@@ -22,31 +22,29 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
     # care about assigning taxonomy here — just identifying hits/misses.
     # So first we generate a fake taxonomy file to avoid requiring a real
     # taxonomy.
-    # reference_taxonomy = qiime2.Artifact.import_data(
-    #    "FeatureData[Sequence]", reference_sequences).view(pd.Series).index
     reference_taxonomy = _dnafastaformats_to_series(reference_sequences).index
     reference_taxonomy = pd.Series(
         reference_taxonomy, index=reference_taxonomy, name='Taxon')
 
     # BLAST query seqs vs. ref db of contaminants (or targets)
     if method == 'blast':
-        # blast uses perc_identity as a percentage, vsearch as a decimal
-        perc_identity = perc_identity * 100
         res = qfc._blast.classify_consensus_blast(
-            reference_sequences, feature_sequences, reference_taxonomy,
+            feature_sequences, reference_sequences, reference_taxonomy,
             maxaccepts=1, perc_identity=perc_identity)
     elif method == 'vsearch':
         res = qfc._vsearch.classify_consensus_vsearch(
-            reference_sequences, feature_sequences, reference_taxonomy,
+            feature_sequences, reference_sequences, reference_taxonomy,
             maxaccepts=1, perc_identity=perc_identity, threads=threads)
 
     # convert feature_sequences to series for filtering
-    query_series = qiime2.Artifact.import_data(
-        "FeatureData[Sequence]", feature_sequences).view(pd.Series)
+    query_series = _dnafastaformats_to_series(feature_sequences)
 
     # filter seqs from seq file
-    hits_seqs = filter_seqs(query_series, res, exclude_ids=True)
-    misses_seqs = filter_seqs(query_series, res, exclude_ids=False)
+    res_md = qiime2.Metadata(res)
+    hits_seqs = filter_seqs(
+        query_series, res_md, where="Taxon='Unassigned'", exclude_ids=True)
+    misses_seqs = filter_seqs(
+        query_series, res_md, where="Taxon='Unassigned'", exclude_ids=False)
 
     # output hits/rejects
     return hits_seqs, misses_seqs

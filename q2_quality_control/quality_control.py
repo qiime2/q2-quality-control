@@ -16,7 +16,8 @@ import pandas as pd
 
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method='blast',
-                 perc_identity: float=0.97, threads: str=1):
+                 perc_identity: float=0.97, threads: str=1,
+                 ) -> (pd.Series, pd.Series):
 
     # q2-feature-classifier requires a reference taxonomy but we don't really
     # care about assigning taxonomy here — just identifying hits/misses.

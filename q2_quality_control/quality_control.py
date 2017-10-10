@@ -9,6 +9,7 @@
 import qiime2
 import q2_feature_classifier as qfc
 from q2_types.feature_data import DNAFASTAFormat
+from q2_types.feature_data._transformer import _dnafastaformats_to_series
 from q2_feature_table import filter_seqs
 import pandas as pd
 
@@ -21,8 +22,9 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
     # care about assigning taxonomy here — just identifying hits/misses.
     # So first we generate a fake taxonomy file to avoid requiring a real
     # taxonomy.
-    reference_taxonomy = qiime2.Artifact.import_data(
-        "FeatureData[Sequence]", reference_sequences).view(pd.Series).index
+    # reference_taxonomy = qiime2.Artifact.import_data(
+    #    "FeatureData[Sequence]", reference_sequences).view(pd.Series).index
+    reference_taxonomy = _dnafastaformats_to_series(reference_sequences).index
     reference_taxonomy = pd.Series(
         reference_taxonomy, index=reference_taxonomy, name='Taxon')
 

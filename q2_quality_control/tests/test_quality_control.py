@@ -29,7 +29,6 @@ class QualityControlTests(TestPluginBase):
         self.fungal_ref = _load_DNAFASTAFormat('fungal-ref-sequences.fasta')
         self.fungal_exp = _load_DNAFASTAFormat('fungal-query-sequences.fasta')
 
-
     def test_exclude_seqs_blast(self):
         obs, missed = exclude_seqs(
             self.query_seqs, self.bacterial_ref, method='blast')

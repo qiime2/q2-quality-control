@@ -9,6 +9,7 @@
 from qiime2.plugin.testing import TestPluginBase
 from q2_quality_control.quality_control import exclude_seqs
 from q2_types.feature_data import DNAFASTAFormat
+from q2_types.feature_data._transformer import _dnafastaformats_to_series
 
 
 class QualityControlTests(TestPluginBase):
@@ -24,10 +25,11 @@ class QualityControlTests(TestPluginBase):
         self.query_seqs = _load_DNAFASTAFormat('query-sequences.fasta')
         self.bacterial_ref = _load_DNAFASTAFormat(
             'bacterial-ref-sequences.fasta')
-        self.bacterial_exp = _load_DNAFASTAFormat(
-            'bacterial-query-sequences.fasta')
+        self.bacterial_exp = _dnafastaformats_to_series(
+            _load_DNAFASTAFormat('bacterial-query-sequences.fasta'))
         self.fungal_ref = _load_DNAFASTAFormat('fungal-ref-sequences.fasta')
-        self.fungal_exp = _load_DNAFASTAFormat('fungal-query-sequences.fasta')
+        self.fungal_exp = _dnafastaformats_to_series(
+            _load_DNAFASTAFormat('fungal-query-sequences.fasta'))
 
     def test_exclude_seqs_blast(self):
         obs, missed = exclude_seqs(

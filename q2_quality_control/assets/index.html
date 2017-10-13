@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}q2-quality-control : {{ title }}{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <h1>Per-Level Accuracy</h1>
+  <div class="text-center">
+    <a href="score_plot.pdf">
+      <img src="score_plot.png">
+      <br>
+      <p>Download as PDF</p>
+    </a>
+    <div class="col-lg-12">
+      <a href="results.tsv">
+        <p>Download as tsv</p>
+      </a>
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="accordion-heading">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#results-table" aria-expanded="true" aria-controls="results-table">
+                Click to Collapse/Expand
+              </a>
+            </h4>
+          </div>
+          <div id="results-table" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="accordion-heading">
+            <div class="panel-body">
+              {{ results }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% if composition_regression %}
+    <h1>Linear regression between observed and expected abundances</h1>
+    <a href="composition_regression.pdf">
+      <img src="composition_regression.png">
+      <br>
+      <p>Download as PDF</p>
+    </a>
+    {% endif %}
+    {% if mismatch_histogram %}
+    <h1>Mismatches between false positive and expected features</h1>
+    <a href="mismatch_histogram.pdf">
+      <img src="mismatch_histogram.png">
+      <br>
+      <p>Download as PDF</p>
+    </a>
+    {% endif %}
+    {% if not misclassifications.empty %}
+    <h1>False positives: misclassifications</h1>
+    <div class="col-lg-12">
+      <a href="misclassifications.tsv">
+        <p>Download as tsv</p>
+      </a>
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="accordion-heading">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#misclassifications-table" aria-expanded="true" aria-controls="misclassifications-table">
+                Click to Collapse/Expand
+              </a>
+            </h4>
+          </div>
+          <div id="misclassifications-table" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="accordion-heading">
+            <div class="panel-body">
+              {{ misclassifications }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% if not underclassifications.empty %}
+    <h1>False positives: underclassifications</h1>
+    <div class="col-lg-12">
+      <a href="underclassifications.tsv">
+        <p>Download as tsv</p>
+      </a>
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="accordion-heading">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#underclassifications-table" aria-expanded="true" aria-controls="underclassifications-table">
+                Click to Collapse/Expand
+              </a>
+            </h4>
+          </div>
+          <div id="underclassifications-table" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="accordion-heading">
+            <div class="panel-body">
+              {{ underclassifications }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% if not false_negative_features.empty %}
+    <h1>False negative features</h1>
+    <div class="col-lg-12">
+      <a href="false_negative_features.tsv">
+        <p>Download as tsv</p>
+      </a>
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="accordion-heading">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#false_negative_features-table" aria-expanded="true" aria-controls="false_negative_features-table">
+                Click to Collapse/Expand
+              </a>
+            </h4>
+          </div>
+          <div id="false_negative_features-table" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="accordion-heading">
+            <div class="panel-body">
+              {{ false_negative_features }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

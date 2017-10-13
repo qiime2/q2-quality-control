@@ -36,7 +36,7 @@ def _evaluate_taxonomic_composition(
     if len(set(yvals) - set(_results_columns())) > 0 or len(yvals) < 1:
         raise ValueError(("yvals must only contain one or more of the "
                           "following values: {0}".format(
-                            ','.join(_results_columns())))
+                            ','.join(_results_columns()))))
 
     # DROP MISSING SAMPLES/NANS/ZERO ABUNDANCE FEATURES
     obs = _drop_nan_zero_and_non_target_rows(obs, exp)
@@ -254,24 +254,43 @@ def _visualize(output_dir, results, false_negative_features=None,
 
     # save results
     results.to_csv(join(output_dir, 'results.tsv'), sep='\t')
+    results = q2templates.df_to_html(results, index=False)
 
-    for name, feature in zip(
-            ('false_negative_features.tsv', 'misclassifications.tsv',
-             'underclassifications.tsv'),
-            (false_negative_features, misclassifications,
-             underclassifications)):
-        if feature is not None:
-            feature.to_csv(join(output_dir, name), sep='\t')
-            feature = q2templates.df_to_html(feature, index=False)
+    if false_negative_features is not None:
+        false_negative_features.to_csv(join(
+            output_dir, 'false_negative_features.tsv'), sep='\t')
+        false_negative_features = q2templates.df_to_html(
+            false_negative_features, index=True)
 
-    for name, plot in zip(
-            ('composition_regression.tsv', 'score_plot.tsv',
-             'mismatch_histogram.tsv'),
-            (composition_regression, score_plot, mismatch_histogram)):
-        if plot is not None:
-            plot.savefig(join(output_dir, name + '.png'), bbox_inches='tight')
-            plot.savefig(join(output_dir, name + '.pdf'), bbox_inches='tight')
-            plt.close('all')
+    if misclassifications is not None:
+        misclassifications.to_csv(join(
+            output_dir, 'misclassifications.tsv'), sep='\t')
+        misclassifications = q2templates.df_to_html(
+            misclassifications, index=True)
+
+    if underclassifications is not None:
+        underclassifications.to_csv(join(
+            output_dir, 'underclassifications.tsv'), sep='\t')
+        underclassifications = q2templates.df_to_html(
+            underclassifications, index=True)
+
+    if composition_regression is not None:
+        composition_regression.savefig(join(
+            output_dir, 'composition_regression.png'), bbox_inches='tight')
+        composition_regression.savefig(join(
+            output_dir, 'composition_regression.pdf'), bbox_inches='tight')
+
+    if score_plot is not None:
+        score_plot.savefig(join(
+            output_dir, 'score_plot.png'), bbox_inches='tight')
+        score_plot.savefig(join(
+            output_dir, 'score_plot.pdf'), bbox_inches='tight')
+
+    if mismatch_histogram is not None:
+        mismatch_histogram.savefig(join(
+            output_dir, 'mismatch_histogram.png'), bbox_inches='tight')
+        mismatch_histogram.savefig(join(
+            output_dir, 'mismatch_histogram.pdf'), bbox_inches='tight')
 
     index = join(TEMPLATES, 'index.html')
     q2templates.render(index, output_dir, context={

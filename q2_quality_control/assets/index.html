@@ -12,11 +12,29 @@
       <br>
       <p>Download as PDF</p>
     </a>
-    <a href="results.tsv">
-      <p>Download scores as tsv</p>
-    </a>
+    <div class="col-lg-12">
+      <a href="results.tsv">
+        <p>Download as tsv</p>
+      </a>
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="accordion-heading">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#results-table" aria-expanded="true" aria-controls="results-table">
+                Click to Collapse/Expand
+              </a>
+            </h4>
+          </div>
+          <div id="results-table" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="accordion-heading">
+            <div class="panel-body">
+              {{ results }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     {% if composition_regression %}
-    <h2>Linear regression between observed and expected abundances</h2>
+    <h1>Linear regression between observed and expected abundances</h1>
     <a href="composition_regression.pdf">
       <img src="composition_regression.png">
       <br>
@@ -24,7 +42,7 @@
     </a>
     {% endif %}
     {% if mismatch_histogram %}
-    <h2>Mismatches between false positive and expected features</h2>
+    <h1>Mismatches between false positive and expected features</h1>
     <a href="mismatch_histogram.pdf">
       <img src="mismatch_histogram.png">
       <br>
@@ -32,7 +50,7 @@
     </a>
     {% endif %}
     {% if not misclassifications.empty %}
-    <h2>False positives: misclassifications</h2>
+    <h1>False positives: misclassifications</h1>
     <div class="col-lg-12">
       <a href="misclassifications.tsv">
         <p>Download as tsv</p>
@@ -56,7 +74,7 @@
     </div>
     {% endif %}
     {% if not underclassifications.empty %}
-    <h2>False positives: underclassifications</h2>
+    <h1>False positives: underclassifications</h1>
     <div class="col-lg-12">
       <a href="underclassifications.tsv">
         <p>Download as tsv</p>
@@ -80,7 +98,7 @@
     </div>
     {% endif %}
     {% if not false_negative_features.empty %}
-    <h2>False negative features</h2>
+    <h1>False negative features</h1>
     <div class="col-lg-12">
       <a href="false_negative_features.tsv">
         <p>Download as tsv</p>

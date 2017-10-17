@@ -35,7 +35,7 @@ plugin.methods.register_function(
     parameters={'method': Str % Choices(["blast", "vsearch"]),
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
-                'threads': Int % Range (1, None)},
+                'threads': Int % Range(1, None)},
     outputs=[('sequence_hits', FeatureData[Sequence]),
              ('sequence_misses', FeatureData[Sequence])],
     input_descriptions={
@@ -47,7 +47,7 @@ plugin.methods.register_function(
                    'against reference sequences'),
         'perc_identity': ('Reject match if percent identity to reference is '
                           'lower. (or if E value is higher than E value '
-                          'threshold.)'),
+                          'threshold.)  Must be in range [0.0, 1.0]'),
         'evalue': ('BLAST expectation (E) value threshold for saving hits. '
                    'Reject if E value is higher than threshold (or '
                    'perc_identity is lower than identity threshold.)'),

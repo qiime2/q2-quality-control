@@ -18,7 +18,7 @@ from ._blast import _blast_seqs
 
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method='blast',
-                 perc_identity: float=0.97, evalue: float=0.001,
+                 perc_identity: float=0.97, evalue: float=10,
                  threads: str=1) -> (pd.Series, pd.Series):
 
     # BLAST query seqs vs. ref db of contaminants (or targets)

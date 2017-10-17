@@ -11,7 +11,7 @@ import subprocess
 import pandas as pd
 
 
-def _blast_seqs(feature_sequences, reference_sequences, evalue=0.001,
+def _blast_seqs(feature_sequences, reference_sequences, evalue=10,
                 perc_identity=0.97, threads=1, method='blast'):
     if method == 'blast':
         # blast uses float format but vsearch uses int for perc_identity
@@ -24,7 +24,7 @@ def _blast_seqs(feature_sequences, reference_sequences, evalue=0.001,
     return _generate_assignments(cmd)
 
 
-def _blast(feature_sequences, reference_sequences, evalue=0.001,
+def _blast(feature_sequences, reference_sequences, evalue=10,
            perc_identity=0.97):
     seqs_fp = str(feature_sequences)
     ref_fp = str(reference_sequences)

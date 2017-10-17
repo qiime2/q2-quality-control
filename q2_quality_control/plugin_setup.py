@@ -35,7 +35,7 @@ plugin.methods.register_function(
     parameters={'method': Str % Choices(["blast", "vsearch"]),
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
-                'threads': Int},
+                'threads': Int % Range (1, None)},
     outputs=[('sequence_hits', FeatureData[Sequence]),
              ('sequence_misses', FeatureData[Sequence])],
     input_descriptions={
@@ -46,9 +46,13 @@ plugin.methods.register_function(
         'method': ('Alignment method to use for matching feature sequences '
                    'against reference sequences'),
         'perc_identity': ('Reject match if percent identity to reference is '
-                          'lower. Must be in range [0.0, 1.0]'),
-        'evalue': 'BLAST expectation value (E) threshold for saving hits.',
-        'threads': 'Number of jobs to execute if method == vsearch',
+                          'lower. (or if E value is higher than E value '
+                          'threshold.)'),
+        'evalue': ('BLAST expectation (E) value threshold for saving hits. '
+                   'Reject if E value is higher than threshold (or '
+                   'perc_identity is lower than identity threshold.)'),
+        'threads': (
+            'Number of jobs to execute. Only applies to vsearch method.'),
     },
     output_descriptions={
         'sequence_hits': (
@@ -65,7 +69,10 @@ plugin.methods.register_function(
         'filter, e.g., extract only feature sequences that align to a certain '
         'clade of bacteria; or to define a negative filter, e.g., identify '
         'sequences that align to contaminant or human DNA sequences that '
-        'should be excluded from subsequent analyses.')
+        'should be excluded from subsequent analyses. Note that filtering is '
+        'performed based on both the perc_identity threshold and E value (the '
+        'latter only if method==BLAST). Set E value to a higher value or '
+        'perc_identity==0 to disable one or the other filtering method.')
 )
 
 plugin.visualizers.register_function(

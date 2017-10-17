@@ -196,7 +196,9 @@ class EvaluateCompositionTests(QualityControlTestsBase):
         self.assertEqual(res[1], exp_v)
 
     def test_evaluate_taxonomic_composition(self):
-        res = _evaluate_taxonomic_composition(self.exp, self.obs, 7)
+        res = _evaluate_taxonomic_composition(
+            self.exp, self.obs, 7, palette='Set1',
+            yvals='TAR,TDR,R,Observed / Expected Taxa')
         # results
         self.assertTrue(np.array_equal(res[0].values, exp_res))
         # false negative features
@@ -222,7 +224,7 @@ class EvaluateCompositionTests(QualityControlTestsBase):
     def test_evaluate_taxonomic_composition_invalid_yvals(self):
         with self.assertRaisesRegex(ValueError, "yvals must only"):
             _evaluate_taxonomic_composition(
-                self.exp, self.obs, 7, yvals='something_nasty')
+                self.exp, self.obs, 7, yvals='something_nasty', palette='Set1')
 
 
 exp_res = np.array(

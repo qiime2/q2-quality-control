@@ -28,8 +28,7 @@ def _results_columns():
 
 
 def _evaluate_taxonomic_composition(
-        exp, obs, depth=7, palette='Set1',
-        yvals='TAR,TDR,R,Observed / Expected Taxa'):
+        exp, obs, depth, palette, yvals):
 
     # convert yvals to list
     yvals = yvals.split(',')
@@ -168,8 +167,7 @@ def _find_nearest_common_lineage(feature, exp_features):
     return feature_depth
 
 
-def _pointplot_multiple_y(results, xval='level', yvals=['TAR', 'TDR', 'R'],
-                          palette='Set1'):
+def _pointplot_multiple_y(results, xval, yvals, palette):
     colors = cycle(sns.color_palette(palette, n_colors=len(yvals)))
     fig, axes = plt.subplots(1)
     handles = []
@@ -184,7 +182,7 @@ def _pointplot_multiple_y(results, xval='level', yvals=['TAR', 'TDR', 'R'],
     return fig
 
 
-def _regplot_from_dict(vectors, palette='Set1'):
+def _regplot_from_dict(vectors, palette):
     yvals = vectors.keys()
     colors = cycle(sns.color_palette(palette, n_colors=len(yvals)))
     fig, axes = plt.subplots(1)

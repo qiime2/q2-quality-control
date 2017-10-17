@@ -11,8 +11,8 @@ import subprocess
 import pandas as pd
 
 
-def _blast_seqs(feature_sequences, reference_sequences, evalue=10,
-                perc_identity=0.97, threads=1, method='blast'):
+def _search_seqs(feature_sequences, reference_sequences, evalue,
+                 perc_identity, threads, method):
     if method == 'blast':
         # blast uses float format but vsearch uses int for perc_identity
         perc_identity = perc_identity * 100
@@ -24,8 +24,7 @@ def _blast_seqs(feature_sequences, reference_sequences, evalue=10,
     return _generate_assignments(cmd)
 
 
-def _blast(feature_sequences, reference_sequences, evalue=10,
-           perc_identity=0.97):
+def _blast(feature_sequences, reference_sequences, evalue, perc_identity):
     seqs_fp = str(feature_sequences)
     ref_fp = str(reference_sequences)
     cmd = ['blastn', '-query', seqs_fp, '-evalue', str(evalue), '-strand',
@@ -34,8 +33,7 @@ def _blast(feature_sequences, reference_sequences, evalue=10,
     return cmd
 
 
-def _vsearch(feature_sequences, reference_sequences, perc_identity=0.97,
-             threads=1):
+def _vsearch(feature_sequences, reference_sequences, perc_identity, threads):
     seqs_fp = str(feature_sequences)
     ref_fp = str(reference_sequences)
     cmd = ['vsearch', '--usearch_global', seqs_fp, '--id', str(perc_identity),
@@ -66,14 +64,14 @@ def _extract_hits(blast_output):
     '''
     with open(blast_output, "r") as inputfile:
         # grab query IDs from each line (only queries with hits are listed)
-        hits = [line.split('\t')[0] for line in inputfile
+        hits = {line.split('\t')[0] for line in inputfile
                 # ignore comment lines and blank lines
                 if not line.startswith('#')
                 and line != ""
                 # if vsearch fails to find assignment, it reports '*' as the
                 # accession ID, so we will not count those IDs as hits.
-                and line.split('\t')[1] != '*']
-    return hits
+                and line.split('\t')[1] != '*'}
+    return list(hits)
 
 
 # Replace this function with QIIME2 API for wrapping commands/binaries,

@@ -19,20 +19,28 @@ from ._blast import _blast_seqs
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method='blast',
                  perc_identity: float=0.97, evalue: float=0.001,
-                 threads: str=1) -> (pd.Series, pd.Series):
+                 perc_query_aligned: float=0.97, threads: str=1
+                 ) -> (pd.Series, pd.Series):
 
     # BLAST query seqs vs. ref db of contaminants (or targets)
     res = _blast_seqs(
         feature_sequences, reference_sequences, evalue=evalue,
-        perc_identity=perc_identity, threads=threads, method=method)
+        perc_identity=perc_identity, threads=threads,
+        perc_query_aligned=perc_query_aligned, method=method)
 
     # convert feature_sequences to series for filtering
     query_series = _dnafastaformats_to_series(feature_sequences)
 
     # filter seqs from seq file
-    res_md = qiime2.Metadata(res)
-    hits_seqs = filter_seqs(query_series, res_md, exclude_ids=False)
-    misses_seqs = filter_seqs(query_series, res_md, exclude_ids=True)
+    try:
+        res_md = qiime2.Metadata(res)
+        hits_seqs = filter_seqs(query_series, res_md, exclude_ids=False)
+    except ValueError:
+        raise ValueError('No query sequences match the reference.')
+    try:
+        misses_seqs = filter_seqs(query_series, res_md, exclude_ids=True)
+    except ValueError:
+        raise ValueError('All query sequences match the reference.')
 
     # output hits/rejects
     return hits_seqs, misses_seqs

@@ -6,11 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import qiime2
-# import q2_feature_classifier as qfc
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.feature_data._transformer import _dnafastaformats_to_series
-from q2_feature_table import filter_seqs
 import pandas as pd
 from ._utilities import _evaluate_taxonomic_composition, _visualize
 from ._blast import _blast_seqs
@@ -23,7 +20,7 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
                  ) -> (pd.Series, pd.Series):
 
     # BLAST query seqs vs. ref db of contaminants (or targets)
-    res = _blast_seqs(
+    hit_ids = _blast_seqs(
         feature_sequences, reference_sequences, evalue=evalue,
         perc_identity=perc_identity, threads=threads,
         perc_query_aligned=perc_query_aligned, method=method)
@@ -32,21 +29,26 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
     query_series = _dnafastaformats_to_series(feature_sequences)
 
     # if no hits are in res, early return empty hits and query_series as misses
-    if len(res) < 1:
+    if len(hit_ids) < 1:
         hits_seqs = pd.Series()
         return hits_seqs, query_series
     # if all query seqs are hits, return query_series as hits and empty misses
-    elif len(res) == len(query_series):
+    elif len(hit_ids) == len(query_series):
         misses_seqs = pd.Series()
         return query_series, misses_seqs
 
     # filter seqs from seq file
-    res_md = qiime2.Metadata(res)
-    hits_seqs = filter_seqs(query_series, res_md, exclude_ids=False)
-    misses_seqs = filter_seqs(query_series, res_md, exclude_ids=True)
+    hits_seqs = {}
+    misses_seqs = {}
+    for seq_id, _dna in query_series.items():
+        seq = str(_dna)
+        if seq_id in hit_ids:
+            hits_seqs[seq_id] = seq
+        else:
+            misses_seqs[seq_id] = seq
 
     # output hits/rejects
-    return hits_seqs, misses_seqs
+    return pd.Series(hits_seqs), pd.Series(misses_seqs)
 
 
 def evaluate_taxonomic_composition(

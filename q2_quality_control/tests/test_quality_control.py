@@ -59,14 +59,9 @@ class SequenceQualityControlBase(QualityControlTestsBase):
             'query-partially-random.fasta')
 
 
-class ExcludeSeqsBase(SequenceQualityControlBase):
-
-    __test__ = False
+class ExcludeSeqsBase(object):
 
     method = None
-
-    def setUp(self):
-        super().setUp()
 
     def test_exclude_seqs_bacterial_hit_fungal_miss(self):
         obs, missed = exclude_seqs(
@@ -126,13 +121,11 @@ class ExcludeSeqsBase(SequenceQualityControlBase):
         self.assertEqual(sorted(obs.index), [])
 
 
-class BlastTests(ExcludeSeqsBase):
-    __test__ = True
+class BlastTests(ExcludeSeqsBase, SequenceQualityControlBase):
     method = 'blast'
 
 
-class VsearchTests(ExcludeSeqsBase):
-    __test__ = True
+class VsearchTests(ExcludeSeqsBase, SequenceQualityControlBase):
     method = 'vsearch'
 
 

@@ -46,9 +46,7 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
                 hits_seqs[seq_id] = seq
             else:
                 misses_seqs[seq_id] = seq
-
-    # output hits/rejects
-    return pd.Series(hits_seqs), pd.Series(misses_seqs)
+        return pd.Series(hits_seqs), pd.Series(misses_seqs)
 
 
 def evaluate_taxonomic_composition(

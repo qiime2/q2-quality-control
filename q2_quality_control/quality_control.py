@@ -7,7 +7,9 @@
 # ----------------------------------------------------------------------------
 
 import qiime2
+# import q2_feature_classifier as qfc
 from q2_types.feature_data import DNAFASTAFormat
+from q2_types.feature_data._transformer import _dnafastaformats_to_series
 from q2_feature_table import filter_seqs
 import pandas as pd
 from ._utilities import _evaluate_taxonomic_composition, _visualize
@@ -27,8 +29,16 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
         perc_query_aligned=perc_query_aligned, method=method)
 
     # convert feature_sequences to series for filtering
-    query_series = qiime2.Artifact.import_data(
-        "FeatureData[Sequence]", feature_sequences).view(pd.Series)
+    query_series = _dnafastaformats_to_series(feature_sequences)
+
+    # if no hits are in res, early return empty hits and query_series as misses
+    if len(res) < 1:
+        hits_seqs = pd.Series()
+        return hits_seqs, query_series
+    # if all query seqs are hits, return query_series as hits and empty misses
+    elif len(res) == len(query_series):
+        misses_seqs = pd.Series()
+        return query_series, misses_seqs
 
     # filter seqs from seq file
     try:

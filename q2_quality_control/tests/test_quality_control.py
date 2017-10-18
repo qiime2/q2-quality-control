@@ -25,11 +25,16 @@ from q2_quality_control._utilities import (
 filterwarnings("ignore", category=UserWarning)
 
 
+def _dnafastaformats_to_series(fasta):
+    fasta = qiime2.Artifact.import_data("FeatureData[Sequence]", fasta)
+    return fasta.view(pd.Series)
+
+
 class QualityControlTestsBase(TestPluginBase):
     package = 'q2_quality_control.tests'
 
 
-class SequenceQualityControlTests(QualityControlTestsBase):
+class SequenceQualityControlBase(QualityControlTestsBase):
 
     def setUp(self):
         super().setUp()
@@ -37,10 +42,6 @@ class SequenceQualityControlTests(QualityControlTestsBase):
         def _load_DNAFASTAFormat(reads_fn):
             reads_fp = self.get_data_path(reads_fn)
             return DNAFASTAFormat(reads_fp, mode='r')
-
-        def _dnafastaformats_to_series(fasta):
-            fasta = qiime2.Artifact.import_data("FeatureData[Sequence]", fasta)
-            return fasta.view(pd.Series)
 
         self.query_seqs = _load_DNAFASTAFormat('query-sequences.fasta')
         self.bacterial_ref = _load_DNAFASTAFormat(
@@ -57,67 +58,97 @@ class SequenceQualityControlTests(QualityControlTestsBase):
         self.query_seqs_part_rand = _load_DNAFASTAFormat(
             'query-partially-random.fasta')
 
+
+class ExcludeSeqsBase(SequenceQualityControlBase):
+
+    __test__ = False
+
+    method = None
+
+    def setUp(self):
+        super().setUp()
+
     def test_exclude_seqs_bacterial_hit_fungal_miss(self):
-        for method in ['blast', 'vsearch']:
-            obs, missed = exclude_seqs(
-                self.query_seqs, self.bacterial_ref, method=method)
-            self.assertEqual(
-                sorted(obs.index), sorted(self.bacterial_exp.index))
-            self.assertEqual(
-                sorted(missed.index), sorted(self.fungal_exp.index))
+        obs, missed = exclude_seqs(
+            self.query_seqs, self.bacterial_ref, method=self.method)
+        self.assertEqual(
+            sorted(obs.index), sorted(self.bacterial_exp.index))
+        self.assertEqual(
+            sorted(missed.index), sorted(self.fungal_exp.index))
 
     def test_exclude_seqs_fungal_hit_bacterial_miss(self):
-        for method in ['blast', 'vsearch']:
-            obs, missed = exclude_seqs(
-                self.query_seqs, self.fungal_ref, method=method)
-            self.assertEqual(sorted(obs.index), sorted(self.fungal_exp.index))
-            self.assertEqual(
-                sorted(missed.index), sorted(self.bacterial_exp.index))
+        obs, missed = exclude_seqs(
+            self.query_seqs, self.fungal_ref, method=self.method)
+        self.assertEqual(sorted(obs.index), sorted(self.fungal_exp.index))
+        self.assertEqual(
+            sorted(missed.index), sorted(self.bacterial_exp.index))
 
     def test_exclude_seqs_all_hit(self):
-        for method in ['blast', 'vsearch']:
-            with self.assertRaisesRegex(ValueError, "All query sequences"):
-                exclude_seqs(self.query_seqs, self.query_seqs, method=method)
+        obs, missed = exclude_seqs(
+            self.query_seqs, self.query_seqs, method=self.method)
+        self.assertEqual(sorted(obs.index), sorted(
+            _dnafastaformats_to_series(self.query_seqs).index))
+        self.assertEqual(sorted(missed.index), [])
 
     def test_exclude_seqs_all_miss(self):
-        for method in ['blast', 'vsearch']:
-            with self.assertRaisesRegex(ValueError, "No query sequences"):
-                exclude_seqs(self.query_seqs_with_mismatch, self.fungal_ref,
-                             method=method)
+        obs, missed = exclude_seqs(
+            self.query_seqs_with_mismatch, self.fungal_ref, method=self.method)
+        self.assertEqual(sorted(missed.index), sorted(
+            _dnafastaformats_to_series(
+                self.query_seqs_with_mismatch).index))
+        self.assertEqual(sorted(obs.index), [])
 
     def test_exclude_seqs_97_perc_identity(self):
-        for method in ['blast', 'vsearch']:
-            obs, missed = exclude_seqs(
-                self.query_seqs_with_mismatch, self.bacterial_ref,
-                method=method)
-            self.assertEqual(
-                sorted(obs.index), ['2MISA', '2MISB'])
-            self.assertEqual(
-                sorted(missed.index), ['10MISA', '8MISA', '8MISB'])
+        obs, missed = exclude_seqs(
+            self.query_seqs_with_mismatch, self.bacterial_ref,
+            method=self.method)
+        self.assertEqual(
+            sorted(obs.index), ['2MISA', '2MISB'])
+        self.assertEqual(
+            sorted(missed.index), ['10MISA', '8MISA', '8MISB'])
 
     def test_exclude_seqs_96_perc_identity(self):
-        for method in ['blast', 'vsearch']:
-            obs, missed = exclude_seqs(
-                self.query_seqs_with_mismatch, self.bacterial_ref,
-                method=method, perc_identity=0.965)
-            self.assertEqual(
-                sorted(obs.index), ['2MISA', '2MISB', '8MISA', '8MISB'])
-            self.assertEqual(
-                sorted(missed.index), ['10MISA'])
+        obs, missed = exclude_seqs(
+            self.query_seqs_with_mismatch, self.bacterial_ref,
+            method=self.method, perc_identity=0.965)
+        self.assertEqual(
+            sorted(obs.index), ['2MISA', '2MISB', '8MISA', '8MISB'])
+        self.assertEqual(
+            sorted(missed.index), ['10MISA'])
 
     def test_exclude_seqs_99_perc_identity(self):
-        for method in ['blast', 'vsearch']:
-            with self.assertRaisesRegex(ValueError, "No query sequences"):
-                exclude_seqs(
-                    self.query_seqs_with_mismatch, self.bacterial_ref,
-                    method=method, perc_identity=0.99)
+        obs, missed = exclude_seqs(
+            self.query_seqs_with_mismatch, self.bacterial_ref,
+            method=self.method, perc_identity=0.99)
+        self.assertEqual(sorted(missed.index), sorted(
+            _dnafastaformats_to_series(
+                self.query_seqs_with_mismatch).index))
+        self.assertEqual(sorted(obs.index), [])
+
+
+class BlastTests(ExcludeSeqsBase):
+    __test__ = True
+    method = 'blast'
+
+
+class VsearchTests(ExcludeSeqsBase):
+    __test__ = True
+    method = 'vsearch'
+
+
+class SequenceQualityControlTests(SequenceQualityControlBase):
+
+    def setUp(self):
+        super().setUp()
 
     def test_exclude_seqs_high_evalue_low_perc_query_aligned_permissive(self):
-        with self.assertRaisesRegex(ValueError, "All query sequences"):
-            exclude_seqs(
-                self.query_seqs_part_rand, self.bacterial_ref,
-                method='blast', perc_identity=0.97, evalue=10000000000000000,
-                perc_query_aligned=0.1)
+        obs, missed = exclude_seqs(
+            self.query_seqs_part_rand, self.bacterial_ref,
+            method='blast', perc_identity=0.97, evalue=10000000000000000,
+            perc_query_aligned=0.1)
+        self.assertEqual(sorted(obs.index), sorted(
+            _dnafastaformats_to_series(self.query_seqs_part_rand).index))
+        self.assertEqual(sorted(missed.index), [])
 
     def test_exclude_seqs_blast_low_evalue_discards_weak_matches(self):
         obs, missed = exclude_seqs(
@@ -130,26 +161,34 @@ class SequenceQualityControlTests(QualityControlTestsBase):
             sorted(missed.index), ['RAND1', 'RAND2'])
 
     def test_exclude_seqs_short_seqs_miss_with_default_blast(self):
-        with self.assertRaisesRegex(ValueError, "No query sequences"):
-            exclude_seqs(
-                self.query_seqs_short, self.bacterial_ref, method='blast')
+        obs, missed = exclude_seqs(
+            self.query_seqs_short, self.bacterial_ref, method='blast')
+        self.assertEqual(sorted(missed.index), sorted(
+            _dnafastaformats_to_series(self.query_seqs_short).index))
+        self.assertEqual(sorted(obs.index), [])
 
     def test_exclude_seqs_short_seqs_hit_with_default_vsearch(self):
-        with self.assertRaisesRegex(ValueError, "All query sequences"):
-            exclude_seqs(
-                self.query_seqs_short, self.bacterial_ref, method='vsearch')
+        obs, missed = exclude_seqs(
+            self.query_seqs_short, self.bacterial_ref, method='vsearch')
+        self.assertEqual(sorted(obs.index), sorted(
+            _dnafastaformats_to_series(self.query_seqs_short).index))
+        self.assertEqual(sorted(missed.index), [])
 
     def test_exclude_seqs_short_seqs_hit_with_blastn_short(self):
-        with self.assertRaisesRegex(ValueError, "All query sequences"):
-            obs, missed = exclude_seqs(
-                self.query_seqs_short, self.bacterial_ref,
-                method='blastn-short', evalue=10000)
+        obs, missed = obs, missed = exclude_seqs(
+            self.query_seqs_short, self.bacterial_ref,
+            method='blastn-short', evalue=10000)
+        self.assertEqual(sorted(obs.index), sorted(
+            _dnafastaformats_to_series(self.query_seqs_short).index))
+        self.assertEqual(sorted(missed.index), [])
 
     def test_exclude_seqs_short_seqs_miss_with_blastn_short_low_eval(self):
-        with self.assertRaisesRegex(ValueError, "No query sequences"):
-            obs, missed = exclude_seqs(
-                self.query_seqs_short, self.bacterial_ref,
-                method='blastn-short', perc_identity=0.01, evalue=10**-30)
+        obs, missed = obs, missed = exclude_seqs(
+            self.query_seqs_short, self.bacterial_ref,
+            method='blastn-short', perc_identity=0.01, evalue=10**-30)
+        self.assertEqual(sorted(missed.index), sorted(
+            _dnafastaformats_to_series(self.query_seqs_short).index))
+        self.assertEqual(sorted(obs.index), [])
 
 
 class UtilitiesTests(QualityControlTestsBase):

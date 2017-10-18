@@ -18,16 +18,27 @@ from ._blast import _search_seqs
 
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method='blast',
-                 perc_identity: float=0.97, evalue: float=10,
-                 threads: str=1) -> (pd.Series, pd.Series):
+                 perc_identity: float=0.97, evalue: float=None,
+                 perc_query_aligned: float=0.97, threads: str=1
+                 ) -> (pd.Series, pd.Series):
 
     # BLAST query seqs vs. ref db of contaminants (or targets)
     res = _search_seqs(
         feature_sequences, reference_sequences, evalue=evalue,
-        perc_identity=perc_identity, threads=threads, method=method)
+        perc_identity=perc_identity, threads=threads,
+        perc_query_aligned=perc_query_aligned, method=method)
 
     # convert feature_sequences to series for filtering
     query_series = _dnafastaformats_to_series(feature_sequences)
+
+    # if no hits are in res, early return empty hits and query_series as misses
+    if len(res) < 1:
+        hits_seqs = pd.Series()
+        return hits_seqs, query_series
+    # if all query seqs are hits, return query_series as hits and empty misses
+    elif len(res) == len(query_series):
+        misses_seqs = pd.Series()
+        return query_series, misses_seqs
 
     # filter seqs from seq file
     res_md = qiime2.Metadata(res)

@@ -28,7 +28,7 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
     # convert feature_sequences to series for filtering
     query_series = _dnafastaformats_to_series(feature_sequences)
 
-    # if no hits are in res, early return empty hits and query_series as misses
+    # if no hits are in hit_ids, return empty hits and query_series as misses
     if len(hit_ids) < 1:
         hits_seqs = pd.Series()
         return hits_seqs, query_series
@@ -36,16 +36,16 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
     elif len(hit_ids) == len(query_series):
         misses_seqs = pd.Series()
         return query_series, misses_seqs
-
-    # filter seqs from seq file
-    hits_seqs = {}
-    misses_seqs = {}
-    for seq_id, _dna in query_series.items():
-        seq = str(_dna)
-        if seq_id in hit_ids:
-            hits_seqs[seq_id] = seq
-        else:
-            misses_seqs[seq_id] = seq
+    # otherwise filter seqs from seq file
+    else:
+        hits_seqs = {}
+        misses_seqs = {}
+        for seq_id, seq in query_series.items():
+            seq = str(seq)
+            if seq_id in hit_ids:
+                hits_seqs[seq_id] = seq
+            else:
+                misses_seqs[seq_id] = seq
 
     # output hits/rejects
     return pd.Series(hits_seqs), pd.Series(misses_seqs)

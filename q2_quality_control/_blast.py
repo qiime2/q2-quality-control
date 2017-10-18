@@ -10,9 +10,8 @@ import tempfile
 import subprocess
 
 
-def _blast_seqs(feature_sequences, reference_sequences, evalue,
-                perc_identity, threads, perc_query_aligned,
-                method='blast'):
+def _search_seqs(feature_sequences, reference_sequences, evalue,
+                 perc_identity, threads, perc_query_aligned, method):
     if method == 'blast':
         # blast uses float format but vsearch uses int for perc_identity
         perc_identity = perc_identity * 100
@@ -29,14 +28,16 @@ def _blast_seqs(feature_sequences, reference_sequences, evalue,
     return _generate_assignments(cmd, perc_query_aligned)
 
 
-def _blast(feature_sequences, reference_sequences, evalue=0.001,
-           perc_identity=0.97):
+def _blast(feature_sequences, reference_sequences, evalue, perc_identity):
     seqs_fp = str(feature_sequences)
     ref_fp = str(reference_sequences)
-    cmd = ['blastn', '-query', seqs_fp, '-evalue', str(evalue), '-strand',
+    cmd = ['blastn', '-query', seqs_fp, '-strand',
            'both', '-outfmt', '6 qseqid sseqid qlen qstart qend', '-subject',
-           ref_fp, '-perc_identity',
-           str(perc_identity), '-max_target_seqs', '1', '-out']
+           ref_fp, '-perc_identity', str(perc_identity),
+           '-max_target_seqs', '1']
+    if evalue is not None:
+        cmd.extend(['-evalue', str(evalue)])
+    cmd.append('-out')
     return cmd
 
 
@@ -48,8 +49,7 @@ def _blastn_short(feature_sequences, reference_sequences, evalue,
     return cmd
 
 
-def _vsearch(feature_sequences, reference_sequences, perc_identity=0.97,
-             threads=1):
+def _vsearch(feature_sequences, reference_sequences, perc_identity, threads):
     seqs_fp = str(feature_sequences)
     ref_fp = str(reference_sequences)
     cmd = ['vsearch', '--usearch_global', seqs_fp, '--id', str(perc_identity),

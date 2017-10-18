@@ -10,17 +10,17 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_types.feature_data._transformer import _dnafastaformats_to_series
 import pandas as pd
 from ._utilities import _evaluate_taxonomic_composition, _visualize
-from ._blast import _blast_seqs
+from ._blast import _search_seqs
 
 
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method='blast',
-                 perc_identity: float=0.97, evalue: float=0.001,
+                 perc_identity: float=0.97, evalue: float=None,
                  perc_query_aligned: float=0.97, threads: str=1
                  ) -> (pd.Series, pd.Series):
 
     # BLAST query seqs vs. ref db of contaminants (or targets)
-    hit_ids = _blast_seqs(
+    hit_ids = _search_seqs(
         feature_sequences, reference_sequences, evalue=evalue,
         perc_identity=perc_identity, threads=threads,
         perc_query_aligned=perc_query_aligned, method=method)

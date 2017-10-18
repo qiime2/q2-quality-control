@@ -12,8 +12,7 @@ import pandas as pd
 
 
 def _search_seqs(feature_sequences, reference_sequences, evalue,
-                 perc_identity, threads, perc_query_aligned,
-                 method='blast'):
+                 perc_identity, threads, perc_query_aligned, method):
     if method == 'blast':
         # blast uses float format but vsearch uses int for perc_identity
         perc_identity = perc_identity * 100

@@ -49,7 +49,8 @@ plugin.methods.register_function(
         'perc_identity': ('Reject match if percent identity to reference is '
                           'lower. Must be in range [0.0, 1.0]'),
         'evalue': ('BLAST expectation (E) value threshold for saving hits. '
-                   'Reject if E value is higher than threshold.'),
+                   'Reject if E value is higher than threshold. This '
+                   'threshold is disabled by default.'),
         'perc_query_aligned': (
             'Percent of query sequence that must align to reference in order '
             'to be accepted as a hit.'),
@@ -73,9 +74,9 @@ plugin.methods.register_function(
         'negative filter, e.g., identify sequences that align to contaminant '
         'or human DNA sequences that should be excluded from subsequent '
         'analyses. Note that filtering is performed based on the '
-        'perc_identity, perc_query_aligned, and E value thresholds (the '
-        'latter only if method==BLAST). Set E value to a higher value, '
-        'perc_identity==0, and/or perc_query_aligned==0 to disable the other '
+        'perc_identity, perc_query_aligned, and evalue thresholds (the '
+        'latter only if method==BLAST and an evalue is set). Set '
+        'perc_identity==0 and/or perc_query_aligned==0 to disable these '
         'filtering thresholds as necessary.')
 )
 

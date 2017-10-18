@@ -32,9 +32,10 @@ plugin.methods.register_function(
     function=exclude_seqs,
     inputs={'feature_sequences': FeatureData[Sequence],
             'reference_sequences': FeatureData[Sequence]},
-    parameters={'method': Str % Choices(["blast", "vsearch"]),
+    parameters={'method': Str % Choices(["blast", "vsearch", "blastn-short"]),
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
+                'perc_query_aligned': Float,
                 'threads': Int},
     outputs=[('sequence_hits', FeatureData[Sequence]),
              ('sequence_misses', FeatureData[Sequence])],
@@ -48,6 +49,9 @@ plugin.methods.register_function(
         'perc_identity': ('Reject match if percent identity to reference is '
                           'lower. Must be in range [0.0, 1.0]'),
         'evalue': 'BLAST expectation value (E) threshold for saving hits.',
+        'perc_query_aligned': (
+            'Percent of query sequence that must align to reference in order '
+            'to be accepted as a hit.'),
         'threads': 'Number of jobs to execute if method == vsearch',
     },
     output_descriptions={

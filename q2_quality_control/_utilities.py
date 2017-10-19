@@ -27,8 +27,32 @@ def _results_columns():
                  'Slope', 'Intercept', 'R', 'P value', 'Std Err'))
 
 
+def _load_metadata(metadata):
+    metadata = metadata.to_series()
+    metadata = pd.to_numeric(metadata, errors='ignore')
+    return metadata
+
+
+def _validate_metadata_is_superset(metadata, table):
+    metadata_ids = set(metadata.index)
+    _is_superset(metadata_ids, table)
+
+
+def _validate_metadata_values_are_superset(metadata, table):
+    # pull unique exp IDs (metadata vals) from metadata for comparison
+    metadata_ids = set(metadata.unique())
+    _is_superset(metadata_ids, table)
+
+
+def _is_superset(metadata_ids, table):
+    table_ids = set(table.index.tolist())
+    if not table_ids.issubset(metadata_ids):
+        raise ValueError('Missing samples in metadata: %r' %
+                         table_ids.difference(metadata_ids))
+
+
 def _evaluate_taxonomic_composition(
-        exp, obs, depth, palette, yvals):
+        exp, obs, depth, palette, yvals, metadata):
 
     # convert yvals to list
     yvals = yvals.split(',')
@@ -37,12 +61,27 @@ def _evaluate_taxonomic_composition(
                           "following values: {0}".format(
                             ','.join(_results_columns()))))
 
-    # DROP MISSING SAMPLES/NANS/ZERO ABUNDANCE FEATURES
-    obs = _drop_nan_zero_and_non_target_rows(obs, exp)
-    exp = _drop_nan_zero_and_non_target_rows(exp, obs)
+    # If metadata are passed, validate and convert to series
+    if metadata is not None:
+        metadata = _load_metadata(metadata)
+        # validate that metadata ids are superset of obs and values (exp ids)
+        # are superset of exp
+        _validate_metadata_is_superset(metadata, obs)
+        _validate_metadata_values_are_superset(metadata, exp)
+        # DROP NANS/ZERO ABUNDANCE FEATURES
+        obs = _drop_nans_zeros(obs)
+        exp = _drop_nans_zeros(exp)
+
+    # if no metadata are passed, we assume that sample IDs correspond directly
+    # between obs and exp tables
+    else:
+        # DROP MISSING SAMPLES/NANS/ZERO ABUNDANCE FEATURES
+        exp, obs = _match_samples_by_index(exp, obs)
+        obs = _drop_nans_zeros(obs)
+        exp = _drop_nans_zeros(exp)
 
     # TAR/TDR for obs vs. exp at each level
-    results, vectors = _compute_per_level_accuracy(exp, obs, depth)
+    results, vectors = _compute_per_level_accuracy(exp, obs, metadata, depth)
 
     # regplot of taxa at top level
     composition_regression = _regplot_from_dict(vectors, palette=palette)
@@ -72,9 +111,14 @@ def _evaluate_taxonomic_composition(
             composition_regression, score_plot, mismatch_histogram)
 
 
-def _drop_nan_zero_and_non_target_rows(df, df2):
-    # drop all rows that do not match df2
+def _match_samples_by_index(df, df2):
+    # drop all rows (samples) in df that do not match df2, and vice versa
     df = df.loc[df2.index]
+    df2 = df2.loc[df.index]
+    return df, df2
+
+
+def _drop_nans_zeros(df):
     # replace nan with zero
     df = df.fillna(0)
     # drop rows / cols with all zero values
@@ -85,7 +129,7 @@ def _drop_nan_zero_and_non_target_rows(df, df2):
     return df.rename(columns=replacements, inplace=False)
 
 
-def _compute_per_level_accuracy(exp, obs, depth):
+def _compute_per_level_accuracy(exp, obs, metadata, depth):
     results = []
     vectors = {}
     for level in range(1, depth + 1):
@@ -94,22 +138,29 @@ def _compute_per_level_accuracy(exp, obs, depth):
         exp_collapsed = _collapse_table(exp, level)
         obs_collapsed = _collapse_table(obs, level)
         # compute stats for each sample individually
-        for sample in exp_collapsed.index:
+        for sample in obs_collapsed.index:
             result = [sample, level]
+            # if metadata are passed, map exp sample ID to value in metadata
+            if metadata is not None:
+                exp_id = metadata[sample]
+            else:
+                exp_id = sample
             # concatenate obs/exp observations to align features
             joined_table = pd.concat(
-                [exp_collapsed.loc[sample],
+                [exp_collapsed.loc[exp_id],
                  obs_collapsed.loc[sample]], axis=1).fillna(0)
-            # Count observed taxa
-            observed_taxa = len(obs_collapsed.columns)
-            observed_taxa_ratio = observed_taxa / len(exp_collapsed.columns)
-            result.extend([observed_taxa, observed_taxa_ratio])
             # split joined table apart again for computing stats
             exp_vector = joined_table.iloc[:, 0]
             obs_vector = joined_table.iloc[:, 1]
+            exp_features = exp_vector[exp_vector != 0]
+            obs_features = obs_vector[obs_vector != 0]
+            # Count observed taxa
+            observed_feature_count = len(obs_features)
+            observed_feature_ratio = (
+                observed_feature_count / len(exp_features))
+            result.extend([observed_feature_count, observed_feature_ratio])
             # compute TAR/TDR
-            result.extend(compute_taxon_accuracy(
-                exp_vector[exp_vector != 0], obs_vector[obs_vector != 0]))
+            result.extend(compute_taxon_accuracy(exp_features, obs_features))
             # compute linear least-squares regression results
             result.extend(linregress(exp_vector, obs_vector))
             results.append(result)

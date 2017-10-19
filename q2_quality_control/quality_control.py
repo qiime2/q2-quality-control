@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import qiime2
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.feature_data._transformer import _dnafastaformats_to_series
 import pandas as pd

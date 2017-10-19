@@ -9,10 +9,7 @@
 import q2_quality_control
 from qiime2.plugin import Str, Plugin, Choices, Range, Float, Int
 from q2_types.feature_data import FeatureData, Sequence
-from q2_types.feature_table import FeatureTable, RelativeFrequency
-from .quality_control import (
-    exclude_seqs, evaluate_taxonomic_composition)
-from ._utilities import _results_columns
+from .quality_control import exclude_seqs
 
 
 plugin = Plugin(
@@ -78,47 +75,4 @@ plugin.methods.register_function(
         'latter only if method==BLAST and an evalue is set). Set '
         'perc_identity==0 and/or perc_query_aligned==0 to disable these '
         'filtering thresholds as necessary.')
-)
-
-plugin.visualizers.register_function(
-    function=evaluate_taxonomic_composition,
-    inputs={'expected_features': FeatureTable[RelativeFrequency],
-            'observed_features': FeatureTable[RelativeFrequency]},
-    parameters={'depth': Int,
-                'palette': Str % Choices([
-                    'Set1', 'Set2', 'Set3', 'Pastel1', 'Pastel2', 'Paired',
-                    'Accent', 'Dark2', 'tab10', 'tab20', 'tab20b', 'tab20c',
-                    'viridis', 'plasma', 'inferno', 'magma', 'terrain',
-                    'rainbow']),
-                'yvals': Str},
-    input_descriptions={
-        'expected_features': 'Expected feature compositions',
-        'observed_features': 'Observed feature compositions'},
-    parameter_descriptions={
-        'depth': ("Maximum depth of semicolon-delimited taxonomic ranks to "
-                  "test (e.g., 1 = root, 7 = species for the greengenes "
-                  "reference sequence database)."),
-        'palette': "Color palette to utilize for plotting.",
-        'yvals': ("Comma-separated list of accuracy metrics to plot on score "
-                  "plots. Enclose in quotes and do not type spaces between "
-                  "values. Must be one more more of [{0}].".format(
-                    ','.join(_results_columns())))},
-    name='Evaluate expected vs. observed taxonomic composition of samples',
-    description=(
-        "This visualizer compares the feature composition of pairs of "
-        "observed and expected samples containing the same sample ID in two "
-        "separate feature tables. Typically, this feature composition will be "
-        "taxonomy classifications or other semicolon-delimited feature "
-        "annotations. Taxon accuracy rate, taxon detection rate, and linear "
-        "regression scores between expected and observed observations are "
-        "calculated at each semicolon-delimited rank, and plots of per-level "
-        "accuracy and observation correlations are plotted. A histogram of "
-        "distance between false positive observations and the nearest "
-        "expected feature is also generated, where distance equals the number "
-        "of rank differences between the observed feature and the nearest "
-        "common lineage in the expected feature. This visualizer is most "
-        "suitable for testing per-run data quality on sequencing runs that "
-        "contain mock communities or other samples with known composition. "
-        "Also suitable for sanity checks of bioinformatic pipeline "
-        "performance.")
 )

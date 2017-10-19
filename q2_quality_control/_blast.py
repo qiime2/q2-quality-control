@@ -8,7 +8,6 @@
 
 import tempfile
 import subprocess
-import pandas as pd
 
 
 def _search_seqs(feature_sequences, reference_sequences, evalue,
@@ -66,9 +65,7 @@ def _generate_assignments(cmd, perc_query_aligned):
         cmd = cmd + [output.name]
         _run_command(cmd)
         hits = _extract_hits(output.name, perc_query_aligned)
-        result = pd.DataFrame(hits, index=hits, columns=['Feature ID'])
-        result.index.name = 'Feature ID'
-        return result
+        return hits
 
 
 def _extract_hits(blast_output, perc_query_aligned):

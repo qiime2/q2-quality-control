@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 import q2_quality_control
-from qiime2.plugin import Str, Plugin, Choices, Range, Float, Int
+from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int,
+                           MetadataCategory)
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, RelativeFrequency
 from .quality_control import (
@@ -90,7 +91,8 @@ plugin.visualizers.register_function(
                     'Accent', 'Dark2', 'tab10', 'tab20', 'tab20b', 'tab20c',
                     'viridis', 'plasma', 'inferno', 'magma', 'terrain',
                     'rainbow']),
-                'yvals': Str},
+                'yvals': Str,
+                'metadata': MetadataCategory},
     input_descriptions={
         'expected_features': 'Expected feature compositions',
         'observed_features': 'Observed feature compositions'},
@@ -102,7 +104,9 @@ plugin.visualizers.register_function(
         'yvals': ("Comma-separated list of accuracy metrics to plot on score "
                   "plots. Enclose in quotes and do not type spaces between "
                   "values. Must be one more more of [{0}].".format(
-                    ','.join(_results_columns())))},
+                    ','.join(_results_columns()))),
+        'metadata': ('Optional sample metadata that maps observed_features '
+                     'sample IDs to expected_features sample IDs.')},
     name='Evaluate expected vs. observed taxonomic composition of samples',
     description=(
         "This visualizer compares the feature composition of pairs of "

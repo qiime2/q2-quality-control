@@ -13,7 +13,7 @@ from ._blast import _search_seqs
 
 
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
-                 reference_sequences: DNAFASTAFormat, method='blast',
+                 reference_sequences: DNAFASTAFormat, method: str='blast',
                  perc_identity: float=0.97, evalue: float=None,
                  perc_query_aligned: float=0.97, threads: str=1
                  ) -> (pd.Series, pd.Series):

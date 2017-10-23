@@ -6,8 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+<<<<<<< HEAD
 import numpy as np
 import numpy.testing as npt
+=======
+>>>>>>> c294ea77eb30cf80ed0bddc0cfde44ce730f8b22
 import pandas as pd
 import qiime2
 from warnings import filterwarnings
@@ -15,6 +18,7 @@ from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import DNAFASTAFormat
 import pandas.util.testing as pdt
 
+<<<<<<< HEAD
 from q2_quality_control.quality_control import (
     exclude_seqs, evaluate_taxonomic_composition)
 from q2_quality_control._utilities import (
@@ -22,6 +26,9 @@ from q2_quality_control._utilities import (
     _drop_nans_zeros, _compute_per_level_accuracy,
     compute_taxon_accuracy, _tally_misclassifications,
     _identify_incorrect_classifications, _find_nearest_common_lineage)
+=======
+from q2_quality_control.quality_control import (exclude_seqs)
+>>>>>>> c294ea77eb30cf80ed0bddc0cfde44ce730f8b22
 
 
 filterwarnings("ignore", category=UserWarning)

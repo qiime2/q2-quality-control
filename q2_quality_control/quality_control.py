@@ -10,12 +10,11 @@ import qiime2
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.feature_data._transformer import _dnafastaformats_to_series
 import pandas as pd
-from ._utilities import _evaluate_taxonomic_composition, _visualize
 from ._blast import _search_seqs
 
 
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
-                 reference_sequences: DNAFASTAFormat, method='blast',
+                 reference_sequences: DNAFASTAFormat, method: str='blast',
                  perc_identity: float=0.97, evalue: float=None,
                  perc_query_aligned: float=0.97, threads: str=1
                  ) -> (pd.Series, pd.Series):

@@ -10,10 +10,7 @@ import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int,
                            MetadataCategory)
 from q2_types.feature_data import FeatureData, Sequence
-from q2_types.feature_table import FeatureTable, RelativeFrequency
-from .quality_control import (
-    exclude_seqs, evaluate_taxonomic_composition)
-from ._utilities import _results_columns
+from .quality_control import exclude_seqs
 
 
 plugin = Plugin(

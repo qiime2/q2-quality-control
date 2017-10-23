@@ -1,0 +1,38 @@
+{% set data = load_setup_py_data() %}
+{% set version = data.get('version') or 'placehold' %}
+{% set release = '.'.join(version.split('.')[:2]) %}
+
+package:
+  name: q2-quality-control
+  version: {{ version }}
+
+source:
+  path: ../..
+
+build:
+  script: make install
+
+requirements:
+  build:
+    - python 3.5*
+    - setuptools
+
+  run:
+    - python 3.5*
+    - setuptools
+    - pandas
+    - blast 2.6.0
+    - vsearch
+    - qiime2 {{ release }}.*
+    - q2-types {{ release }}.*
+    - q2templates {{ release }}.*
+
+test:
+  imports:
+    - q2_quality_control
+    - qiime2.plugins.quality_control
+
+about:
+  home: https://qiime2.org
+  license: BSD-3-Clause
+  license_family: BSD

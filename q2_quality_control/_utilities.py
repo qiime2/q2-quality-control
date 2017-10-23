@@ -22,11 +22,6 @@ import pkg_resources
 TEMPLATES = pkg_resources.resource_filename('q2_quality_control', 'assets')
 
 
-def _results_columns():
-    return list(('Observed Taxa', 'Observed / Expected Taxa', 'TAR', 'TDR',
-                 'Slope', 'Intercept', 'R', 'P value', 'Std Err'))
-
-
 def _load_metadata(metadata):
     metadata = metadata.to_series()
     metadata = pd.to_numeric(metadata, errors='ignore')
@@ -35,39 +30,57 @@ def _load_metadata(metadata):
 
 def _validate_metadata_is_superset(metadata, table):
     metadata_ids = set(metadata.index)
-    _is_superset(metadata_ids, table)
-
-
-def _validate_metadata_values_are_superset(metadata, table):
-    # pull unique exp IDs (metadata vals) from metadata for comparison
-    metadata_ids = set(metadata.unique())
-    _is_superset(metadata_ids, table)
-
-
-def _is_superset(metadata_ids, table):
     table_ids = set(table.index.tolist())
     if not table_ids.issubset(metadata_ids):
         raise ValueError('Missing samples in metadata: %r' %
                          table_ids.difference(metadata_ids))
 
 
-def _evaluate_taxonomic_composition(
-        exp, obs, depth, palette, yvals, metadata):
+def _validate_metadata_values_are_subset(metadata, table):
+    # pull unique exp IDs (metadata vals) from metadata for comparison
+    metadata_ids = set(metadata.unique())
+    table_ids = set(table.index.tolist())
+    if not metadata_ids.issubset(table_ids):
+        raise ValueError('Missing samples in table: %r' %
+                         table_ids.difference(metadata_ids))
 
-    # convert yvals to list
-    yvals = yvals.split(',')
-    if len(set(yvals) - set(_results_columns())) > 0 or len(yvals) < 1:
-        raise ValueError(("yvals must only contain one or more of the "
-                          "following values: {0}".format(
-                            ','.join(_results_columns()))))
+
+def _interpret_metric_selection(plot_tar, plot_tdr, plot_r_value,
+                                plot_r_squared, plot_observed_features,
+                                plot_observed_features_ratio):
+    # convert metric boolean choices to list of column names
+    yvals = []
+    for var, val in zip(
+            (plot_tar, plot_tdr, plot_r_value, plot_r_squared,
+             plot_observed_features, plot_observed_features_ratio),
+            ('TAR', 'TDR', 'r-value', 'r-squared', 'Observed Taxa',
+             'Observed / Expected Taxa')):
+        if var:
+            yvals.append(val)
+
+    # at least one metric must be plotted
+    if len(yvals) < 1:
+        raise ValueError("At least one metric must be plotted.")
+
+    return yvals
+
+
+def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
+                          plot_tdr, plot_r_value, plot_r_squared,
+                          plot_observed_features,
+                          plot_observed_features_ratio):
+
+    yvals = _interpret_metric_selection(
+        plot_tar, plot_tdr, plot_r_value, plot_r_squared,
+        plot_observed_features, plot_observed_features_ratio)
 
     # If metadata are passed, validate and convert to series
     if metadata is not None:
         metadata = _load_metadata(metadata)
         # validate that metadata ids are superset of obs and values (exp ids)
-        # are superset of exp
+        # are subset of exp
         _validate_metadata_is_superset(metadata, obs)
-        _validate_metadata_values_are_superset(metadata, exp)
+        _validate_metadata_values_are_subset(metadata, exp)
         # DROP NANS/ZERO ABUNDANCE FEATURES
         obs = _drop_nans_zeros(obs)
         exp = _drop_nans_zeros(exp)
@@ -91,8 +104,10 @@ def _evaluate_taxonomic_composition(
         results, xval='level', yvals=yvals, palette=palette)
 
     # list taxa that are obs but not exp
-    obs_features = set(obs.columns)
-    exp_features = set(exp.columns)
+    obs_collapsed = _collapse_table(obs, depth)
+    exp_collapsed = _collapse_table(exp, depth)
+    obs_features = set(obs_collapsed.columns)
+    exp_features = set(exp_collapsed.columns)
     fp_features, fn_features = _identify_incorrect_classifications(
         obs_features, exp_features)
 
@@ -103,9 +118,9 @@ def _evaluate_taxonomic_composition(
     mismatch_histogram = _plot_histogram(mismatches)
 
     # generate tables of false postive/negative taxa. Sort alphabetically.
-    fn_features = exp[list(fn_features)].T.sort_index()
-    misclassifications = obs[misclassifications].T.sort_index()
-    underclassifications = obs[underclassifications].T.sort_index()
+    fn_features = exp_collapsed[list(fn_features)].T.sort_index()
+    misclassifications = obs_collapsed[misclassifications].T.sort_index()
+    underclassifications = obs_collapsed[underclassifications].T.sort_index()
 
     return (results, fn_features, misclassifications, underclassifications,
             composition_regression, score_plot, mismatch_histogram)
@@ -168,7 +183,10 @@ def _compute_per_level_accuracy(exp, obs, metadata, depth):
             vectors[level]['exp'].extend(exp_vector)
             vectors[level]['obs'].extend(obs_vector)
     results = pd.DataFrame(
-        results, columns=['sample', 'level', *_results_columns()])
+        results, columns=['sample', 'level', 'Observed Taxa',
+                          'Observed / Expected Taxa', 'TAR', 'TDR', 'Slope',
+                          'Intercept', 'r-value', 'P value', 'Std Err'])
+    results['r-squared'] = results['r-value']**2
     return results, vectors
 
 
@@ -343,7 +361,7 @@ def _visualize(output_dir, results, false_negative_features=None,
 
     index = join(TEMPLATES, 'index.html')
     q2templates.render(index, output_dir, context={
-        'title': 'evaluate_taxonomic_composition',
+        'title': 'evaluate_composition',
         'results': results,
         'false_negative_features': false_negative_features,
         'misclassifications': misclassifications,

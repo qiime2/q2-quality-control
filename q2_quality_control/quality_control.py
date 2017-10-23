@@ -11,6 +11,7 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_types.feature_data._transformer import _dnafastaformats_to_series
 import pandas as pd
 from ._blast import _search_seqs
+from ._utilities import _evaluate_composition, _visualize
 
 
 def exclude_seqs(feature_sequences: DNAFASTAFormat,
@@ -49,16 +50,20 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
         return pd.Series(hits_seqs), pd.Series(misses_seqs)
 
 
-def evaluate_taxonomic_composition(
+def evaluate_composition(
         output_dir: str, expected_features: pd.DataFrame,
         observed_features: pd.DataFrame, depth: int=7, palette: str='Set1',
-        yvals: str='TAR,TDR,R,Observed / Expected Taxa',
+        plot_tar=True, plot_tdr=True, plot_r_value=False, plot_r_squared=True,
+        plot_observed_features=False, plot_observed_features_ratio=True,
         metadata: qiime2.MetadataCategory=None) -> None:
 
     # results, fn_features, misclassifications, underclassifications,
     # composition_regression, score_plot, mismatch_histogram
-    results = _evaluate_taxonomic_composition(
+    results = _evaluate_composition(
         expected_features, observed_features, depth=depth, palette=palette,
-        yvals=yvals, metadata=metadata)
+        metadata=metadata, plot_tar=plot_tar, plot_tdr=plot_tdr,
+        plot_r_value=plot_r_value, plot_r_squared=plot_r_squared,
+        plot_observed_features=plot_observed_features,
+        plot_observed_features_ratio=plot_observed_features_ratio)
 
     _visualize(output_dir, *results)

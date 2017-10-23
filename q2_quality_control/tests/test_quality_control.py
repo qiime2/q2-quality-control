@@ -6,11 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-<<<<<<< HEAD
 import numpy as np
 import numpy.testing as npt
-=======
->>>>>>> c294ea77eb30cf80ed0bddc0cfde44ce730f8b22
 import pandas as pd
 import qiime2
 from warnings import filterwarnings
@@ -18,17 +15,13 @@ from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import DNAFASTAFormat
 import pandas.util.testing as pdt
 
-<<<<<<< HEAD
 from q2_quality_control.quality_control import (
-    exclude_seqs, evaluate_taxonomic_composition)
+    exclude_seqs, evaluate_composition)
 from q2_quality_control._utilities import (
-    _evaluate_taxonomic_composition, _collapse_table,
-    _drop_nans_zeros, _compute_per_level_accuracy,
-    compute_taxon_accuracy, _tally_misclassifications,
-    _identify_incorrect_classifications, _find_nearest_common_lineage)
-=======
-from q2_quality_control.quality_control import (exclude_seqs)
->>>>>>> c294ea77eb30cf80ed0bddc0cfde44ce730f8b22
+    _evaluate_composition, _collapse_table, _drop_nans_zeros,
+    _compute_per_level_accuracy, compute_taxon_accuracy,
+    _tally_misclassifications, _identify_incorrect_classifications,
+    _find_nearest_common_lineage, _interpret_metric_selection)
 
 
 filterwarnings("ignore", category=UserWarning)
@@ -263,6 +256,16 @@ class UtilitiesTests(QualityControlTestsBase):
         self.assertEquals(
             res, ([], ['a;b;c', 'd;e;f', 'g;h;i', 'j;k;l'], [0, 0, 0, 0]))
 
+    def test_interpret_metric_selection_valid(self):
+        yvals = _interpret_metric_selection(
+            True, True, False, True, False, False)
+        self.assertEquals(yvals, ['TAR', 'TDR', 'r-squared'])
+
+    def test_interpret_metric_selection_invalid(self):
+        with self.assertRaisesRegex(ValueError, "At least one metric"):
+            _interpret_metric_selection(
+                False, False, False, False, False, False)
+
 
 class NCLUtilitiesTests(QualityControlTestsBase):
 
@@ -296,6 +299,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
 
     def setUp(self):
         super().setUp()
+        self.exp_results = pd.read_csv(
+            self.get_data_path('exp-results.tsv'), sep='\t', index_col=0)
         self.exp = pd.DataFrame(
             {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.15, 0.15, 0.15],
              'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.15, 0.15],
@@ -318,15 +323,18 @@ class EvaluateCompositionTests(QualityControlTestsBase):
              's3': [0.15, 0.15, 0.25]},
             index=['k__Ac;p__Bc;c__Cc;o__Dc;f__Ec;g__Fc;s__Gc',
                    'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge',
-                   'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff'])
+                   'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff;__'])
+        self.false_neg.index.name = 'Taxon'
         self.misclassified = pd.DataFrame(
             {'s1': [0.20, 0.08], 's2': [0.21, 0.03], 's3': [0.25, 0.0]},
             index=['k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff;s__Gf',
                    'k__Ag;p__Bg;c__Cg;o__Dg;f__Eg;g__Fg;s__Gg'])
+        self.misclassified.index.name = 'Taxon'
         self.underclassified = pd.DataFrame(
             {'s1': [0.20, 0.12], 's2': [0.17, 0.16], 's3': [0.15, 0.15]},
-            index=['k__Ac;p__Bc;c__Cc;o__Dc;f__Ec',
-                   'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe'])
+            index=['k__Ac;p__Bc;c__Cc;o__Dc;f__Ec;__;__',
+                   'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;__'])
+        self.underclassified.index.name = 'Taxon'
         self.exp_one_sample = pd.DataFrame(
             {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.15],
              'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15],
@@ -342,106 +350,166 @@ class EvaluateCompositionTests(QualityControlTestsBase):
 
     # test that visualizer runs without fail; internal functions are all tested
     # with various utility tests, this just makes sure the plugin works.
-    def test_plugin_evaluate_taxonomic_composition(self):
-        evaluate_taxonomic_composition(
+    def test_plugin_evaluate_composition(self):
+        evaluate_composition(
             output_dir=self.temp_dir.name, expected_features=self.exp,
             observed_features=self.obs, depth=7)
 
     def test_compute_per_level_accuracy(self):
         metadata = {_id: _id for _id in self.obs.index}
         res = _compute_per_level_accuracy(self.exp, self.obs, metadata, 7)
-        npt.assert_array_equal(res[0].values, exp_res)
+        pdt.assert_frame_equal(res[0], self.exp_results)
         self.assertEqual(res[1], exp_v)
 
-    def test_evaluate_taxonomic_composition(self):
-        res = _evaluate_taxonomic_composition(
+    def test_evaluate_composition(self):
+        res = _evaluate_composition(
             self.exp, self.obs, depth=7, palette='Set1',
-            yvals='TAR,TDR,R,Observed / Expected Taxa', metadata=None)
-        npt.assert_array_equal(res[0].values, exp_res)
+            plot_tar=True, plot_tdr=True, plot_r_value=True,
+            plot_r_squared=True, plot_observed_features=True,
+            plot_observed_features_ratio=True, metadata=None)
+        pdt.assert_frame_equal(res[0], self.exp_results)
         pdt.assert_frame_equal(res[1], self.false_neg)
         pdt.assert_frame_equal(res[2], self.misclassified)
         pdt.assert_frame_equal(res[3], self.underclassified)
 
-    def test_evaluate_taxonomic_composition_metadata_map_to_mock_sample(self):
-        res = _evaluate_taxonomic_composition(
+    def test_evaluate_composition_metadata_map_to_mock_sample(self):
+        res = _evaluate_composition(
             self.exp_one_sample, self.obs, depth=7, palette='Set1',
-            yvals='TAR,TDR,R,Observed / Expected Taxa',
+            plot_tar=True, plot_tdr=True, plot_r_value=True,
+            plot_r_squared=True, plot_observed_features=True,
+            plot_observed_features_ratio=True,
             metadata=self.metadata_one_sample)
-        npt.assert_array_equal(res[0].values, exp_res)
+        pdt.assert_frame_equal(res[0], self.exp_results)
         # false_neg should contain only one column header since the map
         # contains one sample (rename to match column name in exp_one_sample)
         false_neg = self.false_neg[['s1']]
         false_neg.columns = ['there_can_only_be_one']
+        false_neg.index.name = 'Taxon'
         pdt.assert_frame_equal(res[1], false_neg)
         pdt.assert_frame_equal(res[2], self.misclassified)
         pdt.assert_frame_equal(res[3], self.underclassified)
 
-    def test_evaluate_taxonomic_composition_invalid_yvals(self):
-        with self.assertRaisesRegex(ValueError, "yvals must only"):
-            _evaluate_taxonomic_composition(
-                self.exp, self.obs, depth=7, yvals='something_nasty',
-                palette='Set1', metadata=None)
+    def test_evaluate_composition_dont_test_all_levels(self):
+        empty_expectations = pd.DataFrame(
+            columns=['s1', 's2', 's3']).astype(float)
+        empty_expectations.index.name = 'Taxon'
+        mc = self.misclassified.loc[[
+            'k__Ag;p__Bg;c__Cg;o__Dg;f__Eg;g__Fg;s__Gg']]
+        mc.index = ['k__Ag;p__Bg;c__Cg;o__Dg;f__Eg']
+        mc.index.name = 'Taxon'
+        res = _evaluate_composition(
+            self.exp, self.obs, depth=5, palette='Set1', plot_tar=True,
+            plot_tdr=True, plot_r_value=True, plot_r_squared=True,
+            plot_observed_features=True, plot_observed_features_ratio=True,
+            metadata=None)
+        pdt.assert_frame_equal(
+            res[0], self.exp_results[self.exp_results['level'] < 6])
+        pdt.assert_frame_equal(res[1], empty_expectations)
+        pdt.assert_frame_equal(res[2], mc)
+        pdt.assert_frame_equal(res[3], empty_expectations)
+
+    def test_evaluate_composition_metadata_not_superset(self):
+        incomplete_md = qiime2.MetadataCategory(pd.DataFrame(
+            {'mock_id': ['there_can_only_be_one']}, index=['s3'])['mock_id'])
+        with self.assertRaisesRegex(ValueError, "Missing samples in metadata"):
+            _evaluate_composition(
+                self.exp_one_sample, self.obs, depth=7, palette='Set1',
+                plot_tar=True, plot_tdr=True, plot_r_value=True,
+                plot_r_squared=True, plot_observed_features=True,
+                plot_observed_features_ratio=True, metadata=incomplete_md)
+
+    def test_evaluate_composition_metadata_values_not_subset(self):
+        underrepresented_md = qiime2.MetadataCategory(pd.DataFrame(
+            {'mock_id': ['there_can_only_be_one', 'what_is_this?',
+                         'i_am_not_really_here']},
+            index=['s3', 's1', 's2'])['mock_id'])
+        with self.assertRaisesRegex(ValueError, "Missing samples in table"):
+            _evaluate_composition(
+                self.exp_one_sample, self.obs, depth=7, palette='Set1',
+                plot_tar=True, plot_tdr=True, plot_r_value=True,
+                plot_r_squared=True, plot_observed_features=True,
+                plot_observed_features_ratio=True,
+                metadata=underrepresented_md)
+
+    def test_evaluate_composition_depth_too_high(self):
+        with self.assertRaisesRegex(ValueError, "8 is larger than the max"):
+            _evaluate_composition(
+                self.exp, self.obs, depth=8, palette='Set1',
+                plot_tar=True, plot_tdr=True, plot_r_value=True,
+                plot_r_squared=True, plot_observed_features=True,
+                plot_observed_features_ratio=True, metadata=None)
 
 
-exp_res = np.array(
-    [['s1', 1, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.4711111111111111, 0.07555555555555556, 0.7424214437879759,
-      0.05597710165934492, 0.19011627371391487],
-     ['s2', 1, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.7355555555555554, 0.0377777777777778, 0.8984751466535625,
-      0.005968233652573896, 0.16073596169717613],
-     ['s3', 1, 6, 1., 1.0, 1.0, 1.0, 0.0,
-      0.9302605094190634, 0.0023753591719758017, 0.1763834207376394],
-     ['s1', 2, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.4711111111111111, 0.07555555555555556, 0.7424214437879759,
-      0.05597710165934492, 0.19011627371391487],
-     ['s2', 2, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.7355555555555554, 0.0377777777777778, 0.8984751466535625,
-      0.005968233652573896, 0.16073596169717613],
-     ['s3', 2, 6, 1., 1.0, 1.0, 1.0, 0.0,
-      0.9302605094190634, 0.0023753591719758017, 0.1763834207376394],
-     ['s1', 3, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.4711111111111111, 0.07555555555555556, 0.7424214437879759,
-      0.05597710165934492, 0.19011627371391487],
-     ['s2', 3, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.7355555555555554, 0.0377777777777778, 0.8984751466535625,
-      0.005968233652573896, 0.16073596169717613],
-     ['s3', 3, 6, 1., 1.0, 1.0, 1.0, 0.0,
-      0.9302605094190634, 0.0023753591719758017, 0.1763834207376394],
-     ['s1', 4, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.4711111111111111, 0.07555555555555556, 0.7424214437879759,
-      0.05597710165934492, 0.19011627371391487],
-     ['s2', 4, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.7355555555555554, 0.0377777777777778, 0.8984751466535625,
-      0.005968233652573896, 0.16073596169717613],
-     ['s3', 4, 6, 1., 1.0, 1.0, 1.0, 0.0,
-      0.9302605094190634, 0.0023753591719758017, 0.1763834207376394],
-     ['s1', 5, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.4711111111111111, 0.07555555555555556, 0.7424214437879759,
-      0.05597710165934492, 0.19011627371391487],
-     ['s2', 5, 7, 1.1666666666666667, 1.0, 0.8571428571428571,
-      0.7355555555555554, 0.0377777777777778, 0.8984751466535625,
-      0.005968233652573896, 0.16073596169717613],
-     ['s3', 5, 6, 1., 1.0, 1.0, 1.0, 0.0,
-      0.9302605094190634, 0.0023753591719758017, 0.1763834207376394],
-     ['s1', 6, 7, 1.1666666666666667, 0.8333333333333334,
-      0.7142857142857143, 0.06000000000000002, 0.1175,
-      0.07644707871564385, 0.8572192090908852, 0.3194787421201396],
-     ['s2', 6, 7, 1.1666666666666667, 0.8333333333333334,
-      0.7142857142857143, 0.3199999999999999, 0.08500000000000002,
-      0.3604847272474663, 0.3803642430099776, 0.3380335289089925],
-     ['s3', 6, 6, 1., 0.8333333333333334,
-      0.8333333333333334, 0.5499999999999999, 0.05625000000000001,
-      0.5244044240850757, 0.18213394390544005, 0.3645773809037893],
-     ['s1', 7, 7, 1.1666666666666667, 0.5, 0.42857142857142855,
-      -0.5333333333333334, 0.15333333333333332, -0.6183185276802246,
-      0.05671756838000683, 0.2396757068299673],
-     ['s2', 7, 7, 1.1666666666666667, 0.5, 0.42857142857142855,
-      -0.47333333333333333, 0.14733333333333334, -0.5108045859736967,
-      0.13135717451117476, 0.2816518733787826],
-     ['s3', 7, 6, 1., 0.5, 0.5, -0.4333333333333333,
-      0.14333333333333334, -0.41957319583913677, 0.2274066375244744,
-      0.33145303002252235]], dtype=object)
+class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
+
+    def setUp(self):
+        super().setUp()
+        self.exp_results = pd.read_csv(
+            self.get_data_path('mock-3-results.tsv'), sep='\t', index_col=0)
+        self.exp = qiime2.Artifact.load(
+            self.get_data_path('qc-mock-3-expected.qza')).view(pd.DataFrame)
+        self.obs = qiime2.Artifact.load(
+            self.get_data_path('qc-mock-3-observed.qza')).view(pd.DataFrame)
+
+        self.false_neg = pd.DataFrame(
+            {'HMPMockV1.1.Even1': [0.047619, 0.047619, 0.047619],
+             'HMPMockV1.1.Even2': [0.047619, 0.047619, 0.047619],
+             'HMPMockV1.2.Staggered1': [0.2143622714, 0.0214362274,
+                                        0.0002143626],
+             'HMPMockV1.2.Staggered2': [0.2143622714, 0.0214362274,
+                                        0.0002143626]},
+            index=['k__Bacteria;p__Firmicutes;c__Bacilli;o__Bacillales;'
+                   'f__Staphylococcaceae;g__Staphylococcus;s__aureus',
+                   'k__Bacteria;p__Firmicutes;c__Bacilli;o__Bacillales;'
+                   'f__Staphylococcaceae;g__Staphylococcus;s__epidermidis',
+                   'k__Bacteria;p__Thermi;c__Deinococci;o__Deinococcales;'
+                   'f__Deinococcaceae;g__Deinococcus;s__'])
+        self.false_neg.index.name = 'Taxon'
+        self.misclassified = pd.DataFrame(
+            {'HMPMockV1.1.Even1': [0.08634],
+             'HMPMockV1.1.Even2': [0.0533176566813],
+             'HMPMockV1.2.Staggered1': [0.],
+             'HMPMockV1.2.Staggered2': [0.]},
+            index=['k__Bacteria;p__[Thermi];c__Deinococci;o__Deinococcales;'
+                   'f__Deinococcaceae;g__Deinococcus;s__'])
+        self.misclassified.index.name = 'Taxon'
+        self.underclassified = pd.DataFrame(
+            {'HMPMockV1.1.Even1': [0.536876],
+             'HMPMockV1.1.Even2': [0.577293],
+             'HMPMockV1.2.Staggered1': [0.639295],
+             'HMPMockV1.2.Staggered2': [0.666156]},
+            index=['k__Bacteria;p__Firmicutes;c__Bacilli;o__Bacillales;'
+                   'f__Staphylococcaceae;g__Staphylococcus;__'])
+        self.underclassified.index.name = 'Taxon'
+        self.metadata = qiime2.MetadataCategory(pd.DataFrame(
+            {'mock_id': ['HMPMockV1.1.Even1', 'HMPMockV1.1.Even1',
+                         'HMPMockV1.2.Staggered1', 'HMPMockV1.2.Staggered1']},
+            index=['HMPMockV1.1.Even1', 'HMPMockV1.1.Even2',
+                   'HMPMockV1.2.Staggered1', 'HMPMockV1.2.Staggered2']
+            )['mock_id'])
+
+    def test_evaluate_composition_mockrobiota(self):
+        res = _evaluate_composition(
+            self.exp, self.obs, depth=7, palette='Set1',
+            plot_tar=True, plot_tdr=True, plot_r_value=True,
+            plot_r_squared=True, plot_observed_features=True,
+            plot_observed_features_ratio=True, metadata=None)
+        pdt.assert_frame_equal(res[0], self.exp_results)
+        pdt.assert_frame_equal(res[1], self.false_neg)
+        pdt.assert_frame_equal(res[2], self.misclassified)
+        pdt.assert_frame_equal(res[3], self.underclassified)
+
+    def test_evaluate_composition_mockrobiota_metadata_map(self):
+        res = _evaluate_composition(
+            self.exp, self.obs, depth=7, palette='Set1',
+            plot_tar=True, plot_tdr=True, plot_r_value=True,
+            plot_r_squared=True, plot_observed_features=True,
+            plot_observed_features_ratio=True, metadata=self.metadata)
+        pdt.assert_frame_equal(res[0], self.exp_results)
+        pdt.assert_frame_equal(res[1], self.false_neg)
+        pdt.assert_frame_equal(res[2], self.misclassified)
+        pdt.assert_frame_equal(res[3], self.underclassified)
+
 
 exp_v = {
     1: {'exp': [

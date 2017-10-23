@@ -7,11 +7,11 @@
 # ----------------------------------------------------------------------------
 
 import q2_quality_control
-from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int,
+from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
                            MetadataCategory)
 from q2_types.feature_data import FeatureData, Sequence
-from .quality_control import exclude_seqs
-
+from q2_types.feature_table import FeatureTable, RelativeFrequency
+from .quality_control import exclude_seqs, evaluate_composition
 
 plugin = Plugin(
     name='quality-control',
@@ -79,7 +79,7 @@ plugin.methods.register_function(
 )
 
 plugin.visualizers.register_function(
-    function=evaluate_taxonomic_composition,
+    function=evaluate_composition,
     inputs={'expected_features': FeatureTable[RelativeFrequency],
             'observed_features': FeatureTable[RelativeFrequency]},
     parameters={'depth': Int,
@@ -88,7 +88,12 @@ plugin.visualizers.register_function(
                     'Accent', 'Dark2', 'tab10', 'tab20', 'tab20b', 'tab20c',
                     'viridis', 'plasma', 'inferno', 'magma', 'terrain',
                     'rainbow']),
-                'yvals': Str,
+                'plot_tar': Bool,
+                'plot_tdr': Bool,
+                'plot_r_value': Bool,
+                'plot_r_squared': Bool,
+                'plot_observed_features': Bool,
+                'plot_observed_features_ratio': Bool,
                 'metadata': MetadataCategory},
     input_descriptions={
         'expected_features': 'Expected feature compositions',
@@ -98,18 +103,24 @@ plugin.visualizers.register_function(
                   "test (e.g., 1 = root, 7 = species for the greengenes "
                   "reference sequence database)."),
         'palette': "Color palette to utilize for plotting.",
-        'yvals': ("Comma-separated list of accuracy metrics to plot on score "
-                  "plots. Enclose in quotes and do not type spaces between "
-                  "values. Must be one more more of [{0}].".format(
-                    ','.join(_results_columns()))),
+        'plot_tar': "Plot taxon accuracy rate on score plot?",
+        'plot_tdr': "Plot taxon detection rate on score plot?",
+        'plot_r_value': ("Plot expected vs. observed linear regression r "
+                         "value on score plot?"),
+        'plot_r_squared': ("Plot expected vs. observed linear regression r-"
+                           "squared value on score plot?"),
+        'plot_observed_features': (
+            "Plot observed features count on score plot?"),
+        'plot_observed_features_ratio': (
+            "Plot ratio of observed:expected features on score plot?"),
         'metadata': ('Optional sample metadata that maps observed_features '
                      'sample IDs to expected_features sample IDs.')},
     name='Evaluate expected vs. observed taxonomic composition of samples',
     description=(
         "This visualizer compares the feature composition of pairs of "
         "observed and expected samples containing the same sample ID in two "
-        "separate feature tables. Typically, this feature composition will be "
-        "taxonomy classifications or other semicolon-delimited feature "
+        "separate feature tables. Typically, feature composition will consist "
+        "of taxonomy classifications or other semicolon-delimited feature "
         "annotations. Taxon accuracy rate, taxon detection rate, and linear "
         "regression scores between expected and observed observations are "
         "calculated at each semicolon-delimited rank, and plots of per-level "

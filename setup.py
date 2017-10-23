@@ -27,6 +27,7 @@ setup(
     },
     package_data={
         'q2_quality_control.tests': ['data/*'],
+        'q2_quality_control': ['assets/*'],
     },
     zip_safe=False,
 )

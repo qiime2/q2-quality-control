@@ -53,8 +53,9 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
 def evaluate_composition(
         output_dir: str, expected_features: pd.DataFrame,
         observed_features: pd.DataFrame, depth: int=7, palette: str='Set1',
-        plot_tar=True, plot_tdr=True, plot_r_value=False, plot_r_squared=True,
-        plot_observed_features=False, plot_observed_features_ratio=True,
+        plot_tar: bool=True, plot_tdr: bool=True, plot_r_value: bool=False,
+        plot_r_squared: bool=True, plot_observed_features: bool=False,
+        plot_observed_features_ratio: bool=True,
         metadata: qiime2.MetadataCategory=None) -> None:
 
     # results, fn_features, misclassifications, underclassifications,

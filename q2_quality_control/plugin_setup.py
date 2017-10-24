@@ -27,7 +27,7 @@ plugin = Plugin(
 
 plugin.methods.register_function(
     function=exclude_seqs,
-    inputs={'feature_sequences': FeatureData[Sequence],
+    inputs={'query_sequences': FeatureData[Sequence],
             'reference_sequences': FeatureData[Sequence]},
     parameters={'method': Str % Choices(["blast", "vsearch", "blastn-short"]),
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
@@ -37,7 +37,7 @@ plugin.methods.register_function(
     outputs=[('sequence_hits', FeatureData[Sequence]),
              ('sequence_misses', FeatureData[Sequence])],
     input_descriptions={
-        'feature_sequences': 'Sequences to test for exclusion',
+        'query_sequences': 'Sequences to test for exclusion',
         'reference_sequences': ('Reference sequences to align against feature '
                                 'sequences')},
     parameter_descriptions={

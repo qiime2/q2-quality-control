@@ -278,7 +278,7 @@ def _regplot_from_dict(vectors, palette):
 
 def _plot_histogram(mismatches):
     fig, axes = plt.subplots(1)
-    n, bins, patches = plt.hist(mismatches)
+    n, bins, patches = plt.hist(mismatches, align='left')
     plt.ylabel('Count')
     plt.xlabel('Distance to nearest expected feature')
     return fig

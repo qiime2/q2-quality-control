@@ -10,26 +10,26 @@ import tempfile
 import subprocess
 
 
-def _search_seqs(feature_sequences, reference_sequences, evalue,
+def _search_seqs(query_sequences, reference_sequences, evalue,
                  perc_identity, threads, perc_query_aligned, method):
     if method == 'blast':
         # blast uses float format but vsearch uses int for perc_identity
         perc_identity = perc_identity * 100
         cmd = _blast(
-            feature_sequences, reference_sequences, evalue, perc_identity)
+            query_sequences, reference_sequences, evalue, perc_identity)
     elif method == 'blastn-short':
         # blast uses float format but vsearch uses int for perc_identity
         perc_identity = perc_identity * 100
         cmd = _blastn_short(
-            feature_sequences, reference_sequences, evalue, perc_identity)
+            query_sequences, reference_sequences, evalue, perc_identity)
     elif method == 'vsearch':
         cmd = _vsearch(
-            feature_sequences, reference_sequences, perc_identity, threads)
+            query_sequences, reference_sequences, perc_identity, threads)
     return _generate_assignments(cmd, perc_query_aligned)
 
 
-def _blast(feature_sequences, reference_sequences, evalue, perc_identity):
-    seqs_fp = str(feature_sequences)
+def _blast(query_sequences, reference_sequences, evalue, perc_identity):
+    seqs_fp = str(query_sequences)
     ref_fp = str(reference_sequences)
     cmd = ['blastn', '-query', seqs_fp, '-strand',
            'both', '-outfmt', '6 qseqid sseqid qlen qstart qend', '-subject',
@@ -41,16 +41,16 @@ def _blast(feature_sequences, reference_sequences, evalue, perc_identity):
     return cmd
 
 
-def _blastn_short(feature_sequences, reference_sequences, evalue,
+def _blastn_short(query_sequences, reference_sequences, evalue,
                   perc_identity):
     # Should have identical settings to blast, but adjust word size and filter
-    cmd = _blast(feature_sequences, reference_sequences, evalue, perc_identity)
+    cmd = _blast(query_sequences, reference_sequences, evalue, perc_identity)
     cmd = cmd[:-1] + ['-word_size', '7', '-dust', 'no', '-out']
     return cmd
 
 
-def _vsearch(feature_sequences, reference_sequences, perc_identity, threads):
-    seqs_fp = str(feature_sequences)
+def _vsearch(query_sequences, reference_sequences, perc_identity, threads):
+    seqs_fp = str(query_sequences)
     ref_fp = str(reference_sequences)
     cmd = ['vsearch', '--usearch_global', seqs_fp, '--id', str(perc_identity),
            '--strand', 'both', '--maxaccepts', '1', '--maxrejects', '0',

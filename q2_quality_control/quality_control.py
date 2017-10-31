@@ -14,7 +14,7 @@ from ._blast import _search_seqs
 from ._utilities import _evaluate_composition, _visualize
 
 
-def exclude_seqs(feature_sequences: DNAFASTAFormat,
+def exclude_seqs(query_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method: str='blast',
                  perc_identity: float=0.97, evalue: float=None,
                  perc_query_aligned: float=0.97, threads: str=1
@@ -22,12 +22,12 @@ def exclude_seqs(feature_sequences: DNAFASTAFormat,
 
     # BLAST query seqs vs. ref db of contaminants (or targets)
     hit_ids = _search_seqs(
-        feature_sequences, reference_sequences, evalue=evalue,
+        query_sequences, reference_sequences, evalue=evalue,
         perc_identity=perc_identity, threads=threads,
         perc_query_aligned=perc_query_aligned, method=method)
 
-    # convert feature_sequences to series for filtering
-    query_series = _dnafastaformats_to_series(feature_sequences)
+    # convert query_sequences to series for filtering
+    query_series = _dnafastaformats_to_series(query_sequences)
 
     # if no hits are in hit_ids, return empty hits and query_series as misses
     if len(hit_ids) < 1:

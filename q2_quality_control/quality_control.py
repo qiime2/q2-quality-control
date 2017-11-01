@@ -12,6 +12,7 @@ from q2_types.feature_data._transformer import _dnafastaformats_to_series
 import pandas as pd
 from ._blast import _search_seqs
 from ._utilities import _evaluate_composition, _visualize
+from ._evaluate_seqs import _evaluate_seqs
 
 
 def exclude_seqs(query_sequences: DNAFASTAFormat,
@@ -68,3 +69,15 @@ def evaluate_composition(
         plot_observed_features_ratio=plot_observed_features_ratio)
 
     _visualize(output_dir, *results)
+
+
+def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
+                  reference_sequences: DNAFASTAFormat) -> None:
+
+    alignments, mismatch_histogram = _evaluate_seqs(
+        query_sequences, reference_sequences)
+
+    _visualize(output_dir, results=alignments, false_negative_features=None,
+               misclassifications=None, underclassifications=None,
+               composition_regression=None, score_plot=None,
+               mismatch_histogram=mismatch_histogram)

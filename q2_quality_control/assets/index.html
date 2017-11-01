@@ -5,13 +5,16 @@
 {% block content %}
 
 <div class="row">
-  <h1>Per-Level Accuracy</h1>
+  <h1>Feature evaluation results</h1>
   <div class="text-center">
-    <a href="score_plot.pdf">
-      <img src="score_plot.png">
-      <br>
-      <p>Download as PDF</p>
-    </a>
+    {% if score_plot %}
+    <h1>Per-Level Accuracy</h1>
+      <a href="score_plot.pdf">
+        <img src="score_plot.png">
+        <br>
+        <p>Download as PDF</p>
+      </a>
+    {% endif %}
     <div class="col-lg-12">
       <a href="results.tsv">
         <p>Download as tsv</p>
@@ -49,7 +52,7 @@
       <p>Download as PDF</p>
     </a>
     {% endif %}
-    {% if not misclassifications.empty %}
+    {% if misclassifications and not misclassifications.empty %}
     <h1>False positives: misclassifications</h1>
     <div class="col-lg-12">
       <a href="misclassifications.tsv">
@@ -73,7 +76,7 @@
       </div>
     </div>
     {% endif %}
-    {% if not underclassifications.empty %}
+    {% if underclassifications and not underclassifications.empty %}
     <h1>False positives: underclassifications</h1>
     <div class="col-lg-12">
       <a href="underclassifications.tsv">
@@ -97,7 +100,7 @@
       </div>
     </div>
     {% endif %}
-    {% if not false_negative_features.empty %}
+    {% if false_negative_features and not false_negative_features.empty %}
     <h1>False negative features</h1>
     <div class="col-lg-12">
       <a href="false_negative_features.tsv">

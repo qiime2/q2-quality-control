@@ -11,7 +11,7 @@ from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
                            MetadataCategory)
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, RelativeFrequency
-from .quality_control import exclude_seqs, evaluate_composition
+from .quality_control import exclude_seqs, evaluate_composition, evaluate_seqs
 
 plugin = Plugin(
     name='quality-control',
@@ -26,10 +26,18 @@ plugin = Plugin(
 )
 
 
+seq_inputs = {'query_sequences': FeatureData[Sequence],
+              'reference_sequences': FeatureData[Sequence]}
+
+seq_inputs_descriptions = {
+    'query_sequences': 'Sequences to test for exclusion',
+    'reference_sequences': ('Reference sequences to align against feature '
+                            'sequences')}
+
+
 plugin.methods.register_function(
     function=exclude_seqs,
-    inputs={'query_sequences': FeatureData[Sequence],
-            'reference_sequences': FeatureData[Sequence]},
+    inputs=seq_inputs,
     parameters={'method': Str % Choices(["blast", "vsearch", "blastn-short"]),
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
@@ -37,10 +45,7 @@ plugin.methods.register_function(
                 'threads': Int % Range(1, None)},
     outputs=[('sequence_hits', FeatureData[Sequence]),
              ('sequence_misses', FeatureData[Sequence])],
-    input_descriptions={
-        'query_sequences': 'Sequences to test for exclusion',
-        'reference_sequences': ('Reference sequences to align against feature '
-                                'sequences')},
+    input_descriptions=seq_inputs_descriptions,
     parameter_descriptions={
         'method': ('Alignment method to use for matching feature sequences '
                    'against reference sequences'),
@@ -133,4 +138,23 @@ plugin.visualizers.register_function(
         "contain mock communities or other samples with known composition. "
         "Also suitable for sanity checks of bioinformatic pipeline "
         "performance.")
+)
+
+plugin.visualizers.register_function(
+    function=evaluate_seqs,
+    inputs=seq_inputs,
+    parameters={},
+    input_descriptions=seq_inputs_descriptions,
+    parameter_descriptions={},
+    name='Compare query (observed) vs. reference (expected) sequences.',
+    description=(
+        "This visualizer aligns a set of query (e.g., observed) sequences "
+        "against a set of reference (e.g., expected) sequences to evaluate "
+        "the quality of alignment. The intended use is to align observed "
+        "sequences against expected sequences (e.g., from a mock community) "
+        "to determine the frequency of mismatches between observed sequences "
+        "and the most similar expected sequences, e.g., as a measure of "
+        "sequencing/method error. However, any sequences may be provided as "
+        "input to generate a report on pairwise alignment quality against "
+        "a set of reference sequences.")
 )

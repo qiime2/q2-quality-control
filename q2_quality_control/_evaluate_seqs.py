@@ -8,9 +8,6 @@
 
 import tempfile
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import pkg_resources
 import itertools
 
 from ._utilities import _plot_histogram
@@ -28,6 +25,8 @@ def _evaluate_seqs(query_sequences, reference_sequences):
     # plot histogram of mismatches between obs seqs and top hit in exp seqs
     g = _plot_histogram(pd.to_numeric(alignments['Mismatches']))
 
+    return alignments, g
+
 
 def _generate_alignments(cmd):
     '''Run command line subprocess and extract hits.'''
@@ -40,16 +39,18 @@ def _generate_alignments(cmd):
 def _generate_alignment_results(blast_results):
     '''blast_results: output of blastn in outfmt == 6'''
     alignments = []
-    for line in blast_results:
-        q = line.split('\t')
-        # parse blast traceback (btop) alignment results
-        btop = _parse_blast_traceback(_split_numeric(q[-1]))
-        # caluclate percent coverage based on qend, qstart, and qlen
-        perc_coverage = _perc_coverage(q[7], q[6], q[-4])
-        # join alignment information into a single linebreak-delimited string
-        aln = "\n".join([q[-3], btop, q[-2]])
-        # append blast results to report: remove btop, add perc_coverage
-        alignments.append(tuple(q[:-3] + perc_coverage + aln))
+    with open(blast_results, "r") as inputfile:
+        for line in inputfile:
+            q = line.split('\t')
+            # parse blast traceback (btop) alignment results
+            btop = _parse_blast_traceback(_split_numeric(q[-1]))
+            # caluclate percent coverage based on qend, qstart, and qlen
+            perc_coverage = _perc_coverage(q[7], q[6], q[-4])
+            # join alignment information into a single linebreak-delim string
+            aln = ' '.join([q[-3], btop, q[-2]])
+            # append blast results to report: remove btop, add perc_coverage
+            alignments.append(tuple(q[:-3] + [perc_coverage] + [aln]))
+
     alignments = pd.DataFrame(
         alignments, columns=[
             'Query id', 'Subject id', 'Percent Identity', 'Alignment Length',

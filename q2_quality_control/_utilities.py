@@ -312,10 +312,28 @@ def _tally_misclassifications(fp_features, exp_features):
             sorted(mismatches))
 
 
+def _color_nucleotide_bases(val):
+    cmap = {'A': 'blue', 'C': 'red', 'G': 'orange', 'T': 'green'}
+    if val in cmap.keys():
+        color = cmap[val]
+    else:
+        color = 'white'
+    return 'background-color: %s' % color
+
+
+def _color_paired_alignments(alignments):
+    # split seqs into individual columns by base
+    alignments = alignments['seq'].apply(lambda x: pd.Series(list(x)))
+    # color cells (bases) by base
+    alignments = alignments.style.applymap(_color_nucleotide_bases)
+
+    return alignments.render()
+
+
 def _visualize(output_dir, results, false_negative_features=None,
                misclassifications=None, underclassifications=None,
                composition_regression=None, score_plot=None,
-               mismatch_histogram=None):
+               mismatch_histogram=None, alignments=None):
 
     pd.set_option('display.max_colwidth', -1)
 
@@ -359,6 +377,11 @@ def _visualize(output_dir, results, false_negative_features=None,
         mismatch_histogram.savefig(join(
             output_dir, 'mismatch_histogram.pdf'), bbox_inches='tight')
 
+    if alignments is not None:
+        alignments.to_csv(join(output_dir, 'alignments.tsv'), sep='\t')
+        alignments = _color_paired_alignments(alignments)
+        #alignments = q2templates.df_to_html(alignments, index=True)
+
     index = join(TEMPLATES, 'index.html')
     q2templates.render(index, output_dir, context={
         'title': 'evaluate_composition',
@@ -369,4 +392,5 @@ def _visualize(output_dir, results, false_negative_features=None,
         'composition_regression': composition_regression,
         'score_plot': score_plot,
         'mismatch_histogram': mismatch_histogram,
+        'alignments': alignments,
     })

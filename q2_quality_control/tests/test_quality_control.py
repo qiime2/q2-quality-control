@@ -22,8 +22,7 @@ from q2_quality_control._utilities import (
     _compute_per_level_accuracy, compute_taxon_accuracy,
     _tally_misclassifications, _identify_incorrect_classifications,
     _find_nearest_common_lineage, _interpret_metric_selection)
-from q2_quality_control._evaluate_seqs import (
-    _evaluate_seqs, _split_numeric, _parse_blast_traceback)
+from q2_quality_control._evaluate_seqs import _evaluate_seqs
 
 
 filterwarnings("ignore", category=UserWarning)
@@ -36,12 +35,13 @@ def _dnafastaformats_to_series(fasta):
 
 # test template for EvaluateSeqsTests
 def load_evaluate_seqs(query_sequences, reference_sequences, exp_fp):
-    alignments, g = _evaluate_seqs(query_sequences, reference_sequences)
+    results, alignments, g = _evaluate_seqs(
+        query_sequences, reference_sequences)
     # need to cast to numeric to match dtypes that are interpreted in exp
     # as it is read in by read_csv
-    alignments = alignments.apply(lambda x: pd.to_numeric(x, errors='ignore'))
+    results = results.apply(lambda x: pd.to_numeric(x, errors='ignore'))
     exp = pd.read_csv(exp_fp, sep='\t', index_col=0)
-    pdt.assert_frame_equal(alignments, exp)
+    pdt.assert_frame_equal(results, exp)
 
 
 class QualityControlTestsBase(TestPluginBase):
@@ -302,33 +302,6 @@ class EvaluateSeqsTests(SequenceQualityControlBase):
         load_evaluate_seqs(
             self.query_seqs_part_rand, self.bacterial_ref,
             self.get_data_path('test_evaluate_seqs_part_rand.tsv'))
-
-
-class EvaluateSeqsUtilitiesTests(QualityControlTestsBase):
-
-    def test_split_numeric_identical(self):
-        res = _split_numeric('150')
-        self.assertEqual(res, ['150'])
-
-    def test_split_numeric_mismatches(self):
-        res = _split_numeric('120AG19TG9')
-        self.assertEqual(res, ['120', 'AG', '19', 'TG', '9'])
-
-    def test_split_numeric_gaps(self):
-        res = _split_numeric('120A-20T-')
-        self.assertEqual(res, ['120', 'A-', '20', 'T-'])
-
-    def test_parse_blast_traceback_identical(self):
-        res = _parse_blast_traceback(['10'])
-        self.assertEqual(res, "||||||||||")
-
-    def test_parse_blast_traceback_mismatches(self):
-        res = _parse_blast_traceback(['5', 'AGAGAG', '3'])
-        self.assertEqual(res, "|||||   |||")
-
-    def test_parse_blast_traceback_gaps(self):
-        res = _parse_blast_traceback(['5', 'A-A-A-', '3'])
-        self.assertEqual(res, "|||||   |||")
 
 
 class NCLUtilitiesTests(QualityControlTestsBase):

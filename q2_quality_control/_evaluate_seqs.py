@@ -8,7 +8,6 @@
 
 import tempfile
 import pandas as pd
-import itertools
 
 from ._utilities import _plot_histogram
 from ._blast import _blast, _perc_coverage, _run_command
@@ -18,14 +17,14 @@ def _evaluate_seqs(query_sequences, reference_sequences):
     cmd = _blast(query_sequences, reference_sequences, None, 0)
     # modify command to output seq alignment information
     cmd[6] = ('6 qseqid sseqid pident length mismatch gapopen qstart qend '
-              'sstart send evalue bitscore qlen qseq sseq btop')
+              'sstart send evalue bitscore qlen qseq sseq')
     # generate report of blast alignment results
-    alignments = _generate_alignments(cmd)
+    results, alignments = _generate_alignments(cmd)
 
     # plot histogram of mismatches between obs seqs and top hit in exp seqs
-    g = _plot_histogram(pd.to_numeric(alignments['Mismatches']))
+    g = _plot_histogram(pd.to_numeric(results['Mismatches']))
 
-    return alignments, g
+    return results, alignments, g
 
 
 def _generate_alignments(cmd):
@@ -39,45 +38,36 @@ def _generate_alignments(cmd):
 def _generate_alignment_results(blast_results):
     '''blast_results: output of blastn in outfmt == 6'''
     alignments = []
+    results = []
     with open(blast_results, "r") as inputfile:
         for line in inputfile:
-            q = line.split('\t')
-            # parse blast traceback (btop) alignment results
-            btop = _parse_blast_traceback(_split_numeric(q[-1]))
+            # qseqid sseqid pident length mismatch gapopen qstart qend
+            # sstart send evalue bitscore qlen qseq sseq
+            (qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend,
+             sstart, send, evalue, bitscore, qlen, qseq, sseq) = \
+                line.split('\t')
             # caluclate percent coverage based on qend, qstart, and qlen
-            perc_coverage = _perc_coverage(q[7], q[6], q[-4])
-            # join alignment information into a single linebreak-delim string
-            aln = ' '.join([q[-3], btop, q[-2]])
-            # append blast results to report: remove btop, add perc_coverage
-            alignments.append(tuple(q[:-3] + [perc_coverage] + [aln]))
+            perc_coverage = _perc_coverage(qend, qstart, qlen)
+            # trim subject seq to alignment
+            #sseq = sseq[int(sstart)-1:int(send)-1]
+            # add query and hit seqs to alignments
+            alignments.append((qseqid, 'query', qseq))
+            alignments.append((qseqid, sseqid, sseq))
+            # append blast results to report: remove seqs, add perc_coverage
+            results.append((
+                qseqid, sseqid, pident, length, mismatch, gapopen, qstart,
+                qend, sstart, send, evalue, bitscore, qlen, perc_coverage))
 
-    alignments = pd.DataFrame(
-        alignments, columns=[
+    results = pd.DataFrame(results, columns=[
             'Query id', 'Subject id', 'Percent Identity', 'Alignment Length',
             'Mismatches', 'Gaps', 'Alignment Start (query)',
             'Alignment end (query)', 'Alignment Start (subject)',
             'Alignment end (subject)', 'E Value', 'Bit Score', 'Query length',
-            'Percent Coverage', 'Pairwise Alignment'])
-    alignments.set_index(['Query id'])
-    return alignments
+            'Percent Coverage'])
 
+    alignments = pd.DataFrame(
+        alignments, columns=['Query id', 'Subject id', 'seq'])
+    # convert to multiindex
+    alignments = alignments.set_index(['Query id', 'Subject id'])
 
-def _split_numeric(s):
-    '''Split string into list of substrings grouped by numeric/non-numeric
-    values
-    '''
-    return ["".join(x) for _, x in itertools.groupby(s, key=str.isdigit)]
-
-
-def _parse_blast_traceback(btop):
-    results = []
-    for s in btop:
-        # numbers indicate length of match
-        if s.isdigit():
-            results.append('|' * int(s))
-        # characters indicate base mismatches. E.g., AG indicates A on query,
-        # G on subject at next position; A- indicates A on query, gap in
-        # subject.
-        else:
-            results.append(' ' * int(len(s) / 2))
-    return "".join(results)
+    return results, alignments

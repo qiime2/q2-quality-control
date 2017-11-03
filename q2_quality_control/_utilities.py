@@ -380,7 +380,6 @@ def _visualize(output_dir, results, false_negative_features=None,
     if alignments is not None:
         alignments.to_csv(join(output_dir, 'alignments.tsv'), sep='\t')
         alignments = _color_paired_alignments(alignments)
-        #alignments = q2templates.df_to_html(alignments, index=True)
 
     index = join(TEMPLATES, 'index.html')
     q2templates.render(index, output_dir, context={

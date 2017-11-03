@@ -48,8 +48,6 @@ def _generate_alignment_results(blast_results):
                 line.split('\t')
             # caluclate percent coverage based on qend, qstart, and qlen
             perc_coverage = _perc_coverage(qend, qstart, qlen)
-            # trim subject seq to alignment
-            #sseq = sseq[int(sstart)-1:int(send)-1]
             # add query and hit seqs to alignments
             alignments.append((qseqid, 'query', qseq))
             alignments.append((qseqid, sseqid, sseq))

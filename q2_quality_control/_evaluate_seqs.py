@@ -41,6 +41,7 @@ def _generate_alignment_results(blast_results):
     results = []
     with open(blast_results, "r") as inputfile:
         for line in inputfile:
+            line = line.rstrip()
             # qseqid sseqid pident length mismatch gapopen qstart qend
             # sstart send evalue bitscore qlen qseq sseq
             (qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend,

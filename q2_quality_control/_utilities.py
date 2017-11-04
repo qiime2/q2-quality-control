@@ -312,25 +312,43 @@ def _tally_misclassifications(fp_features, exp_features):
             sorted(mismatches))
 
 
-def _color_nucleotide_bases(val):
-    cmap = {'A': 'blue', 'C': 'red', 'G': 'orange', 'T': 'green'}
-    if val in cmap.keys():
-        color = cmap[val]
-    else:
-        color = 'white'
-    return 'background-color: %s' % color
-
-
-def _color_paired_alignments(alignments):
-    # split seqs into individual columns by base
+def _plot_alignments_as_heatmap(alignments):
+    # split sequences into 1 base per column
     alignments = alignments['seq'].apply(lambda x: pd.Series(list(x)))
-    # color cells (bases) by base
-    alignments = alignments.style.applymap(_color_nucleotide_bases)
+    # generate numerical representation for plotting as heatmap
+    numerical_rep = _represent_sequence_numerically(alignments)
+    # we don't want to see nan values
+    alignments = alignments.fillna('')
+    return _plot_heatmap(alignments, numerical_rep)
 
-    return alignments.render()
+
+def _plot_heatmap(alignments, numerical_rep):
+    # determine shape for sizing plot
+    nrows, ncols = alignments.shape
+    fig, axes = plt.subplots(1, figsize=(ncols / 3, nrows / 3))
+    # A: 'blue', C: 'red', G: 'orange', T: 'green', other: 'white'
+    sns.heatmap(numerical_rep, annot=alignments.values, fmt='',
+                cmap=['white', 'blue', 'red', 'orange', 'green'],
+                cbar=False, ax=axes, vmin=0)
+    axes.set_xlabel('Position')
+    axes.xaxis.set_ticks_position("top")
+    axes.xaxis.set_label_position("top")
+    plt.yticks(rotation='horizontal')
+    plt.xticks(rotation='vertical')
+    return fig
 
 
-def _visualize(output_dir, results, false_negative_features=None,
+def _represent_sequence_numerically(alignments):
+    # map standard bases to numbers
+    alignments = alignments.replace({'A': 1, 'C': 2, 'G': 3, 'T': 4})
+    # convert all other strings to nan
+    alignments = alignments.convert_objects(convert_numeric=True)
+    # convert nans to 0 and return
+    return alignments.fillna(0)
+
+
+def _visualize(output_dir, title, running_title, results,
+               false_negative_features=None,
                misclassifications=None, underclassifications=None,
                composition_regression=None, score_plot=None,
                mismatch_histogram=None, alignments=None):
@@ -379,11 +397,16 @@ def _visualize(output_dir, results, false_negative_features=None,
 
     if alignments is not None:
         alignments.to_csv(join(output_dir, 'alignments.tsv'), sep='\t')
-        alignments = _color_paired_alignments(alignments)
+        alignments = _plot_alignments_as_heatmap(alignments)
+        alignments.savefig(join(
+            output_dir, 'alignments.png'), bbox_inches='tight')
+        alignments.savefig(join(
+            output_dir, 'alignments.pdf'), bbox_inches='tight')
 
     index = join(TEMPLATES, 'index.html')
     q2templates.render(index, output_dir, context={
-        'title': 'evaluate_composition',
+        'title': title,
+        'running-title': running_title,
         'results': results,
         'false_negative_features': false_negative_features,
         'misclassifications': misclassifications,

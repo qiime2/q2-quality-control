@@ -68,7 +68,8 @@ def evaluate_composition(
         plot_observed_features=plot_observed_features,
         plot_observed_features_ratio=plot_observed_features_ratio)
 
-    _visualize(output_dir, *results)
+    _visualize(output_dir, 'Feature evaluation results',
+               'evaluate_composition', *results)
 
 
 def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
@@ -77,7 +78,9 @@ def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
     results, alignments, mismatch_histogram = _evaluate_seqs(
         query_sequences, reference_sequences)
 
-    _visualize(output_dir, results=results, false_negative_features=None,
+    _visualize(output_dir, 'Sequence evaluation results',
+               'evaluate_seqs', results=results,
+               false_negative_features=None,
                misclassifications=None, underclassifications=None,
                composition_regression=None, score_plot=None,
                mismatch_histogram=mismatch_histogram, alignments=alignments)

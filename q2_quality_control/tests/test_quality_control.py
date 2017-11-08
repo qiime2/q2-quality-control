@@ -36,7 +36,7 @@ def _dnafastaformats_to_series(fasta):
 # test template for EvaluateSeqsTests
 def load_evaluate_seqs(query_sequences, reference_sequences, exp_fp):
     results, alignments, g = _evaluate_seqs(
-        query_sequences, reference_sequences)
+        query_sequences, reference_sequences, show_alignments=False)
     # need to cast to numeric to match dtypes that are interpreted in exp
     # as it is read in by read_csv
     results = results.apply(lambda x: pd.to_numeric(x, errors='ignore'))
@@ -286,7 +286,8 @@ class EvaluateSeqsTests(SequenceQualityControlBase):
     def test_evaluate_seqs_plugin(self):
         evaluate_seqs(output_dir=self.temp_dir.name,
                       query_sequences=self.bacterial_ref,
-                      reference_sequences=self.bacterial_ref)
+                      reference_sequences=self.bacterial_ref,
+                      show_alignments=True)
 
     def test_evaluate_seqs_identical(self):
         load_evaluate_seqs(

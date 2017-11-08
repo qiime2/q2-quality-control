@@ -143,9 +143,11 @@ plugin.visualizers.register_function(
 plugin.visualizers.register_function(
     function=evaluate_seqs,
     inputs=seq_inputs,
-    parameters={},
+    parameters={'show_alignments': Bool},
     input_descriptions=seq_inputs_descriptions,
-    parameter_descriptions={},
+    parameter_descriptions={
+        'show_alignments': ('Option to plot pairwise alignments of query '
+                            'sequences and their top hits.')},
     name='Compare query (observed) vs. reference (expected) sequences.',
     description=(
         "This visualizer aligns a set of query (e.g., observed) sequences "

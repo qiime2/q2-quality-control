@@ -73,10 +73,11 @@ def evaluate_composition(
 
 
 def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
-                  reference_sequences: DNAFASTAFormat) -> None:
+                  reference_sequences: DNAFASTAFormat,
+                  show_alignments: bool=False) -> None:
 
     results, alignments, mismatch_histogram = _evaluate_seqs(
-        query_sequences, reference_sequences)
+        query_sequences, reference_sequences, show_alignments)
 
     _visualize(output_dir, 'Sequence evaluation results',
                'evaluate_seqs', results=results,

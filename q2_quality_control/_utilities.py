@@ -333,6 +333,9 @@ def _plot_heatmap(alignments, numerical_rep):
     axes.set_xlabel('Position')
     axes.xaxis.set_ticks_position("top")
     axes.xaxis.set_label_position("top")
+    # plot horizontal lines separating pairs of aligned sequences
+    axes.hlines([n for n in range(2, len(alignments), 2)],
+                *axes.get_xlim(), linewidth=4.0)
     plt.yticks(rotation='horizontal')
     plt.xticks(rotation='vertical')
     return fig

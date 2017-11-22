@@ -136,7 +136,7 @@ plugin.visualizers.register_function(
         "common lineage in the expected feature. This visualizer is most "
         "suitable for testing per-run data quality on sequencing runs that "
         "contain mock communities or other samples with known composition. "
-        "Also suitable for sanity checks of bioinformatic pipeline "
+        "Also suitable for sanity checks of bioinformatics pipeline "
         "performance.")
 )
 

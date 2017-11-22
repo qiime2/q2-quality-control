@@ -108,16 +108,22 @@ plugin.visualizers.register_function(
                   "test (e.g., 1 = root, 7 = species for the greengenes "
                   "reference sequence database)."),
         'palette': "Color palette to utilize for plotting.",
-        'plot_tar': "Plot taxon accuracy rate on score plot?",
-        'plot_tdr': "Plot taxon detection rate on score plot?",
+        'plot_tar': ("Plot taxon accuracy rate (TAR) on score plot. TAR is "
+                     "the number of true positive features divided by the "
+                     "total number of observed features (TAR = true positives "
+                     "/ (true positives + false positives))."),
+        'plot_tdr': ("Plot taxon detection rate (TDR) on score plot. TDR is "
+                     "the number of true positive features divided by the "
+                     "total number of expected features (TDR = true positives "
+                     "/ (true positives + false negatives))."),
         'plot_r_value': ("Plot expected vs. observed linear regression r "
-                         "value on score plot?"),
+                         "value on score plot."),
         'plot_r_squared': ("Plot expected vs. observed linear regression r-"
-                           "squared value on score plot?"),
+                           "squared value on score plot."),
         'plot_observed_features': (
-            "Plot observed features count on score plot?"),
+            "Plot observed features count on score plot."),
         'plot_observed_features_ratio': (
-            "Plot ratio of observed:expected features on score plot?"),
+            "Plot ratio of observed:expected features on score plot."),
         'metadata': ('Optional sample metadata that maps observed_features '
                      'sample IDs to expected_features sample IDs.')},
     name='Evaluate expected vs. observed taxonomic composition of samples',

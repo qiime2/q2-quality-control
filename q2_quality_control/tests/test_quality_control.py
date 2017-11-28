@@ -21,7 +21,8 @@ from q2_quality_control._utilities import (
     _evaluate_composition, _collapse_table, _drop_nans_zeros,
     _compute_per_level_accuracy, compute_taxon_accuracy,
     _tally_misclassifications, _identify_incorrect_classifications,
-    _find_nearest_common_lineage, _interpret_metric_selection)
+    _find_nearest_common_lineage, _interpret_metric_selection,
+    _match_samples_by_index)
 from q2_quality_control._evaluate_seqs import _evaluate_seqs
 
 
@@ -278,6 +279,14 @@ class UtilitiesTests(QualityControlTestsBase):
             _interpret_metric_selection(
                 False, False, False, False, False, False)
 
+    def test_match_samples_by_index(self):
+        df_a = pd.DataFrame({'a': (1., 2., 3.)}, index=['1', '2', '3'])
+        df_b = pd.DataFrame({'a': (2., 3., 7.)}, index=['2', '3', '7'])
+        df_c = pd.DataFrame({'a': (2., 3.)}, index=['2', '3'])
+        df_a, df_b = _match_samples_by_index(df_a, df_b)
+        pdt.assert_frame_equal(df_a.dropna(), df_c)
+        pdt.assert_frame_equal(df_b.dropna(), df_c)
+
 
 class EvaluateSeqsTests(SequenceQualityControlBase):
 
@@ -346,7 +355,7 @@ class EvaluateCompositionTests(QualityControlTestsBase):
              'k__Ad;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15, 0.15, 0.15],
              'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge': [0.15, 0.15, 0.15],
              'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff': [0.25, 0.25, 0.25]},
-            index=['s3', 's1', 's2'])
+            index=['s1', 's2', 's3'])
         self.obs = pd.DataFrame(
             {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.10, 0.15, 0.15],
              'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.10, 0.10],

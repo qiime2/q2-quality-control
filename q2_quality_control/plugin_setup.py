@@ -16,7 +16,7 @@ from .quality_control import exclude_seqs, evaluate_composition, evaluate_seqs
 plugin = Plugin(
     name='quality-control',
     version=q2_quality_control.__version__,
-    website="https://github.com/qiime2/q2-quality-control",
+    website='https://github.com/qiime2/q2-quality-control',
     package='q2_quality_control',
     description=(
         'This QIIME 2 plugin supports methods for assessing and controlling '
@@ -38,7 +38,7 @@ seq_inputs_descriptions = {
 plugin.methods.register_function(
     function=exclude_seqs,
     inputs=seq_inputs,
-    parameters={'method': Str % Choices(["blast", "vsearch", "blastn-short"]),
+    parameters={'method': Str % Choices(['blast', 'vsearch', 'blastn-short']),
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
                 'perc_query_aligned': Float,
@@ -104,46 +104,45 @@ plugin.visualizers.register_function(
         'expected_features': 'Expected feature compositions',
         'observed_features': 'Observed feature compositions'},
     parameter_descriptions={
-        'depth': ("Maximum depth of semicolon-delimited taxonomic ranks to "
-                  "test (e.g., 1 = root, 7 = species for the greengenes "
-                  "reference sequence database)."),
-        'palette': "Color palette to utilize for plotting.",
-        'plot_tar': ("Plot taxon accuracy rate (TAR) on score plot. TAR is "
-                     "the number of true positive features divided by the "
-                     "total number of observed features (TAR = true positives "
-                     "/ (true positives + false positives))."),
-        'plot_tdr': ("Plot taxon detection rate (TDR) on score plot. TDR is "
-                     "the number of true positive features divided by the "
-                     "total number of expected features (TDR = true positives "
-                     "/ (true positives + false negatives))."),
-        'plot_r_value': ("Plot expected vs. observed linear regression r "
-                         "value on score plot."),
-        'plot_r_squared': ("Plot expected vs. observed linear regression r-"
-                           "squared value on score plot."),
-        'plot_observed_features': (
-            "Plot observed features count on score plot."),
-        'plot_observed_features_ratio': (
-            "Plot ratio of observed:expected features on score plot."),
-        'metadata': ('Optional sample metadata that maps observed_features '
-                     'sample IDs to expected_features sample IDs.')},
+        'depth': 'Maximum depth of semicolon-delimited taxonomic ranks to '
+                 'test (e.g., 1 = root, 7 = species for the greengenes '
+                 'reference sequence database).',
+        'palette': 'Color palette to utilize for plotting.',
+        'plot_tar': 'Plot taxon accuracy rate (TAR) on score plot. TAR is '
+                    'the number of true positive features divided by the '
+                    'total number of observed features (TAR = true positives '
+                    '/ (true positives + false positives)).',
+        'plot_tdr': 'Plot taxon detection rate (TDR) on score plot. TDR is '
+                    'the number of true positive features divided by the '
+                    'total number of expected features (TDR = true positives '
+                    '/ (true positives + false negatives)).',
+        'plot_r_value': 'Plot expected vs. observed linear regression r '
+                        'value on score plot.',
+        'plot_r_squared': 'Plot expected vs. observed linear regression r-'
+                          'squared value on score plot.',
+        'plot_observed_features':
+            'Plot observed features count on score plot.',
+        'plot_observed_features_ratio':
+            'Plot ratio of observed:expected features on score plot.',
+        'metadata': 'Optional sample metadata that maps observed_features '
+                    'sample IDs to expected_features sample IDs.'},
     name='Evaluate expected vs. observed taxonomic composition of samples',
-    description=(
-        "This visualizer compares the feature composition of pairs of "
-        "observed and expected samples containing the same sample ID in two "
-        "separate feature tables. Typically, feature composition will consist "
-        "of taxonomy classifications or other semicolon-delimited feature "
-        "annotations. Taxon accuracy rate, taxon detection rate, and linear "
-        "regression scores between expected and observed observations are "
-        "calculated at each semicolon-delimited rank, and plots of per-level "
-        "accuracy and observation correlations are plotted. A histogram of "
-        "distance between false positive observations and the nearest "
-        "expected feature is also generated, where distance equals the number "
-        "of rank differences between the observed feature and the nearest "
-        "common lineage in the expected feature. This visualizer is most "
-        "suitable for testing per-run data quality on sequencing runs that "
-        "contain mock communities or other samples with known composition. "
-        "Also suitable for sanity checks of bioinformatics pipeline "
-        "performance.")
+    description='This visualizer compares the feature composition of pairs of '
+        'observed and expected samples containing the same sample ID in two '
+        'separate feature tables. Typically, feature composition will consist '
+        'of taxonomy classifications or other semicolon-delimited feature '
+        'annotations. Taxon accuracy rate, taxon detection rate, and linear '
+        'regression scores between expected and observed observations are '
+        'calculated at each semicolon-delimited rank, and plots of per-level '
+        'accuracy and observation correlations are plotted. A histogram of '
+        'distance between false positive observations and the nearest '
+        'expected feature is also generated, where distance equals the number '
+        'of rank differences between the observed feature and the nearest '
+        'common lineage in the expected feature. This visualizer is most '
+        'suitable for testing per-run data quality on sequencing runs that '
+        'contain mock communities or other samples with known composition. '
+        'Also suitable for sanity checks of bioinformatics pipeline '
+        'performance.'
 )
 
 plugin.visualizers.register_function(
@@ -152,17 +151,16 @@ plugin.visualizers.register_function(
     parameters={'show_alignments': Bool},
     input_descriptions=seq_inputs_descriptions,
     parameter_descriptions={
-        'show_alignments': ('Option to plot pairwise alignments of query '
-                            'sequences and their top hits.')},
+        'show_alignments': 'Option to plot pairwise alignments of query '
+                           'sequences and their top hits.'},
     name='Compare query (observed) vs. reference (expected) sequences.',
-    description=(
-        "This visualizer aligns a set of query (e.g., observed) sequences "
-        "against a set of reference (e.g., expected) sequences to evaluate "
-        "the quality of alignment. The intended use is to align observed "
-        "sequences against expected sequences (e.g., from a mock community) "
-        "to determine the frequency of mismatches between observed sequences "
-        "and the most similar expected sequences, e.g., as a measure of "
-        "sequencing/method error. However, any sequences may be provided as "
-        "input to generate a report on pairwise alignment quality against "
-        "a set of reference sequences.")
+    description='This action aligns a set of query (e.g., observed) sequences '
+        'against a set of reference (e.g., expected) sequences to evaluate '
+        'the quality of alignment. The intended use is to align observed '
+        'sequences against expected sequences (e.g., from a mock community) '
+        'to determine the frequency of mismatches between observed sequences '
+        'and the most similar expected sequences, e.g., as a measure of '
+        'sequencing/method error. However, any sequences may be provided as '
+        'input to generate a report on pairwise alignment quality against '
+        'a set of reference sequences.'
 )

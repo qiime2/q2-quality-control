@@ -81,23 +81,23 @@ def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
         # are subset of exp
         _validate_metadata_is_superset(metadata, obs)
         _validate_metadata_values_are_subset(metadata, exp)
-        # DROP NANS/ZERO ABUNDANCE FEATURES
-        obs = _drop_nans_zeros(obs)
-        exp = _drop_nans_zeros(exp)
 
     # if no metadata are passed, we assume that sample IDs correspond directly
     # between obs and exp tables
     else:
-        # DROP MISSING SAMPLES/NANS/ZERO ABUNDANCE FEATURES
+        # DROP MISSING SAMPLES
         exp, obs = _match_samples_by_index(exp, obs)
-        obs = _drop_nans_zeros(obs)
-        exp = _drop_nans_zeros(exp)
+
+    # DROP NANS/ZERO ABUNDANCE FEATURES
+    obs = _drop_nans_zeros(obs)
+    exp = _drop_nans_zeros(exp)
 
     # TAR/TDR for obs vs. exp at each level
     results, vectors = _compute_per_level_accuracy(exp, obs, metadata, depth)
 
     # regplot of taxa at top level
-    composition_regression = _regplot_from_dict(vectors, palette=palette)
+    composition_regression = _regplot_from_dict(
+        vectors, palette=palette, legend_title="Level")
 
     # pointplot on obs vs. exp at maximum level (coming off of the prior loop)
     score_plot = _pointplot_multiple_y(
@@ -126,11 +126,11 @@ def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
             composition_regression, score_plot, mismatch_histogram)
 
 
-def _match_samples_by_index(df, df2):
+def _match_samples_by_index(df_a, df_b):
     # drop all rows (samples) in df that do not match df2, and vice versa
-    df = df.loc[df2.index]
-    df2 = df2.loc[df.index]
-    return df, df2
+    df_a_new = df_a.loc[df_b.index]
+    df_b_new = df_b.loc[df_a.index]
+    return df_a_new, df_b_new
 
 
 def _drop_nans_zeros(df):
@@ -211,7 +211,7 @@ def compute_taxon_accuracy(exp, obs):
 def _find_nearest_common_lineage(feature, exp_features):
     feature_depth = len(feature.split(';'))
     # slice off empty labels
-    feature = feature.rstrip(';_').split(';')
+    feature = feature.rstrip(';_ ').split(';')
     for i in range(0, len(feature), 1):
         # start with None (i.e., don't remove any elements from list)
         # this will check for underclassifications first
@@ -251,7 +251,7 @@ def _pointplot_multiple_y(results, xval, yvals, palette):
     return fig
 
 
-def _regplot_from_dict(vectors, palette):
+def _regplot_from_dict(vectors, palette, legend_title):
     yvals = vectors.keys()
     colors = cycle(sns.color_palette(palette, n_colors=len(yvals)))
     fig, axes = plt.subplots(1)
@@ -262,7 +262,8 @@ def _regplot_from_dict(vectors, palette):
                     np.array(vectors[level]['obs']), ax=axes, color=color)
         handles.append(mpatches.Patch(color=color, label=level))
     axes.legend(
-        handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+        title=legend_title)
 
     # Plot arbitrary line with slope of 1 (true ratio)
     x0, x1 = axes.axes.get_xlim()
@@ -409,7 +410,7 @@ def _visualize(output_dir, title, running_title, results,
     index = join(TEMPLATES, 'index.html')
     q2templates.render(index, output_dir, context={
         'title': title,
-        'running-title': running_title,
+        'running_title': running_title,
         'results': results,
         'false_negative_features': false_negative_features,
         'misclassifications': misclassifications,

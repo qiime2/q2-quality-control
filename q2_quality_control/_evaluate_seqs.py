@@ -16,8 +16,8 @@ from ._blast import _blast, _perc_coverage, _run_command
 def _evaluate_seqs(query_sequences, reference_sequences, show_alignments):
     cmd = _blast(query_sequences, reference_sequences, None, 0)
     # modify command to output seq alignment information
-    cmd[6] = ('6 qseqid sseqid pident length mismatch gapopen qstart qend '
-              'sstart send evalue bitscore qlen qseq sseq')
+    cmd[6] = '6 qseqid sseqid pident length mismatch gapopen qstart qend ' \
+             'sstart send evalue bitscore qlen qseq sseq'
     # generate report of blast alignment results
     results, alignments = _generate_alignments(cmd, show_alignments)
 
@@ -30,47 +30,36 @@ def _evaluate_seqs(query_sequences, reference_sequences, show_alignments):
 def _generate_alignments(cmd, show_alignments):
     '''Run command line subprocess and extract hits.'''
     with tempfile.NamedTemporaryFile() as output:
-        cmd = cmd + [output.name]
+        cmd.append(output.name)
         _run_command(cmd)
         return _generate_alignment_results(output.name, show_alignments)
 
 
 def _generate_alignment_results(blast_results, show_alignments):
     '''blast_results: output of blastn in outfmt == 6'''
-    alignments = []
-    results = []
-    with open(blast_results, "r") as inputfile:
-        for line in inputfile:
-            line = line.rstrip()
-            # qseqid sseqid pident length mismatch gapopen qstart qend
-            # sstart send evalue bitscore qlen qseq sseq
-            (qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend,
-             sstart, send, evalue, bitscore, qlen, qseq, sseq) = \
-                line.split('\t')
-            # caluclate percent coverage based on qend, qstart, and qlen
-            perc_coverage = _perc_coverage(qend, qstart, qlen)
-            # add query and hit seqs to alignments
-            if show_alignments:
-                alignments.append((qseqid, 'query', qseq))
-                alignments.append((qseqid, sseqid, sseq))
-            # append blast results to report: remove seqs, add perc_coverage
-            results.append((
-                qseqid, sseqid, pident, length, mismatch, gapopen, qstart,
-                qend, sstart, send, evalue, bitscore, qlen, perc_coverage))
-
-    results = pd.DataFrame(results, columns=[
-            'Query id', 'Subject id', 'Percent Identity', 'Alignment Length',
-            'Mismatches', 'Gaps', 'Alignment Start (query)',
-            'Alignment end (query)', 'Alignment Start (subject)',
-            'Alignment end (subject)', 'E Value', 'Bit Score', 'Query length',
-            'Percent Coverage'])
+    results = pd.read_csv(blast_results, sep='\t', names=[
+        'Query id', 'Subject id', 'Percent Identity', 'Alignment Length',
+        'Mismatches', 'Gaps', 'Alignment Start (query)',
+        'Alignment end (query)', 'Alignment Start (subject)',
+        'Alignment end (subject)', 'E Value', 'Bit Score', 'Query length',
+        'qseq', 'sseq'])
+    # caluclate percent coverage based on qend, qstart, and qlen
+    results['Percent Coverage'] = results.apply(lambda x: _perc_coverage(
+        x['Alignment end (query)'], x['Alignment Start (query)'],
+        x['Query length']), axis=1)
 
     if show_alignments:
+        alignments = []
+        for i, d in results.iterrows():
+            alignments.append((d['Query id'], 'query', d['qseq']))
+            alignments.append((d['Query id'], d['Subject id'], d['sseq']))
         alignments = pd.DataFrame(
             alignments, columns=['Query id', 'Subject id', 'seq'])
         # convert to multiindex
         alignments = alignments.set_index(['Query id', 'Subject id'])
     else:
         alignments = None
+
+    results = results.drop(['qseq', 'sseq'], axis=1)
 
     return results, alignments

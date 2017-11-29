@@ -127,7 +127,7 @@ def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
 
 
 def _match_samples_by_index(df_a, df_b):
-    # drop all rows (samples) in df that do not match df2, and vice versa
+    # find all rows (samples) in df_a that do not match df_b, and vice versa
     df_a_new = df_a.loc[df_b.index]
     df_b_new = df_b.loc[df_a.index]
     return df_a_new, df_b_new
@@ -212,6 +212,7 @@ def _find_nearest_common_lineage(feature, exp_features):
     feature_depth = len(feature.split(';'))
     # slice off empty labels
     feature = feature.rstrip(';_ ').split(';')
+    feature = [f.strip() for f in feature]
     for i in range(0, len(feature), 1):
         # start with None (i.e., don't remove any elements from list)
         # this will check for underclassifications first

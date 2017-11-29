@@ -21,6 +21,7 @@ requirements:
     - python 3.5*
     - setuptools
     - pandas
+    - seaborn
     - blast 2.6.0
     - vsearch
     - qiime2 {{ release }}.*

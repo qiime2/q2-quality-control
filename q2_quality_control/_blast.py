@@ -84,19 +84,22 @@ def _extract_hits(blast_output, perc_query_aligned):
             if not line.startswith('#') and line != "":
                 query_id, subject_id, query_len, start, end = line.split('\t')
                 # check how much of alignment covers query
-                # query start is one-based relative to start of sequence
-                # and hence we add 1 to adjust for comparison vs. length.
-                # E.g., alignment of two identical 10-nt seqs will yield:
-                # start = 1, end = 15. Hence 15 - 1 + 1 = 15 nt full
-                # length of alignment.
-                perc_coverage = (
-                    (float(end) - float(start) + 1) / float(query_len))
+                perc_coverage = _perc_coverage(end, start, query_len)
                 # check for minimum perc_query_aligned
                 # if vsearch fails to find assignment, it reports '*' as the
                 # accession ID, so we will not count those IDs as hits.
                 if perc_coverage >= perc_query_aligned and subject_id != '*':
                     hits.add(query_id)
     return hits
+
+
+def _perc_coverage(end, start, query_len):
+    # query start is one-based relative to start of sequence
+    # and hence we add 1 to adjust for comparison vs. length.
+    # E.g., alignment of two identical 10-nt seqs will yield:
+    # start = 1, end = 15. Hence 15 - 1 + 1 = 15 nt full
+    # length of alignment.
+    return (float(end) - float(start) + 1) / float(query_len)
 
 
 # Replace this function with QIIME2 API for wrapping commands/binaries,

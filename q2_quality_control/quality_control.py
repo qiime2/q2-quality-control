@@ -6,10 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import qiime2
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.feature_data._transformer import _dnafastaformats_to_series
 import pandas as pd
 from ._blast import _search_seqs
+from ._utilities import _evaluate_composition, _visualize
+from ._evaluate_seqs import _evaluate_seqs
 
 
 def exclude_seqs(query_sequences: DNAFASTAFormat,
@@ -46,3 +49,39 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
             else:
                 misses_seqs[seq_id] = seq
         return pd.Series(hits_seqs), pd.Series(misses_seqs)
+
+
+def evaluate_composition(
+        output_dir: str, expected_features: pd.DataFrame,
+        observed_features: pd.DataFrame, depth: int=7, palette: str='Set1',
+        plot_tar: bool=True, plot_tdr: bool=True, plot_r_value: bool=False,
+        plot_r_squared: bool=True, plot_observed_features: bool=False,
+        plot_observed_features_ratio: bool=True,
+        metadata: qiime2.MetadataCategory=None) -> None:
+
+    # results, fn_features, misclassifications, underclassifications,
+    # composition_regression, score_plot, mismatch_histogram
+    results = _evaluate_composition(
+        expected_features, observed_features, depth=depth, palette=palette,
+        metadata=metadata, plot_tar=plot_tar, plot_tdr=plot_tdr,
+        plot_r_value=plot_r_value, plot_r_squared=plot_r_squared,
+        plot_observed_features=plot_observed_features,
+        plot_observed_features_ratio=plot_observed_features_ratio)
+
+    _visualize(output_dir, 'Feature evaluation results',
+               'evaluate_composition', *results)
+
+
+def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
+                  reference_sequences: DNAFASTAFormat,
+                  show_alignments: bool=False) -> None:
+
+    results, alignments, mismatch_histogram = _evaluate_seqs(
+        query_sequences, reference_sequences, show_alignments)
+
+    _visualize(output_dir, 'Sequence evaluation results',
+               'evaluate_seqs', results=results,
+               false_negative_features=None,
+               misclassifications=None, underclassifications=None,
+               composition_regression=None, score_plot=None,
+               mismatch_histogram=mismatch_histogram, alignments=alignments)

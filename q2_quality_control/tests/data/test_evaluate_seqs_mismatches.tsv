@@ -1,0 +1,6 @@
+	Query id	Subject id	Percent Identity	Alignment Length	Mismatches	Gaps	Alignment Start (query)	Alignment end (query)	Alignment Start (subject)	Alignment end (subject)	E Value	Bit Score	Query length	Percent Coverage
+0	2MISA	1111886	98.800	250	3	0	1	250	1	250	5.52e-129	446	250	1.0
+1	2MISB	1111867	98.800	250	3	0	1	250	1	250	5.52e-129	446	250	1.0
+2	8MISA	1111783	96.800	250	8	0	1	250	1	250	1.20e-120	418	250	1.0
+3	8MISB	1111768	96.800	250	8	0	1	250	1	250	1.20e-120	418	250	1.0
+4	10MISA	1111750	96.000	250	10	0	1	250	1	250	2.61e-117	407	250	1.0

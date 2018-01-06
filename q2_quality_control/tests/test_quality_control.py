@@ -390,10 +390,11 @@ class EvaluateCompositionTests(QualityControlTestsBase):
              'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge': [0.15],
              'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff': [0.25]},
             index=['there_can_only_be_one'])
-        self.metadata_one_sample = qiime2.MetadataCategory(pd.DataFrame(
-            {'mock_id': ['there_can_only_be_one', 'there_can_only_be_one',
-                         'there_can_only_be_one']},
-            index=['s3', 's1', 's2'])['mock_id'])
+        self.metadata_one_sample = qiime2.CategoricalMetadataColumn(
+            pd.Series(['there_can_only_be_one',
+                       'there_can_only_be_one',
+                       'there_can_only_be_one'], name='mock_id',
+                      index=pd.Index(['s3', 's1', 's2'], name='id')))
 
     # test that visualizer runs without fail; internal functions are all tested
     # with various utility tests, this just makes sure the plugin works.
@@ -456,8 +457,9 @@ class EvaluateCompositionTests(QualityControlTestsBase):
         pdt.assert_frame_equal(res[3], empty_expectations)
 
     def test_evaluate_composition_metadata_not_superset(self):
-        incomplete_md = qiime2.MetadataCategory(pd.DataFrame(
-            {'mock_id': ['there_can_only_be_one']}, index=['s3'])['mock_id'])
+        incomplete_md = qiime2.CategoricalMetadataColumn(
+                    pd.Series(['there_can_only_be_one'], name='mock_id',
+                              index=pd.Index(['s3'], name='id')))
         with self.assertRaisesRegex(ValueError, "Missing samples in metadata"):
             _evaluate_composition(
                 self.exp_one_sample, self.obs, depth=7, palette='Set1',
@@ -466,10 +468,11 @@ class EvaluateCompositionTests(QualityControlTestsBase):
                 plot_observed_features_ratio=True, metadata=incomplete_md)
 
     def test_evaluate_composition_metadata_values_not_subset(self):
-        underrepresented_md = qiime2.MetadataCategory(pd.DataFrame(
-            {'mock_id': ['there_can_only_be_one', 'what_is_this?',
-                         'i_am_not_really_here']},
-            index=['s3', 's1', 's2'])['mock_id'])
+        underrepresented_md = qiime2.CategoricalMetadataColumn(
+            pd.Series(['there_can_only_be_one',
+                       'what_is_this?',
+                       'i_am_not_really_here'], name='mock_id',
+                      index=pd.Index(['s3', 's1', 's2'], name='id')))
         with self.assertRaisesRegex(ValueError, "Missing samples in table"):
             _evaluate_composition(
                 self.exp_one_sample, self.obs, depth=7, palette='Set1',
@@ -528,12 +531,15 @@ class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
             index=['k__Bacteria;p__Firmicutes;c__Bacilli;o__Bacillales;'
                    'f__Staphylococcaceae;g__Staphylococcus;__'])
         self.underclassified.index.name = 'Taxon'
-        self.metadata = qiime2.MetadataCategory(pd.DataFrame(
-            {'mock_id': ['HMPMockV1.1.Even1', 'HMPMockV1.1.Even1',
-                         'HMPMockV1.2.Staggered1', 'HMPMockV1.2.Staggered1']},
-            index=['HMPMockV1.1.Even1', 'HMPMockV1.1.Even2',
-                   'HMPMockV1.2.Staggered1', 'HMPMockV1.2.Staggered2']
-            )['mock_id'])
+        self.metadata = qiime2.CategoricalMetadataColumn(
+            pd.Series(['HMPMockV1.1.Even1',
+                       'HMPMockV1.1.Even1',
+                       'HMPMockV1.2.Staggered1',
+                       'HMPMockV1.2.Staggered1'], name='mock_id',
+                      index=pd.Index(['HMPMockV1.1.Even1',
+                                      'HMPMockV1.1.Even2',
+                                      'HMPMockV1.2.Staggered1',
+                                      'HMPMockV1.2.Staggered2'], name='id')))
 
     def test_evaluate_composition_mockrobiota(self):
         res = _evaluate_composition(

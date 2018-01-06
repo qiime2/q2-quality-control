@@ -8,7 +8,7 @@
 
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataCategory)
+                           MetadataColumn, Categorical)
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, RelativeFrequency
 from .quality_control import exclude_seqs, evaluate_composition, evaluate_seqs
@@ -99,7 +99,7 @@ plugin.visualizers.register_function(
                 'plot_r_squared': Bool,
                 'plot_observed_features': Bool,
                 'plot_observed_features_ratio': Bool,
-                'metadata': MetadataCategory},
+                'metadata': MetadataColumn[Categorical]},
     input_descriptions={
         'expected_features': 'Expected feature compositions',
         'observed_features': 'Observed feature compositions'},

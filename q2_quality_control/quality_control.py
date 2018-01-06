@@ -57,7 +57,7 @@ def evaluate_composition(
         plot_tar: bool=True, plot_tdr: bool=True, plot_r_value: bool=False,
         plot_r_squared: bool=True, plot_observed_features: bool=False,
         plot_observed_features_ratio: bool=True,
-        metadata: qiime2.MetadataCategory=None) -> None:
+        metadata: qiime2.CategoricalMetadataColumn=None) -> None:
 
     # results, fn_features, misclassifications, underclassifications,
     # composition_regression, score_plot, mismatch_histogram

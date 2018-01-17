@@ -22,12 +22,6 @@ import pkg_resources
 TEMPLATES = pkg_resources.resource_filename('q2_quality_control', 'assets')
 
 
-def _load_metadata(metadata):
-    metadata = metadata.to_series()
-    metadata = pd.to_numeric(metadata, errors='ignore')
-    return metadata
-
-
 def _validate_metadata_is_superset(metadata, table):
     metadata_ids = set(metadata.index)
     table_ids = set(table.index.tolist())
@@ -76,10 +70,10 @@ def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
 
     # If metadata are passed, validate and convert to series
     if metadata is not None:
-        metadata = _load_metadata(metadata)
-        # validate that metadata ids are superset of obs and values (exp ids)
-        # are subset of exp
+        metadata = metadata.to_series()
+        # validate that metadata ids are superset of obs
         _validate_metadata_is_superset(metadata, obs)
+        # validate that metadata values (exp ids) are subset of exp
         _validate_metadata_values_are_subset(metadata, exp)
 
     # if no metadata are passed, we assume that sample IDs correspond directly

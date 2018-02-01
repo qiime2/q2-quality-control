@@ -36,7 +36,7 @@ def _validate_metadata_values_are_subset(metadata, table):
     table_ids = set(table.index.tolist())
     if not metadata_ids.issubset(table_ids):
         raise ValueError('Missing samples in table: %r' %
-                         table_ids.difference(metadata_ids))
+                         metadata_ids.difference(table_ids))
 
 
 def _interpret_metric_selection(plot_tar, plot_tdr, plot_r_value,
@@ -59,6 +59,19 @@ def _interpret_metric_selection(plot_tar, plot_tdr, plot_r_value,
     return yvals
 
 
+def _validate_metadata_and_exp_table(metadata, exp, obs):
+    # validate that metadata ids are superset of obs
+    _validate_metadata_is_superset(metadata, obs)
+    # filter metadata to contain only rows (sample IDs) found in obs
+    metadata = metadata.reindex(obs.index).dropna()
+    # validate that metadata values (exp ids) are subset of exp
+    _validate_metadata_values_are_subset(metadata, exp)
+    # filter exp to contain only rows (sample IDs) found in metadata values
+    exp = exp.reindex(metadata.unique()).dropna()
+
+    return metadata, exp
+
+
 def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
                           plot_tdr, plot_r_value, plot_r_squared,
                           plot_observed_features,
@@ -71,10 +84,7 @@ def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
     # If metadata are passed, validate and convert to series
     if metadata is not None:
         metadata = metadata.to_series()
-        # validate that metadata ids are superset of obs
-        _validate_metadata_is_superset(metadata, obs)
-        # validate that metadata values (exp ids) are subset of exp
-        _validate_metadata_values_are_subset(metadata, exp)
+        metadata, exp = _validate_metadata_and_exp_table(metadata, exp, obs)
 
     # if no metadata are passed, we assume that sample IDs correspond directly
     # between obs and exp tables

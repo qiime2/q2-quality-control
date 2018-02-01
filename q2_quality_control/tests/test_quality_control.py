@@ -22,7 +22,7 @@ from q2_quality_control._utilities import (
     _compute_per_level_accuracy, compute_taxon_accuracy,
     _tally_misclassifications, _identify_incorrect_classifications,
     _find_nearest_common_lineage, _interpret_metric_selection,
-    _match_samples_by_index)
+    _match_samples_by_index, _validate_metadata_and_exp_table)
 from q2_quality_control._evaluate_seqs import _evaluate_seqs
 
 
@@ -287,6 +287,34 @@ class UtilitiesTests(QualityControlTestsBase):
         pdt.assert_frame_equal(df_a.dropna(), df_c)
         pdt.assert_frame_equal(df_b.dropna(), df_c)
 
+    def test_validate_metadata_and_exp_table_metadata_not_superset(self):
+        incomplete_md = pd.Series(['there_can_only_be_one'], name='mock_id',
+                                  index=pd.Index(['s3'], name='id'))
+        with self.assertRaisesRegex(ValueError, "Missing samples in metadata"):
+            _validate_metadata_and_exp_table(
+                incomplete_md, exp_one_sample, obs)
+
+    def test_validate_metadata_and_exp_table_metadata_values_not_subset(self):
+        underrepresented_md = pd.Series(
+            ['there_can_only_be_one', 'what_is_this?', 'i_am_not_really_here'],
+            name='mock_id', index=pd.Index(['s3', 's1', 's2'], name='id'))
+        with self.assertRaisesRegex(ValueError, "Missing samples in table"):
+            _validate_metadata_and_exp_table(
+                underrepresented_md, exp_one_sample, obs)
+
+    # test for issue-25: metadata is superset, but values are subset of exp
+    # should output new metadata that fits the table
+    def test_validate_metadata_and_exp_table_md_superset_vals_subset(self):
+        overabundant_md = pd.Series(
+            ['s1', 's1', 's1', 's2', 's2'], name='mock_id',
+            index=pd.Index(['s3', 's1', 's2', 'fake1', 'fake2'], name='id'))
+        corrected_md = pd.Series(
+            ['s1', 's1', 's1'], name='mock_id',
+            index=pd.Index(['s1', 's2', 's3']))
+        new_md, junk = _validate_metadata_and_exp_table(
+            overabundant_md, exp, obs)
+        pdt.assert_series_equal(new_md, corrected_md)
+
 
 class EvaluateSeqsTests(SequenceQualityControlBase):
 
@@ -348,23 +376,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
         super().setUp()
         self.exp_results = pd.read_csv(
             self.get_data_path('exp-results.tsv'), sep='\t', index_col=0)
-        self.exp = pd.DataFrame(
-            {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.15, 0.15, 0.15],
-             'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.15, 0.15],
-             'k__Ac;p__Bc;c__Cc;o__Dc;f__Ec;g__Fc;s__Gc': [0.15, 0.15, 0.15],
-             'k__Ad;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15, 0.15, 0.15],
-             'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge': [0.15, 0.15, 0.15],
-             'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff': [0.25, 0.25, 0.25]},
-            index=['s1', 's2', 's3'])
-        self.obs = pd.DataFrame(
-            {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.10, 0.15, 0.15],
-             'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.10, 0.10],
-             'k__Ac;p__Bc;c__Cc;o__Dc;f__Ec': [0.20, 0.17, 0.15],
-             'k__Ad;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15, 0.18, 0.20],
-             'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe': [0.12, 0.16, 0.15],
-             'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff;s__Gf': [0.20, 0.21, 0.25],
-             'k__Ag;p__Bg;c__Cg;o__Dg;f__Eg;g__Fg;s__Gg': [0.08, 0.03, 0.0]},
-            index=['s1', 's2', 's3'])
+        self.exp = exp
+        self.obs = obs
         self.false_neg = pd.DataFrame(
             {'s1': [0.15, 0.15, 0.25], 's2': [0.15, 0.15, 0.25],
              's3': [0.15, 0.15, 0.25]},
@@ -382,14 +395,7 @@ class EvaluateCompositionTests(QualityControlTestsBase):
             index=['k__Ac;p__Bc;c__Cc;o__Dc;f__Ec;__;__',
                    'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;__'])
         self.underclassified.index.name = 'Taxon'
-        self.exp_one_sample = pd.DataFrame(
-            {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.15],
-             'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15],
-             'k__Ac;p__Bc;c__Cc;o__Dc;f__Ec;g__Fc;s__Gc': [0.15],
-             'k__Ad;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15],
-             'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge': [0.15],
-             'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff': [0.25]},
-            index=['there_can_only_be_one'])
+        self.exp_one_sample = exp_one_sample
         self.metadata_one_sample = qiime2.CategoricalMetadataColumn(
             pd.Series(['there_can_only_be_one',
                        'there_can_only_be_one',
@@ -469,10 +475,10 @@ class EvaluateCompositionTests(QualityControlTestsBase):
 
     def test_evaluate_composition_metadata_values_not_subset(self):
         underrepresented_md = qiime2.CategoricalMetadataColumn(
-            pd.Series(['there_can_only_be_one',
-                       'what_is_this?',
-                       'i_am_not_really_here'], name='mock_id',
-                      index=pd.Index(['s3', 's1', 's2'], name='id')))
+            pd.Series(['there_can_only_be_one', 'what_is_this?',
+                       'i_am_not_really_here'],
+                      name='mock_id', index=pd.Index(['s3', 's1', 's2'],
+                                                     name='id')))
         with self.assertRaisesRegex(ValueError, "Missing samples in table"):
             _evaluate_composition(
                 self.exp_one_sample, self.obs, depth=7, palette='Set1',
@@ -558,11 +564,41 @@ class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
             plot_tar=True, plot_tdr=True, plot_r_value=True,
             plot_r_squared=True, plot_observed_features=True,
             plot_observed_features_ratio=True, metadata=self.metadata)
+        false_neg = self.false_neg[['HMPMockV1.1.Even1',
+                                    'HMPMockV1.2.Staggered1']]
         pdt.assert_frame_equal(res[0], self.exp_results)
-        pdt.assert_frame_equal(res[1], self.false_neg)
+        pdt.assert_frame_equal(res[1], false_neg)
         pdt.assert_frame_equal(res[2], self.misclassified)
         pdt.assert_frame_equal(res[3], self.underclassified)
 
+
+exp = pd.DataFrame(
+    {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.15, 0.15, 0.15],
+     'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.15, 0.15],
+     'k__Ac;p__Bc;c__Cc;o__Dc;f__Ec;g__Fc;s__Gc': [0.15, 0.15, 0.15],
+     'k__Ad;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15, 0.15, 0.15],
+     'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge': [0.15, 0.15, 0.15],
+     'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff': [0.25, 0.25, 0.25]},
+    index=['s1', 's2', 's3'])
+
+exp_one_sample = pd.DataFrame(
+    {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.15],
+     'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15],
+     'k__Ac;p__Bc;c__Cc;o__Dc;f__Ec;g__Fc;s__Gc': [0.15],
+     'k__Ad;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15],
+     'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge': [0.15],
+     'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff': [0.25]},
+    index=['there_can_only_be_one'])
+
+obs = pd.DataFrame(
+    {'k__Aa;p__Ba;c__Ca;o__Da;f__Ea;g__Fa;s__Ga': [0.10, 0.15, 0.15],
+     'k__Ab;p__Bb;c__Cb;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.10, 0.10],
+     'k__Ac;p__Bc;c__Cc;o__Dc;f__Ec': [0.20, 0.17, 0.15],
+     'k__Ad;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15, 0.18, 0.20],
+     'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe': [0.12, 0.16, 0.15],
+     'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff;s__Gf': [0.20, 0.21, 0.25],
+     'k__Ag;p__Bg;c__Cg;o__Dg;f__Eg;g__Fg;s__Gg': [0.08, 0.03, 0.0]},
+    index=['s1', 's2', 's3'])
 
 exp_v = {
     1: {'exp': [

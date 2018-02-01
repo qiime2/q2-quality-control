@@ -309,11 +309,11 @@ class UtilitiesTests(QualityControlTestsBase):
             ['s1', 's1', 's1', 's2', 's2'], name='mock_id',
             index=pd.Index(['s3', 's1', 's2', 'fake1', 'fake2'], name='id'))
         corrected_md = pd.Series(
-            ['s1', 's1', 's1', 's2', 's2'], name='mock_id',
-            index=pd.Index(['s3', 's1', 's2', 'fake1', 'fake2'], name='id'))
+            ['s1', 's1', 's1'], name='mock_id',
+            index=pd.Index(['s1', 's2', 's3']))
         new_md, junk = _validate_metadata_and_exp_table(
             overabundant_md, exp, obs)
-        pdt.assert_frame_equal(new_md, corrected_md)
+        pdt.assert_series_equal(new_md, corrected_md)
 
 
 class EvaluateSeqsTests(SequenceQualityControlBase):
@@ -564,8 +564,10 @@ class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
             plot_tar=True, plot_tdr=True, plot_r_value=True,
             plot_r_squared=True, plot_observed_features=True,
             plot_observed_features_ratio=True, metadata=self.metadata)
+        false_neg = self.false_neg[['HMPMockV1.1.Even1',
+                                    'HMPMockV1.2.Staggered1']]
         pdt.assert_frame_equal(res[0], self.exp_results)
-        pdt.assert_frame_equal(res[1], self.false_neg)
+        pdt.assert_frame_equal(res[1], false_neg)
         pdt.assert_frame_equal(res[2], self.misclassified)
         pdt.assert_frame_equal(res[3], self.underclassified)
 

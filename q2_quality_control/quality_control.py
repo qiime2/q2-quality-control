@@ -7,12 +7,16 @@
 # ----------------------------------------------------------------------------
 
 import qiime2
+import biom
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.feature_data._transformer import _dnafastaformats_to_series
 import pandas as pd
+
 from ._blast import _search_seqs
-from ._utilities import _evaluate_composition, _visualize
+from ._utilities import (
+    _evaluate_composition, _visualize, _pointplot_multiple_y)
 from ._evaluate_seqs import _evaluate_seqs
+from ._evaluate_taxonomy import _evaluate_taxonomy
 
 
 def exclude_seqs(query_sequences: DNAFASTAFormat,
@@ -85,3 +89,25 @@ def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
                misclassifications=None, underclassifications=None,
                composition_regression=None, score_plot=None,
                mismatch_histogram=mismatch_histogram, alignments=alignments)
+
+
+def evaluate_taxonomy(output_dir: str, expected_taxa: pd.Series,
+                      observed_taxa: pd.Series, depth: int,
+                      palette: str='Set1',
+                      require_exp_ids: bool=True, require_obs_ids: bool=True,
+                      feature_table: biom.Table=None, sample_id: str=None
+                      ) -> None:
+    prf = _evaluate_taxonomy(expected_taxa, observed_taxa, require_exp_ids,
+                             require_obs_ids, feature_table, sample_id,
+                             level_range=range(0, depth))
+
+    score_plot = _pointplot_multiple_y(
+        prf, xval='level', yvals=['Precision', 'Recall', 'F-measure'],
+        palette=palette)
+
+    _visualize(output_dir, 'Taxonomic accuracy results',
+               'evaluate_taxonomy', results=prf,
+               false_negative_features=None,
+               misclassifications=None, underclassifications=None,
+               composition_regression=None, score_plot=score_plot,
+               mismatch_histogram=None, alignments=None)

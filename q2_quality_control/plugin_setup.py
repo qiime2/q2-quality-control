@@ -8,10 +8,12 @@
 
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataColumn, Categorical)
+                           MetadataColumn, Categorical, Citations)
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, RelativeFrequency
 from .quality_control import exclude_seqs, evaluate_composition, evaluate_seqs
+
+citations = Citations.load('citations.bib', package='q2_quality_control')
 
 plugin = Plugin(
     name='quality-control',
@@ -80,7 +82,8 @@ plugin.methods.register_function(
         'perc_identity, perc_query_aligned, and evalue thresholds (the '
         'latter only if method==BLAST and an evalue is set). Set '
         'perc_identity==0 and/or perc_query_aligned==0 to disable these '
-        'filtering thresholds as necessary.')
+        'filtering thresholds as necessary.'),
+    citations=[citations['camacho2009blast+']]
 )
 
 plugin.visualizers.register_function(
@@ -142,7 +145,8 @@ plugin.visualizers.register_function(
         'suitable for testing per-run data quality on sequencing runs that '
         'contain mock communities or other samples with known composition. '
         'Also suitable for sanity checks of bioinformatics pipeline '
-        'performance.'
+        'performance.',
+    citations=[citations['bokulich2018optimizing']]
 )
 
 plugin.visualizers.register_function(
@@ -162,5 +166,6 @@ plugin.visualizers.register_function(
         'and the most similar expected sequences, e.g., as a measure of '
         'sequencing/method error. However, any sequences may be provided as '
         'input to generate a report on pairwise alignment quality against '
-        'a set of reference sequences.'
+        'a set of reference sequences.',
+    citations=[citations['camacho2009blast+']]
 )

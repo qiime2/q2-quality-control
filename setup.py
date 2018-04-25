@@ -26,8 +26,8 @@ setup(
         ['q2-quality-control=q2_quality_control.plugin_setup:plugin']
     },
     package_data={
+        'q2_quality_control': ['citations.bib', 'assets/*'],
         'q2_quality_control.tests': ['data/*'],
-        'q2_quality_control': ['assets/*'],
     },
     zip_safe=False,
 )

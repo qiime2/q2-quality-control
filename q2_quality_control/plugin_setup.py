@@ -100,6 +100,8 @@ plugin.visualizers.register_function(
                 'plot_tdr': Bool,
                 'plot_r_value': Bool,
                 'plot_r_squared': Bool,
+                'plot_bray_curtis': Bool,
+                'plot_jaccard': Bool,
                 'plot_observed_features': Bool,
                 'plot_observed_features_ratio': Bool,
                 'metadata': MetadataColumn[Categorical]},
@@ -123,6 +125,10 @@ plugin.visualizers.register_function(
                         'value on score plot.',
         'plot_r_squared': 'Plot expected vs. observed linear regression r-'
                           'squared value on score plot.',
+        'plot_bray_curtis': 'Plot expected vs. observed Bray-Curtis '
+                            'dissimilarity scores on score plot.',
+        'plot_jaccard': 'Plot expected vs. observed Jaccard distances scores '
+                        'on score plot.',
         'plot_observed_features':
             'Plot observed features count on score plot.',
         'plot_observed_features_ratio':

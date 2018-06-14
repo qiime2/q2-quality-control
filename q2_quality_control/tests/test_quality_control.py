@@ -557,8 +557,8 @@ class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
         res = _evaluate_composition(
             self.exp, self.obs, depth=7, palette='Set1',
             plot_tar=True, plot_tdr=True, plot_r_value=True,
-            plot_r_squared=True, plot_bray_curtis=False,
-            plot_jaccard=False, plot_observed_features=True,
+            plot_r_squared=True, plot_bray_curtis=True,
+            plot_jaccard=True, plot_observed_features=True,
             plot_observed_features_ratio=True, metadata=None)
         pdt.assert_frame_equal(res[0], self.exp_results)
         pdt.assert_frame_equal(res[1], self.false_neg)

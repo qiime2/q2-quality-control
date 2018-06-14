@@ -271,13 +271,13 @@ class UtilitiesTests(QualityControlTestsBase):
 
     def test_interpret_metric_selection_valid(self):
         yvals = _interpret_metric_selection(
-            True, True, False, True, False, False)
+            True, True, False, True, False, False, False, False)
         self.assertEquals(yvals, ['TAR', 'TDR', 'r-squared'])
 
     def test_interpret_metric_selection_invalid(self):
         with self.assertRaisesRegex(ValueError, "At least one metric"):
             _interpret_metric_selection(
-                False, False, False, False, False, False)
+                False, False, False, False, False, False, False, False)
 
     def test_match_samples_by_index(self):
         df_a = pd.DataFrame({'a': (1., 2., 3.)}, index=['1', '2', '3'])
@@ -419,7 +419,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
         res = _evaluate_composition(
             self.exp, self.obs, depth=7, palette='Set1',
             plot_tar=True, plot_tdr=True, plot_r_value=True,
-            plot_r_squared=True, plot_observed_features=True,
+            plot_r_squared=True, plot_bray_curtis=False,
+            plot_jaccard=False, plot_observed_features=True,
             plot_observed_features_ratio=True, metadata=None)
         pdt.assert_frame_equal(res[0], self.exp_results)
         pdt.assert_frame_equal(res[1], self.false_neg)
@@ -430,7 +431,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
         res = _evaluate_composition(
             self.exp_one_sample, self.obs, depth=7, palette='Set1',
             plot_tar=True, plot_tdr=True, plot_r_value=True,
-            plot_r_squared=True, plot_observed_features=True,
+            plot_r_squared=True, plot_bray_curtis=False,
+            plot_jaccard=False, plot_observed_features=True,
             plot_observed_features_ratio=True,
             metadata=self.metadata_one_sample)
         pdt.assert_frame_equal(res[0], self.exp_results)
@@ -454,7 +456,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
         res = _evaluate_composition(
             self.exp, self.obs, depth=5, palette='Set1', plot_tar=True,
             plot_tdr=True, plot_r_value=True, plot_r_squared=True,
-            plot_observed_features=True, plot_observed_features_ratio=True,
+            plot_observed_features=True, plot_bray_curtis=False,
+            plot_jaccard=False, plot_observed_features_ratio=True,
             metadata=None)
         pdt.assert_frame_equal(
             res[0], self.exp_results[self.exp_results['level'] < 6])
@@ -470,7 +473,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
             _evaluate_composition(
                 self.exp_one_sample, self.obs, depth=7, palette='Set1',
                 plot_tar=True, plot_tdr=True, plot_r_value=True,
-                plot_r_squared=True, plot_observed_features=True,
+                plot_r_squared=True, plot_bray_curtis=False,
+                plot_jaccard=False, plot_observed_features=True,
                 plot_observed_features_ratio=True, metadata=incomplete_md)
 
     def test_evaluate_composition_metadata_values_not_subset(self):
@@ -483,7 +487,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
             _evaluate_composition(
                 self.exp_one_sample, self.obs, depth=7, palette='Set1',
                 plot_tar=True, plot_tdr=True, plot_r_value=True,
-                plot_r_squared=True, plot_observed_features=True,
+                plot_r_squared=True, plot_bray_curtis=False,
+                plot_jaccard=False, plot_observed_features=True,
                 plot_observed_features_ratio=True,
                 metadata=underrepresented_md)
 
@@ -492,7 +497,8 @@ class EvaluateCompositionTests(QualityControlTestsBase):
             _evaluate_composition(
                 self.exp, self.obs, depth=8, palette='Set1',
                 plot_tar=True, plot_tdr=True, plot_r_value=True,
-                plot_r_squared=True, plot_observed_features=True,
+                plot_r_squared=True, plot_bray_curtis=False,
+                plot_jaccard=False, plot_observed_features=True,
                 plot_observed_features_ratio=True, metadata=None)
 
 
@@ -551,7 +557,8 @@ class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
         res = _evaluate_composition(
             self.exp, self.obs, depth=7, palette='Set1',
             plot_tar=True, plot_tdr=True, plot_r_value=True,
-            plot_r_squared=True, plot_observed_features=True,
+            plot_r_squared=True, plot_bray_curtis=True,
+            plot_jaccard=True, plot_observed_features=True,
             plot_observed_features_ratio=True, metadata=None)
         pdt.assert_frame_equal(res[0], self.exp_results)
         pdt.assert_frame_equal(res[1], self.false_neg)
@@ -562,7 +569,8 @@ class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
         res = _evaluate_composition(
             self.exp, self.obs, depth=7, palette='Set1',
             plot_tar=True, plot_tdr=True, plot_r_value=True,
-            plot_r_squared=True, plot_observed_features=True,
+            plot_r_squared=True, plot_bray_curtis=False,
+            plot_jaccard=False, plot_observed_features=True,
             plot_observed_features_ratio=True, metadata=self.metadata)
         false_neg = self.false_neg[['HMPMockV1.1.Even1',
                                     'HMPMockV1.2.Staggered1']]

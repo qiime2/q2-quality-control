@@ -8,6 +8,7 @@
 
 from os.path import join
 from scipy.stats import linregress
+from scipy.spatial.distance import braycurtis, jaccard
 import seaborn as sns
 from itertools import cycle
 import matplotlib.patches as mpatches
@@ -40,15 +41,17 @@ def _validate_metadata_values_are_subset(metadata, table):
 
 
 def _interpret_metric_selection(plot_tar, plot_tdr, plot_r_value,
-                                plot_r_squared, plot_observed_features,
+                                plot_r_squared, plot_bray_curtis, plot_jaccard,
+                                plot_observed_features,
                                 plot_observed_features_ratio):
     # convert metric boolean choices to list of column names
     yvals = []
     for var, val in zip(
             (plot_tar, plot_tdr, plot_r_value, plot_r_squared,
-             plot_observed_features, plot_observed_features_ratio),
-            ('TAR', 'TDR', 'r-value', 'r-squared', 'Observed Taxa',
-             'Observed / Expected Taxa')):
+             plot_bray_curtis, plot_jaccard, plot_observed_features,
+             plot_observed_features_ratio),
+            ('TAR', 'TDR', 'r-value', 'r-squared', 'Bray-Curtis', 'Jaccard',
+             'Observed Taxa', 'Observed / Expected Taxa')):
         if var:
             yvals.append(val)
 
@@ -74,12 +77,13 @@ def _validate_metadata_and_exp_table(metadata, exp, obs):
 
 def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
                           plot_tdr, plot_r_value, plot_r_squared,
+                          plot_bray_curtis, plot_jaccard,
                           plot_observed_features,
                           plot_observed_features_ratio):
 
     yvals = _interpret_metric_selection(
-        plot_tar, plot_tdr, plot_r_value, plot_r_squared,
-        plot_observed_features, plot_observed_features_ratio)
+        plot_tar, plot_tdr, plot_r_value, plot_r_squared, plot_bray_curtis,
+        plot_jaccard, plot_observed_features, plot_observed_features_ratio)
 
     # If metadata are passed, validate and convert to series
     if metadata is not None:
@@ -182,6 +186,11 @@ def _compute_per_level_accuracy(exp, obs, metadata, depth):
             result.extend(compute_taxon_accuracy(exp_features, obs_features))
             # compute linear least-squares regression results
             result.extend(linregress(exp_vector, obs_vector))
+            # compute Bray-Curtis dissimilarity
+            result.append(braycurtis(exp_vector, obs_vector))
+            # compute Jaccard distance, must convert to bool array
+            result.append(jaccard(list(map(bool, exp_vector)),
+                                  list(map(bool, obs_vector))))
             results.append(result)
             # store vectors for constructing regplots
             vectors[level]['exp'].extend(exp_vector)
@@ -189,7 +198,8 @@ def _compute_per_level_accuracy(exp, obs, metadata, depth):
     results = pd.DataFrame(
         results, columns=['sample', 'level', 'Observed Taxa',
                           'Observed / Expected Taxa', 'TAR', 'TDR', 'Slope',
-                          'Intercept', 'r-value', 'P value', 'Std Err'])
+                          'Intercept', 'r-value', 'P value', 'Std Err',
+                          'Bray-Curtis', 'Jaccard'])
     results['r-squared'] = results['r-value']**2
     return results, vectors
 
@@ -351,7 +361,7 @@ def _represent_sequence_numerically(alignments):
     # map standard bases to numbers
     alignments = alignments.replace({'A': 1, 'C': 2, 'G': 3, 'T': 4})
     # convert all other strings to nan
-    alignments = alignments.convert_objects(convert_numeric=True)
+    alignments = alignments.apply(pd.to_numeric, errors='coerce', axis=1)
     # convert nans to 0 and return
     return alignments.fillna(0)
 

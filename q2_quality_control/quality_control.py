@@ -55,7 +55,8 @@ def evaluate_composition(
         output_dir: str, expected_features: pd.DataFrame,
         observed_features: pd.DataFrame, depth: int=7, palette: str='Set1',
         plot_tar: bool=True, plot_tdr: bool=True, plot_r_value: bool=False,
-        plot_r_squared: bool=True, plot_observed_features: bool=False,
+        plot_r_squared: bool=True, plot_bray_curtis: bool=False,
+        plot_jaccard: bool=False, plot_observed_features: bool=False,
         plot_observed_features_ratio: bool=True,
         metadata: qiime2.CategoricalMetadataColumn=None) -> None:
 
@@ -65,6 +66,7 @@ def evaluate_composition(
         expected_features, observed_features, depth=depth, palette=palette,
         metadata=metadata, plot_tar=plot_tar, plot_tdr=plot_tdr,
         plot_r_value=plot_r_value, plot_r_squared=plot_r_squared,
+        plot_bray_curtis=plot_bray_curtis, plot_jaccard=plot_jaccard,
         plot_observed_features=plot_observed_features,
         plot_observed_features_ratio=plot_observed_features_ratio)
 

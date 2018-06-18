@@ -93,8 +93,8 @@ def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
                mismatch_histogram=mismatch_histogram, alignments=alignments)
 
 
-def evaluate_taxonomy(output_dir: str, expected_taxa: pd.Series,
-                      observed_taxa: pd.Series, depth: int,
+def evaluate_taxonomy(output_dir: str, expected_taxa: pd.DataFrame,
+                      observed_taxa: pd.DataFrame, depth: int,
                       palette: str='Set1',
                       require_exp_ids: bool=True, require_obs_ids: bool=True,
                       feature_table: biom.Table=None, sample_id: str=None

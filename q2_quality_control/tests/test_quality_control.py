@@ -711,7 +711,7 @@ class EvaluateTaxonomyTests(QualityControlTestsBase):
     def test_index_is_subset_FALSE(self):
         # if series1 is subset of series2, raise error
         with self.assertRaisesRegex(
-                RuntimeError, 'ids not found in observed ids'):
+                ValueError, 'ids not found in observed ids'):
             _index_is_subset(self.exp_taxa[:-5], self.obs_taxa, 'observed')
 
     def test_validate_indices_and_set_joining_mode_equal(self):
@@ -745,7 +745,7 @@ class EvaluateTaxonomyTests(QualityControlTestsBase):
     def test_validate_indices_and_set_joining_mode_require_obs_id_FAIL(self):
         # series1 < series2 indices but require_obs_id=True, FAIL
         with self.assertRaisesRegex(
-                RuntimeError, 'ids not found in expected ids'):
+                ValueError, 'ids not found in expected ids'):
             _validate_indices_and_set_joining_mode(
                 self.exp_taxa[-5:], self.obs_taxa, require_exp_ids=False,
                 require_obs_ids=True)
@@ -753,7 +753,7 @@ class EvaluateTaxonomyTests(QualityControlTestsBase):
     def test_validate_indices_and_set_joining_mode_require_exp_id_FAIL(self):
         # series1 > series2 indices but require_exp_ids=True, FAIL
         with self.assertRaisesRegex(
-                RuntimeError, 'ids not found in observed ids'):
+                ValueError, 'ids not found in observed ids'):
             _validate_indices_and_set_joining_mode(
                 self.exp_taxa, self.obs_taxa[-5:], require_exp_ids=True,
                 require_obs_ids=False)

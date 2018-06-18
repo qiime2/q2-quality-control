@@ -221,5 +221,6 @@ plugin.visualizers.register_function(
         'assignment, e.g., between different taxonomy classifiers or other '
         'bioinformatics methods. Expected taxonomies should be derived from '
         'simulated or mock community sequences that have known taxonomic '
-        'affiliations.'
+        'affiliations.',
+    citations=[citations['bokulich2018optimizing']]
 )

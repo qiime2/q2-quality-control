@@ -10,13 +10,14 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 import qiime2
+import biom
 from warnings import filterwarnings
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import DNAFASTAFormat
 import pandas.util.testing as pdt
 
 from q2_quality_control.quality_control import (
-    exclude_seqs, evaluate_composition, evaluate_seqs)
+    exclude_seqs, evaluate_composition, evaluate_seqs, evaluate_taxonomy)
 from q2_quality_control._utilities import (
     _evaluate_composition, _collapse_table, _drop_nans_zeros,
     _compute_per_level_accuracy, compute_taxon_accuracy,
@@ -24,6 +25,9 @@ from q2_quality_control._utilities import (
     _find_nearest_common_lineage, _interpret_metric_selection,
     _match_samples_by_index, _validate_metadata_and_exp_table)
 from q2_quality_control._evaluate_seqs import _evaluate_seqs
+from q2_quality_control._evaluate_taxonomy import (
+    _evaluate_taxonomy, _extract_taxa_names, _index_is_subset,
+    _validate_indices_and_set_joining_mode)
 
 
 filterwarnings("ignore", category=UserWarning)
@@ -578,6 +582,181 @@ class EvaluateCompositionMockrobiotaDataTests(QualityControlTestsBase):
         pdt.assert_frame_equal(res[1], false_neg)
         pdt.assert_frame_equal(res[2], self.misclassified)
         pdt.assert_frame_equal(res[3], self.underclassified)
+
+
+class EvaluateTaxonomyTests(QualityControlTestsBase):
+
+    def setUp(self):
+        super().setUp()
+        self.exp_taxa = pd.read_csv(
+            self.get_data_path('mock-3-expected-taxonomy.tsv'), sep='\t',
+            index_col=0)
+        self.obs_taxa = pd.read_csv(
+            self.get_data_path('mock-3-observed-taxonomy.tsv'), sep='\t',
+            index_col=0)
+        self.obs_table = biom.load_table(
+            self.get_data_path('mock-3-obs-table.biom'))
+        self.prf_res_unw = pd.DataFrame.from_dict({
+            'level': {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7},
+            'Precision': {0: 0.96, 1: 0.96, 2: 0.96, 3: 0.96, 4: 0.96,
+                          5: 0.9583333333333334, 6: 0.7368421052631579},
+            'Recall': {0: 0.96, 1: 0.96, 2: 0.96, 3: 0.96, 4: 0.96,
+                       5: 0.92, 6: 0.56},
+            'F-measure': {0: 0.96, 1: 0.96, 2: 0.96, 3: 0.96, 4: 0.96,
+                          5: 0.9387755102040817, 6: 0.6363636363636364}})[[
+                             'level', 'Precision', 'Recall', 'F-measure']]
+
+    # just check that visualizer works. Other tests check nuts/bolts
+    def test_evaluate_taxonomy(self):
+        evaluate_taxonomy(
+            self.temp_dir.name, self.exp_taxa, self.obs_taxa, depth=7)
+
+    def test_evaluate_taxonomy_basic(self):
+        prf = _evaluate_taxonomy(
+            self.exp_taxa, self.obs_taxa, require_exp_ids=False,
+            require_obs_ids=False, feature_table=None, sample_id=None,
+            level_range=range(0, 7))
+        pdt.assert_frame_equal(prf, self.prf_res_unw)
+
+    def test_evaluate_taxonomy_sample_id_no_table(self):
+        prf = _evaluate_taxonomy(
+            self.exp_taxa, self.obs_taxa, require_exp_ids=False,
+            require_obs_ids=False, feature_table=None,
+            sample_id='HMPMockV1.1.Even1', level_range=range(0, 7))
+        prf_res_unw = self.prf_res_unw
+        prf_res_unw['SampleID'] = 'HMPMockV1.1.Even1'
+        pdt.assert_frame_equal(prf, prf_res_unw)
+
+    def test_evaluate_taxonomy_sample_id_not_found_FAIL(self):
+        with self.assertRaisesRegex(
+                ValueError, 'Sample id not found in feature table: Peanut'):
+            _evaluate_taxonomy(
+                self.exp_taxa, self.obs_taxa, require_exp_ids=False,
+                require_obs_ids=False, feature_table=self.obs_table,
+                sample_id='Peanut')
+
+    def test_evaluate_taxonomy_plus_table_no_sample_id(self):
+        prf = _evaluate_taxonomy(
+            self.exp_taxa, self.obs_taxa, require_exp_ids=False,
+            require_obs_ids=False, feature_table=self.obs_table,
+            sample_id=None, level_range=range(6, 7))
+        pdt.assert_frame_equal(prf, pd.DataFrame.from_dict(
+            {'level': {0: 7},
+             'Precision': {0: 0.6377837950426994},
+             'Recall': {0: 0.19487462344605203},
+             'F-measure': {0: 0.2985326855267221}})[[
+                'level', 'Precision', 'Recall', 'F-measure']])
+
+    def test_evaluate_taxonomy_sample_id_plus_table(self):
+        prf = _evaluate_taxonomy(
+            self.exp_taxa, self.obs_taxa, require_exp_ids=False,
+            require_obs_ids=False, feature_table=self.obs_table,
+            sample_id='HMPMockV1.1.Even1', level_range=range(6, 7))
+        pdt.assert_frame_equal(prf, pd.DataFrame.from_dict(
+            {'level': {0: 7},
+             'Precision': {0: 0.5523983315954119},
+             'Recall': {0: 0.19757575757575757},
+             'F-measure': {0: 0.2910514387748094},
+             'SampleID': {0: 'HMPMockV1.1.Even1'}})[[
+                'level', 'Precision', 'Recall', 'F-measure', 'SampleID']])
+
+    def test_evaluate_taxonomy_plus_table_missing_features_in_table_FAIL(self):
+        obs_table = self.obs_table.filter(
+            ['47ad35356a9bfec68416d32e4f039021',
+             'c4269a6e9bd66eca53e710c9f9d9ad4f',
+             '7a8d29c59b803baaed9cc1f04ce0dc33',
+             '86adb6193435090318cf24df07770d07'], axis='observation')
+
+        with self.assertRaisesRegex(
+                ValueError, "Feature ids not found in feature table"):
+            _evaluate_taxonomy(
+                self.exp_taxa, self.obs_taxa, require_exp_ids=False,
+                require_obs_ids=False, feature_table=obs_table,
+                sample_id=None, level_range=range(6, 7))
+
+    def _test_extract_taxa_names_species(self):
+        names = _extract_taxa_names(self.self.exp_taxa.iloc['Taxon'])
+        self.assertEqual(names, ['s__', 's__', 's__sphaeroides', 's__acnes',
+                                 's__aureus', '', 's__coli', 's__pylori',
+                                 's__', 's__', 's__', 's__', 's__cereus',
+                                 's__', 's__', 's__', 's__', 's__', 's__',
+                                 's__', 's__', 's__monocytogenes',
+                                 's__aeruginosa', 's__', 's__agalactiae'])
+
+    def _test_extract_taxa_names_phylum(self):
+        names = _extract_taxa_names(
+            self.self.exp_taxa.iloc['Taxon'], level=slice(0, 1))
+        self.assertEqual(names, ['k__Bacteria', 'k__Bacteria', 'k__Bacteria',
+                                 'k__Bacteria', 'k__Bacteria', 'other',
+                                 'k__Bacteria', 'k__Bacteria', 'k__Archaea',
+                                 'k__Bacteria', 'k__Archaea', 'k__Bacteria',
+                                 'k__Bacteria', 'k__Bacteria', 'k__Bacteria',
+                                 'k__Bacteria', 'k__Bacteria', 'k__Bacteria',
+                                 'k__Archaea', 'k__Bacteria', 'k__Bacteria',
+                                 'k__Bacteria', 'k__Bacteria', 'k__Bacteria',
+                                 'k__Bacteria'])
+
+    def _test_extract_taxa_names_all_levels(self):
+        names = _extract_taxa_names(
+            self.self.exp_taxa['Taxon'], level=slice(0, 7))
+        self.assertEqual(names, list(self.self.exp_taxa.iloc['Taxon']))
+
+    def test_index_is_subset_equal_series(self):
+        # if series1 is superset of or == series2, no problem
+        _index_is_subset(self.exp_taxa, self.obs_taxa, 'observed')
+
+    def test_index_is_subset_TRUE(self):
+        _index_is_subset(self.exp_taxa, self.obs_taxa[:-5], 'observed')
+
+    def test_index_is_subset_FALSE(self):
+        # if series1 is subset of series2, raise error
+        with self.assertRaisesRegex(
+                ValueError, 'ids not found in observed ids'):
+            _index_is_subset(self.exp_taxa[:-5], self.obs_taxa, 'observed')
+
+    def test_validate_indices_and_set_joining_mode_equal(self):
+        # series1 == series2 indices, no prob bob
+        join_how = _validate_indices_and_set_joining_mode(
+            self.exp_taxa, self.obs_taxa, require_exp_ids=True,
+            require_obs_ids=True)
+        self.assertEqual(join_how, 'inner')
+
+    def test_validate_indices_and_set_joining_mode_inner(self):
+        # any time require_exp_id == require_obs_ids, join_how = 'inner'
+        join_how = _validate_indices_and_set_joining_mode(
+            self.exp_taxa, self.obs_taxa, require_exp_ids=False,
+            require_obs_ids=False)
+        self.assertEqual(join_how, 'inner')
+
+    def test_validate_indices_and_set_joining_mode_right(self):
+        # exp < obs indices but require_obs_ids=False, pass
+        join_how = _validate_indices_and_set_joining_mode(
+            self.exp_taxa[-5:], self.obs_taxa, require_exp_ids=True,
+            require_obs_ids=False)
+        self.assertEqual(join_how, 'left')
+
+    def test_validate_indices_and_set_joining_mode_left(self):
+        # exp > obs indices but require_exp_ids=False, pass
+        join_how = _validate_indices_and_set_joining_mode(
+            self.exp_taxa, self.obs_taxa[-5:], require_exp_ids=False,
+            require_obs_ids=True)
+        self.assertEqual(join_how, 'right')
+
+    def test_validate_indices_and_set_joining_mode_require_obs_id_FAIL(self):
+        # series1 < series2 indices but require_obs_id=True, FAIL
+        with self.assertRaisesRegex(
+                ValueError, 'ids not found in expected ids'):
+            _validate_indices_and_set_joining_mode(
+                self.exp_taxa[-5:], self.obs_taxa, require_exp_ids=False,
+                require_obs_ids=True)
+
+    def test_validate_indices_and_set_joining_mode_require_exp_id_FAIL(self):
+        # series1 > series2 indices but require_exp_ids=True, FAIL
+        with self.assertRaisesRegex(
+                ValueError, 'ids not found in observed ids'):
+            _validate_indices_and_set_joining_mode(
+                self.exp_taxa, self.obs_taxa[-5:], require_exp_ids=True,
+                require_obs_ids=False)
 
 
 exp = pd.DataFrame(

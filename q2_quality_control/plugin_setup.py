@@ -9,9 +9,11 @@
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
                            MetadataColumn, Categorical, Citations)
-from q2_types.feature_data import FeatureData, Sequence
+from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.feature_table import FeatureTable, RelativeFrequency
-from .quality_control import exclude_seqs, evaluate_composition, evaluate_seqs
+from .quality_control import (exclude_seqs, evaluate_composition,
+                              evaluate_seqs, evaluate_taxonomy)
+
 
 citations = Citations.load('citations.bib', package='q2_quality_control')
 
@@ -35,6 +37,19 @@ seq_inputs_descriptions = {
     'query_sequences': 'Sequences to test for exclusion',
     'reference_sequences': ('Reference sequences to align against feature '
                             'sequences')}
+
+taxa_inputs = {'depth': Int,
+               'palette': Str % Choices([
+                    'Set1', 'Set2', 'Set3', 'Pastel1', 'Pastel2', 'Paired',
+                    'Accent', 'Dark2', 'tab10', 'tab20', 'tab20b', 'tab20c',
+                    'viridis', 'plasma', 'inferno', 'magma', 'terrain',
+                    'rainbow'])}
+
+taxa_inputs_descriptions = {
+    'depth': 'Maximum depth of semicolon-delimited taxonomic ranks to '
+             'test (e.g., 1 = root, 7 = species for the greengenes '
+             'reference sequence database).',
+    'palette': 'Color palette to utilize for plotting.'}
 
 
 plugin.methods.register_function(
@@ -90,12 +105,7 @@ plugin.visualizers.register_function(
     function=evaluate_composition,
     inputs={'expected_features': FeatureTable[RelativeFrequency],
             'observed_features': FeatureTable[RelativeFrequency]},
-    parameters={'depth': Int,
-                'palette': Str % Choices([
-                    'Set1', 'Set2', 'Set3', 'Pastel1', 'Pastel2', 'Paired',
-                    'Accent', 'Dark2', 'tab10', 'tab20', 'tab20b', 'tab20c',
-                    'viridis', 'plasma', 'inferno', 'magma', 'terrain',
-                    'rainbow']),
+    parameters={**taxa_inputs,
                 'plot_tar': Bool,
                 'plot_tdr': Bool,
                 'plot_r_value': Bool,
@@ -109,10 +119,7 @@ plugin.visualizers.register_function(
         'expected_features': 'Expected feature compositions',
         'observed_features': 'Observed feature compositions'},
     parameter_descriptions={
-        'depth': 'Maximum depth of semicolon-delimited taxonomic ranks to '
-                 'test (e.g., 1 = root, 7 = species for the greengenes '
-                 'reference sequence database).',
-        'palette': 'Color palette to utilize for plotting.',
+        **taxa_inputs_descriptions,
         'plot_tar': 'Plot taxon accuracy rate (TAR) on score plot. TAR is '
                     'the number of true positive features divided by the '
                     'total number of observed features (TAR = true positives '
@@ -174,4 +181,46 @@ plugin.visualizers.register_function(
         'input to generate a report on pairwise alignment quality against '
         'a set of reference sequences.',
     citations=[citations['camacho2009blast+']]
+)
+
+plugin.visualizers.register_function(
+    function=evaluate_taxonomy,
+    inputs={'expected_taxa': FeatureData[Taxonomy],
+            'observed_taxa': FeatureData[Taxonomy],
+            'feature_table': FeatureTable[RelativeFrequency]},
+    parameters={**taxa_inputs,
+                'require_exp_ids': Bool,
+                'require_obs_ids': Bool,
+                'sample_id': Str},
+    input_descriptions={
+        'expected_taxa': 'Expected taxonomic assignments',
+        'observed_taxa': 'Observed taxonomic assignments',
+        'feature_table': 'Optional feature table containing relative '
+                         'frequency of each feature, used to weight accuracy '
+                         'scores by frequency. Must contain all features '
+                         'found in expected and/or observed taxa. Features '
+                         'found in the table but not the expected/observed '
+                         'taxa will be dropped prior to analysis.'},
+    parameter_descriptions={
+        **taxa_inputs_descriptions,
+        'require_obs_ids': 'Require that all features found in expected taxa '
+                           'must be found in observed taxa or raise error.',
+        'require_exp_ids': 'Require that all features found in observed taxa '
+                           'must be found in expected taxa or raise error.',
+        'sample_id': 'Optional sample ID to use for extracting frequency data '
+                     'from feature table, and for labeling accuracy results. '
+                     'If no sample_id is provided, feature frequencies are '
+                     'derived from the sum of all samples present in the '
+                     'feature table.'},
+    name='Evaluate expected vs. observed taxonomic assignments',
+    description='This visualizer compares a pair of observed and expected '
+        'taxonomic assignments to calculate precision, recall, and F-measure '
+        'at each taxonomic level, up to maximum level specified by the depth '
+        'parameter. These metrics are calculated at each semicolon-delimited '
+        'rank. This action is useful for comparing the accuracy of taxonomic '
+        'assignment, e.g., between different taxonomy classifiers or other '
+        'bioinformatics methods. Expected taxonomies should be derived from '
+        'simulated or mock community sequences that have known taxonomic '
+        'affiliations.',
+    citations=[citations['bokulich2018optimizing']]
 )

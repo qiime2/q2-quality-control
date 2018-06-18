@@ -17,8 +17,6 @@ def _evaluate_taxonomy(exp_taxa, obs_taxa, require_exp_ids=True,
         exp_taxa, obs_taxa, require_exp_ids, require_obs_ids)
 
     # merge tables
-    if type(exp_taxa) == pd.core.series.Series:
-        exp_taxa = exp_taxa.to_frame()
     taxa = exp_taxa.join(
         obs_taxa, how=join_how, lsuffix='_exp', rsuffix='_obs')
 
@@ -37,8 +35,7 @@ def _evaluate_taxonomy(exp_taxa, obs_taxa, require_exp_ids=True,
 
 
 # modified from tax-credit with permission of nbokulich
-def _compute_prf(exp, obs, l_range=range(0, 7), sample_weight=None,
-                 exclude=None):
+def _compute_prf(exp, obs, l_range=range(0, 7), sample_weight=None):
     p, r, f = {}, {}, {}
     # iterate over multiple taxonomic levels
     for lvl in l_range:
@@ -46,7 +43,7 @@ def _compute_prf(exp, obs, l_range=range(0, 7), sample_weight=None,
         _obs = _extract_taxa_names(obs, level=slice(0, lvl))
         _exp = _extract_taxa_names(exp, level=slice(0, lvl))
         p[lvl], r[lvl], f[lvl] = _precision_recall_fscore(
-            _exp, _obs, sample_weight=sample_weight, exclude=exclude)
+            _exp, _obs, sample_weight=sample_weight)
 
     return p, r, f
 
@@ -66,16 +63,12 @@ def _extract_taxa_names(inlist, level=slice(6, 7), delim=';', stripchars=None):
 
 
 # ported from tax-credit with permission of nbokulich
-def _precision_recall_fscore(exp, obs, sample_weight=None, exclude=None):
+def _precision_recall_fscore(exp, obs, sample_weight=None):
     # precision, recall, fscore, calculated using microaveraging
-    if exclude is None:
-        exclude = []
     if sample_weight is None:
         sample_weight = [1]*len(exp)
     tp, fp, fn = 0, 0, 0
     for e, o, w in zip(exp, obs, sample_weight):
-        if e in exclude:
-            continue
         if o == e:
             # tp for the true class, the rest are tn
             tp += w
@@ -91,6 +84,7 @@ def _precision_recall_fscore(exp, obs, sample_weight=None, exclude=None):
             # fn for the true class, the rest are tn
             fn += w
 
+    # avoid divide by zero error. If no true positives, all scores = 0
     if tp == 0:
         return 0, 0, 0
     else:

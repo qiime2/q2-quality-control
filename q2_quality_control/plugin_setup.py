@@ -8,12 +8,14 @@
 
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataColumn, Categorical)
+                           MetadataColumn, Categorical, Citations)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.feature_table import FeatureTable, RelativeFrequency
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy)
 
+
+citations = Citations.load('citations.bib', package='q2_quality_control')
 
 plugin = Plugin(
     name='quality-control',
@@ -95,7 +97,8 @@ plugin.methods.register_function(
         'perc_identity, perc_query_aligned, and evalue thresholds (the '
         'latter only if method==BLAST and an evalue is set). Set '
         'perc_identity==0 and/or perc_query_aligned==0 to disable these '
-        'filtering thresholds as necessary.')
+        'filtering thresholds as necessary.'),
+    citations=[citations['camacho2009blast+']]
 )
 
 plugin.visualizers.register_function(
@@ -107,6 +110,8 @@ plugin.visualizers.register_function(
                 'plot_tdr': Bool,
                 'plot_r_value': Bool,
                 'plot_r_squared': Bool,
+                'plot_bray_curtis': Bool,
+                'plot_jaccard': Bool,
                 'plot_observed_features': Bool,
                 'plot_observed_features_ratio': Bool,
                 'metadata': MetadataColumn[Categorical]},
@@ -127,6 +132,10 @@ plugin.visualizers.register_function(
                         'value on score plot.',
         'plot_r_squared': 'Plot expected vs. observed linear regression r-'
                           'squared value on score plot.',
+        'plot_bray_curtis': 'Plot expected vs. observed Bray-Curtis '
+                            'dissimilarity scores on score plot.',
+        'plot_jaccard': 'Plot expected vs. observed Jaccard distances scores '
+                        'on score plot.',
         'plot_observed_features':
             'Plot observed features count on score plot.',
         'plot_observed_features_ratio':
@@ -149,7 +158,8 @@ plugin.visualizers.register_function(
         'suitable for testing per-run data quality on sequencing runs that '
         'contain mock communities or other samples with known composition. '
         'Also suitable for sanity checks of bioinformatics pipeline '
-        'performance.'
+        'performance.',
+    citations=[citations['bokulich2018optimizing']]
 )
 
 plugin.visualizers.register_function(
@@ -169,7 +179,8 @@ plugin.visualizers.register_function(
         'and the most similar expected sequences, e.g., as a measure of '
         'sequencing/method error. However, any sequences may be provided as '
         'input to generate a report on pairwise alignment quality against '
-        'a set of reference sequences.'
+        'a set of reference sequences.',
+    citations=[citations['camacho2009blast+']]
 )
 
 plugin.visualizers.register_function(

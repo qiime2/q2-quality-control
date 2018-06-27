@@ -206,8 +206,8 @@ def _compute_per_level_accuracy(exp, obs, metadata, depth):
 
 # ported and modified from tax-credit with permission of nbokulich
 def compute_taxon_accuracy(exp, obs):
-    actual_obs_ids = set(exp.index)
-    expected_obs_ids = set(obs.index)
+    actual_obs_ids = set(obs.index)
+    expected_obs_ids = set(exp.index)
 
     tp = len(actual_obs_ids & expected_obs_ids)
     fp = len(actual_obs_ids - expected_obs_ids)

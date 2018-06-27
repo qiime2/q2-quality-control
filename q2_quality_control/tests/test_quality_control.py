@@ -217,7 +217,7 @@ class UtilitiesTests(QualityControlTestsBase):
         res = compute_taxon_accuracy(
             pd.Series({'a;b': 1, 'b;c': 1, 'c;d': 1}),
             pd.Series({'a;b': 1, 'b;c': 1, 'c;e': 1, 'd;e': 1}))
-        self.assertEqual(res, (0.6666666666666666, 0.5))
+        self.assertEqual(res, (0.5, 0.6666666666666666))
 
     def test_compute_taxon_accuracy_no_matches(self):
         res = compute_taxon_accuracy(

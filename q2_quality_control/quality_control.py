@@ -20,9 +20,9 @@ from ._evaluate_taxonomy import _evaluate_taxonomy
 
 
 def exclude_seqs(query_sequences: DNAFASTAFormat,
-                 reference_sequences: DNAFASTAFormat, method: str='blast',
-                 perc_identity: float=0.97, evalue: float=None,
-                 perc_query_aligned: float=0.97, threads: str=1
+                 reference_sequences: DNAFASTAFormat, method: str = 'blast',
+                 perc_identity: float = 0.97, evalue: float = None,
+                 perc_query_aligned: float = 0.97, threads: str = 1
                  ) -> (pd.Series, pd.Series):
 
     # BLAST query seqs vs. ref db of contaminants (or targets)
@@ -57,12 +57,13 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
 
 def evaluate_composition(
         output_dir: str, expected_features: pd.DataFrame,
-        observed_features: pd.DataFrame, depth: int=7, palette: str='Set1',
-        plot_tar: bool=True, plot_tdr: bool=True, plot_r_value: bool=False,
-        plot_r_squared: bool=True, plot_bray_curtis: bool=False,
-        plot_jaccard: bool=False, plot_observed_features: bool=False,
-        plot_observed_features_ratio: bool=True,
-        metadata: qiime2.CategoricalMetadataColumn=None) -> None:
+        observed_features: pd.DataFrame, depth: int = 7, palette: str = 'Set1',
+        plot_tar: bool = True, plot_tdr: bool = True,
+        plot_r_value: bool = False, plot_r_squared: bool = True,
+        plot_bray_curtis: bool = False, plot_jaccard: bool = False,
+        plot_observed_features: bool = False,
+        plot_observed_features_ratio: bool = True,
+        metadata: qiime2.CategoricalMetadataColumn = None) -> None:
 
     # results, fn_features, misclassifications, underclassifications,
     # composition_regression, score_plot, mismatch_histogram
@@ -80,7 +81,7 @@ def evaluate_composition(
 
 def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
                   reference_sequences: DNAFASTAFormat,
-                  show_alignments: bool=False) -> None:
+                  show_alignments: bool = False) -> None:
 
     results, alignments, mismatch_histogram = _evaluate_seqs(
         query_sequences, reference_sequences, show_alignments)
@@ -95,9 +96,9 @@ def evaluate_seqs(output_dir: str, query_sequences: DNAFASTAFormat,
 
 def evaluate_taxonomy(output_dir: str, expected_taxa: pd.DataFrame,
                       observed_taxa: pd.DataFrame, depth: int,
-                      palette: str='Set1',
-                      require_exp_ids: bool=True, require_obs_ids: bool=True,
-                      feature_table: biom.Table=None, sample_id: str=None
+                      palette: str = 'Set1', require_exp_ids: bool = True,
+                      require_obs_ids: bool = True,
+                      feature_table: biom.Table = None, sample_id: str = None
                       ) -> None:
     prf = _evaluate_taxonomy(expected_taxa, observed_taxa, require_exp_ids,
                              require_obs_ids, feature_table, sample_id,

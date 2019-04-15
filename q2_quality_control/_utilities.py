@@ -185,7 +185,12 @@ def _compute_per_level_accuracy(exp, obs, metadata, depth):
             # compute TAR/TDR
             result.extend(compute_taxon_accuracy(exp_features, obs_features))
             # compute linear least-squares regression results
-            result.extend(linregress(exp_vector, obs_vector))
+            if len(exp_vector) == len(obs_vector) == 1:
+                # linear regression cannot compute if vector length < 2
+                reg_results = [np.nan] * 5
+            else:
+                reg_results = linregress(exp_vector, obs_vector)
+            result.extend(reg_results)
             # compute Bray-Curtis dissimilarity
             result.append(braycurtis(exp_vector, obs_vector))
             # compute Jaccard distance, must convert to bool array

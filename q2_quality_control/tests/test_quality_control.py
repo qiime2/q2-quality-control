@@ -419,6 +419,14 @@ class EvaluateCompositionTests(QualityControlTestsBase):
         pdt.assert_frame_equal(res[0], self.exp_results)
         self.assertEqual(res[1], exp_v)
 
+    # confirm accurate behavior when exp/obs vector lengths are equal to
+    # one. See https://github.com/qiime2/q2-quality-control/issues/44
+    def test_compute_per_level_accuracy_vector_length_one(self):
+        res = _compute_per_level_accuracy(
+            exp_one_kingdom, obs_one_kingdom, None, depth=1)
+        # assert that all r2 values are nan (if r2 is nan, r will be also)
+        self.assertTrue(np.isnan(res[0]['r-squared']).all())
+
     def test_evaluate_composition(self):
         res = _evaluate_composition(
             self.exp, self.obs, depth=7, palette='Set1',
@@ -785,6 +793,25 @@ obs = pd.DataFrame(
      'k__Ae;p__Be;c__Ce;o__De;f__Ee;g__Fe': [0.12, 0.16, 0.15],
      'k__Af;p__Bf;c__Cf;o__Df;f__Ef;g__Ff;s__Gf': [0.20, 0.21, 0.25],
      'k__Ag;p__Bg;c__Cg;o__Dg;f__Eg;g__Fg;s__Gg': [0.08, 0.03, 0.0]},
+    index=['s1', 's2', 's3'])
+
+exp_one_kingdom = pd.DataFrame(
+    {'k__A;p__B;c__C;o__Da;f__Ea;g__Fa;s__Ga': [0.15, 0.15, 0.15],
+     'k__A;p__B;c__C;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.15, 0.15],
+     'k__A;p__B;c__Cc;o__Dc;f__Ec;g__Fc;s__Gc': [0.15, 0.15, 0.15],
+     'k__A;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15, 0.15, 0.15],
+     'k__A;p__Be;c__Ce;o__De;f__Ee;g__Fe;s__Ge': [0.15, 0.15, 0.15],
+     'k__A;p__Bf;c__Cf;o__Df;f__Ef;g__Ff': [0.25, 0.25, 0.25]},
+    index=['s1', 's2', 's3'])
+
+obs_one_kingdom = pd.DataFrame(
+    {'k__A;p__B;c__C;o__Da;f__Ea;g__Fa;s__Ga': [0.10, 0.15, 0.15],
+     'k__A;p__B;c__C;o__Db;f__Eb;g__Fb;s__Gb': [0.15, 0.10, 0.10],
+     'k__A;p__B;c__Cc;o__Dc;f__Ec': [0.20, 0.17, 0.15],
+     'k__A;p__Bd;c__Cd;o__Dd;f__Ed;g__Fd;s__Gd': [0.15, 0.18, 0.20],
+     'k__A;p__Be;c__Ce;o__De;f__Ee;g__Fe': [0.12, 0.16, 0.15],
+     'k__A;p__Bf;c__Cf;o__Df;f__Ef;g__Ff;s__Gf': [0.20, 0.21, 0.25],
+     'k__A;p__Bg;c__Cg;o__Dg;f__Eg;g__Fg;s__Gg': [0.08, 0.03, 0.0]},
     index=['s1', 's2', 's3'])
 
 exp_v = {

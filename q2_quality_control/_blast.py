@@ -11,7 +11,8 @@ import subprocess
 
 
 def _search_seqs(query_sequences, reference_sequences, evalue,
-                 perc_identity, threads, perc_query_aligned, method):
+                 perc_identity, threads, perc_query_aligned, method,
+                 left_justify):
     if method == 'blast':
         # blast uses float format but vsearch uses int for perc_identity
         perc_identity = perc_identity * 100
@@ -24,7 +25,8 @@ def _search_seqs(query_sequences, reference_sequences, evalue,
             query_sequences, reference_sequences, evalue, perc_identity)
     elif method == 'vsearch':
         cmd = _vsearch(
-            query_sequences, reference_sequences, perc_identity, threads)
+            query_sequences, reference_sequences, perc_identity, threads,
+            left_justify)
     return _generate_assignments(cmd, perc_query_aligned)
 
 
@@ -49,13 +51,17 @@ def _blastn_short(query_sequences, reference_sequences, evalue,
     return cmd
 
 
-def _vsearch(query_sequences, reference_sequences, perc_identity, threads):
+def _vsearch(query_sequences, reference_sequences, perc_identity, threads,
+             left_just):
     seqs_fp = str(query_sequences)
     ref_fp = str(reference_sequences)
     cmd = ['vsearch', '--usearch_global', seqs_fp, '--id', str(perc_identity),
            '--strand', 'both', '--maxaccepts', '1', '--maxrejects', '0',
            '--db', ref_fp, '--threads', str(threads),
-           '--userfields', 'query+target+ql+qlo+qhi', '--userout']
+           '--userfields', 'query+target+ql+qlo+qhi']
+    if left_just:
+        cmd.append('--leftjust')
+    cmd.append('--userout')
     return cmd
 
 

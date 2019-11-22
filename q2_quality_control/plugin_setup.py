@@ -59,7 +59,8 @@ plugin.methods.register_function(
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
                 'perc_query_aligned': Float,
-                'threads': Int % Range(1, None)},
+                'threads': Int % Range(1, None),
+                'left_justify': Bool},
     outputs=[('sequence_hits', FeatureData[Sequence]),
              ('sequence_misses', FeatureData[Sequence])],
     input_descriptions=seq_inputs_descriptions,
@@ -76,6 +77,8 @@ plugin.methods.register_function(
             'to be accepted as a hit.'),
         'threads': (
             'Number of jobs to execute. Only applies to vsearch method.'),
+        'left_justify': ('Reject match if the pairwise alignment begins with '
+                         'gaps'),
     },
     output_descriptions={
         'sequence_hits': (

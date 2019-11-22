@@ -18,18 +18,26 @@ from ._utilities import (
 from ._evaluate_seqs import _evaluate_seqs
 from ._evaluate_taxonomy import _evaluate_taxonomy
 
+left_justify_supported_methods = ['vsearch']
+
 
 def exclude_seqs(query_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method: str = 'blast',
                  perc_identity: float = 0.97, evalue: float = None,
-                 perc_query_aligned: float = 0.97, threads: str = 1
+                 perc_query_aligned: float = 0.97, threads: str = 1,
+                 left_justify: bool = False,
                  ) -> (pd.Series, pd.Series):
 
+    if left_justify and (method not in left_justify_supported_methods):
+        raise ValueError("left_justify is not compatible with method %s. "
+                         "Valid methods for left_justify are %s" %
+                         (method, left_justify_supported_methods))
     # BLAST query seqs vs. ref db of contaminants (or targets)
     hit_ids = _search_seqs(
         query_sequences, reference_sequences, evalue=evalue,
         perc_identity=perc_identity, threads=threads,
-        perc_query_aligned=perc_query_aligned, method=method)
+        perc_query_aligned=perc_query_aligned, method=method,
+        left_justify=left_justify)
 
     # convert query_sequences to series for filtering
     query_series = _dnafastaformats_to_series(query_sequences)

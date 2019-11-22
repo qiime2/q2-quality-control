@@ -157,15 +157,15 @@ class VsearchTests(ExcludeSeqsBase, SequenceQualityControlBase):
     method = 'vsearch'
 
     def test_exclude_seqs_left_justify_hits(self):
-            obs, missed = exclude_seqs(
-                self.query_seqs_left_justify, self.bacterial_ref,
-                method=self.method,
-                left_justify=True)
-            self.assertCountEqual(
-                sorted(obs.index),
-                ['1111886-leftjustmatch', '1111882-leftjustwithindel',
-                 '1111879-leftjustmatch']
-            )
+        obs, missed = exclude_seqs(
+            self.query_seqs_left_justify, self.bacterial_ref,
+            method=self.method,
+            left_justify=True)
+        self.assertCountEqual(
+            sorted(obs.index),
+            ['1111886-leftjustmatch', '1111882-leftjustwithindel',
+             '1111879-leftjustmatch']
+        )
 
     def test_exclude_seqs_left_justify_missed(self):
         obs, missed = exclude_seqs(

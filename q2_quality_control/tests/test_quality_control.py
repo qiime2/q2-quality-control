@@ -76,6 +76,8 @@ class SequenceQualityControlBase(QualityControlTestsBase):
             'query-sequences-short.fasta')
         self.query_seqs_part_rand = _load_DNAFASTAFormat(
             'query-partially-random.fasta')
+        self.query_seqs_left_justify = _load_DNAFASTAFormat(
+            'query-sequences-left-justified.fasta')
 
 
 class ExcludeSeqsBase(object):
@@ -143,9 +145,33 @@ class ExcludeSeqsBase(object):
 class BlastTests(ExcludeSeqsBase, SequenceQualityControlBase):
     method = 'blast'
 
+    def test_exclude_seqs_left_justify_value_error(self):
+        with self.assertRaisesRegex(ValueError, r'left_just is not '
+                                                r'compatible with method'):
+            exclude_seqs(
+                self.query_seqs_left_justify, self.bacterial_ref,
+                method=self.method, left_justify=True)
+
 
 class VsearchTests(ExcludeSeqsBase, SequenceQualityControlBase):
     method = 'vsearch'
+
+    def test_exclude_seqs_left_justify_hits(self):
+            obs, missed = exclude_seqs(
+                self.query_seqs_left_justify, self.bacterial_ref,
+                method=self.method,
+                left_justify=True)
+            self.assertCountEqual(
+                sorted(obs.index),
+                ['1111886-leftjustmatch', '1111882-leftjustwithindel',
+                 '1111879-leftjustmatch']
+            )
+
+    def test_exclude_seqs_left_justify_missed(self):
+        obs, missed = exclude_seqs(
+            self.query_seqs_left_justify, self.bacterial_ref,
+            method=self.method, left_justify=True)
+        self.assertEqual(sorted(missed.index), ['1111883-noleftjustmatch'])
 
 
 class SequenceQualityControlTests(SequenceQualityControlBase):

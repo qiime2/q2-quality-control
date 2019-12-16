@@ -146,8 +146,9 @@ class BlastTests(ExcludeSeqsBase, SequenceQualityControlBase):
     method = 'blast'
 
     def test_exclude_seqs_left_justify_value_error(self):
-        with self.assertRaisesRegex(ValueError, r'left_justify is not '
-                                                r'compatible with method'):
+        with self.assertRaisesRegex(ValueError, "left_justify=True is not "
+                                                "compatible with "
+                                                "method='blast'"):
             exclude_seqs(
                 self.query_seqs_left_justify, self.bacterial_ref,
                 method=self.method, left_justify=True)

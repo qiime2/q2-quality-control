@@ -29,9 +29,9 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
                  ) -> (pd.Series, pd.Series):
 
     if left_justify and (method not in left_justify_supported_methods):
-        raise ValueError("left_justify=%s is not compatible with method=%s, "
+        raise ValueError("left_justify=%s is not compatible with method='%s', "
                          "check the documentation for valid combinations" %
-                         (method, left_justify_supported_methods))
+                         (left_justify, method))
     # BLAST query seqs vs. ref db of contaminants (or targets)
     hit_ids = _search_seqs(
         query_sequences, reference_sequences, evalue=evalue,

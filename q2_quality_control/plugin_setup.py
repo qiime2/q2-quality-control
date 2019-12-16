@@ -57,6 +57,7 @@ P_method, P_left_justify, _ = TypeMap({
         Visualization,
     (Str % Choices("vsearch"), Bool): Visualization,
 })
+
 plugin.methods.register_function(
     function=exclude_seqs,
     inputs=seq_inputs,

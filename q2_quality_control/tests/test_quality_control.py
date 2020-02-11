@@ -236,25 +236,25 @@ class UtilitiesTests(QualityControlTestsBase):
             {'a;b;c;d;e': [1, 1, 1], 'a;b;f;g;h': [1, 1, 1],
              'a;b': [1, 1, 1]})
         new_table = _collapse_table(old_table, 2)
-        self.assertEquals(set(new_table.columns), set(['a;b']))
+        self.assertEqual(set(new_table.columns), set(['a;b']))
         npt.assert_array_equal(new_table.values, np.array([[3], [3], [3]]))
         new_table = _collapse_table(old_table, 3)
-        self.assertEquals(set(new_table.columns),
-                          set(('a;b;__', 'a;b;c', 'a;b;f')))
+        self.assertEqual(set(new_table.columns),
+                         set(('a;b;__', 'a;b;c', 'a;b;f')))
         npt.assert_array_equal(
             new_table.values, np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]))
 
     def test_identify_incorrect_classifications(self):
         res = _identify_incorrect_classifications(
             set(('a', 'c', 'd', 'e', 'f')), set(('a', 'b', 'c', 'd')))
-        self.assertEquals(res, (set(('e', 'f')), set(('b'))))
+        self.assertEqual(res, (set(('e', 'f')), set(('b'))))
 
     # matches should never reach this function, so expect underclassification
     def test_tally_misclassifications(self):
         res = _tally_misclassifications(
             set(('a;b;c', 'd;e;f;m', 'g;h', 'j', 'm;n;o')),
             set(('a;b;c', 'd;e;f', 'g;h;i', 'j;k;l')))
-        self.assertEquals(
+        self.assertEqual(
             res, (['d;e;f;m', 'm;n;o'], ['a;b;c', 'g;h', 'j'],
                   [-2, -1, 0, 1, 3]))
 
@@ -262,21 +262,21 @@ class UtilitiesTests(QualityControlTestsBase):
         res = _tally_misclassifications(
             set(('m;n;o', 'p;q;r', 'q;r;s', 'r;s;t;u')),
             set(('a;b;c', 'd;e;f', 'g;h;i', 'j;k;l')))
-        self.assertEquals(res, (['m;n;o', 'p;q;r', 'q;r;s', 'r;s;t;u'], [],
-                                [3, 3, 3, 4]))
+        self.assertEqual(res, (['m;n;o', 'p;q;r', 'q;r;s', 'r;s;t;u'], [],
+                               [3, 3, 3, 4]))
 
     # matches should never reach this function, so expect underclassification
     def test_tally_misclassifications_all_match(self):
         res = _tally_misclassifications(
             set(('a;b;c', 'd;e;f', 'g;h;i', 'j;k;l')),
             set(('a;b;c', 'd;e;f', 'g;h;i', 'j;k;l')))
-        self.assertEquals(
+        self.assertEqual(
             res, ([], ['a;b;c', 'd;e;f', 'g;h;i', 'j;k;l'], [0, 0, 0, 0]))
 
     def test_interpret_metric_selection_valid(self):
         yvals = _interpret_metric_selection(
             True, True, False, True, False, False, False, False)
-        self.assertEquals(yvals, ['TAR', 'TDR', 'r-squared'])
+        self.assertEqual(yvals, ['TAR', 'TDR', 'r-squared'])
 
     def test_interpret_metric_selection_invalid(self):
         with self.assertRaisesRegex(ValueError, "At least one metric"):

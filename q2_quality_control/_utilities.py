@@ -171,7 +171,7 @@ def _compute_per_level_accuracy(exp, obs, metadata, depth):
             # concatenate obs/exp observations to align features
             joined_table = pd.concat(
                 [exp_collapsed.loc[exp_id],
-                 obs_collapsed.loc[sample]], axis=1).fillna(0)
+                 obs_collapsed.loc[sample]], axis=1, sort=True).fillna(0)
             # split joined table apart again for computing stats
             exp_vector = joined_table.iloc[:, 0]
             obs_vector = joined_table.iloc[:, 1]

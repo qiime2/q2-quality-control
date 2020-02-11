@@ -136,8 +136,8 @@ def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
 
 def _match_samples_by_index(df_a, df_b):
     # find all rows (samples) in df_a that do not match df_b, and vice versa
-    df_a_new = df_a.loc[df_b.index]
-    df_b_new = df_b.loc[df_a.index]
+    df_a_new = df_a.reindex(df_b.index)
+    df_b_new = df_b.reindex(df_a.index)
     return df_a_new, df_b_new
 
 

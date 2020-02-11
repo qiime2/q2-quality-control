@@ -377,7 +377,7 @@ def _visualize(output_dir, title, running_title, results,
                composition_regression=None, score_plot=None,
                mismatch_histogram=None, alignments=None):
 
-    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_colwidth', None)
 
     # save results
     results.to_csv(join(output_dir, 'results.tsv'), sep='\t')

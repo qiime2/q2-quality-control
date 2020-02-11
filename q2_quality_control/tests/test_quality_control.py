@@ -240,7 +240,7 @@ class UtilitiesTests(QualityControlTestsBase):
         npt.assert_array_equal(new_table.values, np.array([[3], [3], [3]]))
         new_table = _collapse_table(old_table, 3)
         self.assertEqual(set(new_table.columns),
-                          set(('a;b;__', 'a;b;c', 'a;b;f')))
+                         set(('a;b;__', 'a;b;c', 'a;b;f')))
         npt.assert_array_equal(
             new_table.values, np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]))
 
@@ -263,7 +263,7 @@ class UtilitiesTests(QualityControlTestsBase):
             set(('m;n;o', 'p;q;r', 'q;r;s', 'r;s;t;u')),
             set(('a;b;c', 'd;e;f', 'g;h;i', 'j;k;l')))
         self.assertEqual(res, (['m;n;o', 'p;q;r', 'q;r;s', 'r;s;t;u'], [],
-                                [3, 3, 3, 4]))
+                               [3, 3, 3, 4]))
 
     # matches should never reach this function, so expect underclassification
     def test_tally_misclassifications_all_match(self):

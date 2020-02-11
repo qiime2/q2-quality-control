@@ -52,7 +52,8 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
                 hits_seqs[seq_id] = seq
             else:
                 misses_seqs[seq_id] = seq
-        return pd.Series(hits_seqs, dtype='string'), pd.Series(misses_seqs, dtype='string')
+        return (pd.Series(hits_seqs, dtype='string'),
+                pd.Series(misses_seqs, dtype='string'))
 
 
 def evaluate_composition(

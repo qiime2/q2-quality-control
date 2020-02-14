@@ -18,7 +18,7 @@ from ._utilities import (
 from ._evaluate_seqs import _evaluate_seqs
 from ._evaluate_taxonomy import _evaluate_taxonomy
 
-left_justify_supported_methods = ['vsearch']
+left_justify_supported_methods = {'vsearch'}
 
 
 def exclude_seqs(query_sequences: DNAFASTAFormat,
@@ -29,9 +29,9 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
                  ) -> (pd.Series, pd.Series):
 
     if left_justify and (method not in left_justify_supported_methods):
-        raise ValueError("left_justify=%s is not compatible with method='%s', "
+        raise ValueError("Enabling left_justify is not compatible with method=%r, "
                          "check the documentation for valid combinations" %
-                         (left_justify, method))
+                         (method, ))
     # BLAST query seqs vs. ref db of contaminants (or targets)
     hit_ids = _search_seqs(
         query_sequences, reference_sequences, evalue=evalue,

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2017-2019, QIIME 2 development team.
+# Copyright (c) 2017-2020, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -44,11 +44,11 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
 
     # if no hits are in hit_ids, return empty hits and query_series as misses
     if len(hit_ids) < 1:
-        hits_seqs = pd.Series()
+        hits_seqs = pd.Series(dtype='string')
         return hits_seqs, query_series
     # if all query seqs are hits, return query_series as hits and empty misses
     elif len(hit_ids) == len(query_series):
-        misses_seqs = pd.Series()
+        misses_seqs = pd.Series(dtype='string')
         return query_series, misses_seqs
     # otherwise filter seqs from seq file
     else:
@@ -60,7 +60,8 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
                 hits_seqs[seq_id] = seq
             else:
                 misses_seqs[seq_id] = seq
-        return pd.Series(hits_seqs), pd.Series(misses_seqs)
+        return (pd.Series(hits_seqs, dtype='string'),
+                pd.Series(misses_seqs, dtype='string'))
 
 
 def evaluate_composition(

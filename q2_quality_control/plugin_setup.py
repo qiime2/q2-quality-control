@@ -8,7 +8,8 @@
 
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataColumn, Categorical, Citations)
+                           MetadataColumn, Categorical, Citations, TypeMap,
+                           Visualization)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.feature_table import FeatureTable, RelativeFrequency
 from .quality_control import (exclude_seqs, evaluate_composition,
@@ -51,15 +52,22 @@ taxa_inputs_descriptions = {
              'reference sequence database).',
     'palette': 'Color palette to utilize for plotting.'}
 
+P_method, P_left_justify, _ = TypeMap({
+    (Str % Choices("blast", "blastn-short"), Bool % Choices(False)):
+        Visualization,
+    (Str % Choices("vsearch"), Bool): Visualization,
+})
 
 plugin.methods.register_function(
     function=exclude_seqs,
     inputs=seq_inputs,
-    parameters={'method': Str % Choices(['blast', 'vsearch', 'blastn-short']),
+    parameters={'method': P_method,
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
                 'perc_query_aligned': Float,
-                'threads': Int % Range(1, None)},
+                'threads': Int % Range(1, None),
+                'left_justify': P_left_justify,
+                },
     outputs=[('sequence_hits', FeatureData[Sequence]),
              ('sequence_misses', FeatureData[Sequence])],
     input_descriptions=seq_inputs_descriptions,
@@ -76,6 +84,8 @@ plugin.methods.register_function(
             'to be accepted as a hit.'),
         'threads': (
             'Number of jobs to execute. Only applies to vsearch method.'),
+        'left_justify': ('Reject match if the pairwise alignment begins with '
+                         'gaps'),
     },
     output_descriptions={
         'sequence_hits': (

@@ -44,11 +44,11 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
 
     # if no hits are in hit_ids, return empty hits and query_series as misses
     if len(hit_ids) < 1:
-        hits_seqs = pd.Series(dtype='string')
+        hits_seqs = pd.Series()
         return hits_seqs, query_series
     # if all query seqs are hits, return query_series as hits and empty misses
     elif len(hit_ids) == len(query_series):
-        misses_seqs = pd.Series(dtype='string')
+        misses_seqs = pd.Series()
         return query_series, misses_seqs
     # otherwise filter seqs from seq file
     else:
@@ -60,8 +60,7 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
                 hits_seqs[seq_id] = seq
             else:
                 misses_seqs[seq_id] = seq
-        return (pd.Series(hits_seqs, dtype='string'),
-                pd.Series(misses_seqs, dtype='string'))
+        return pd.Series(hits_seqs), pd.Series(misses_seqs)
 
 
 def evaluate_composition(

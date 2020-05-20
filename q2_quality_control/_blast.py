@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import tempfile
-import subprocess
+from ._utilities import _run_command
 
 
 def _search_seqs(query_sequences, reference_sequences, evalue,
@@ -106,17 +106,3 @@ def _perc_coverage(end, start, query_len):
     # start = 1, end = 15. Hence 15 - 1 + 1 = 15 nt full
     # length of alignment.
     return (float(end) - float(start) + 1) / float(query_len)
-
-
-# Replace this function with QIIME2 API for wrapping commands/binaries,
-# pending https://github.com/qiime2/qiime2/issues/224
-def _run_command(cmd, verbose=True):
-    if verbose:
-        print("Running external command line application. This may print "
-              "messages to stdout and/or stderr.")
-        print("The command being run is below. This command cannot "
-              "be manually re-run as it will depend on temporary files that "
-              "no longer exist.")
-        print("\nCommand:", end=' ')
-        print(" ".join(cmd), end='\n\n')
-    subprocess.run(cmd, check=True)

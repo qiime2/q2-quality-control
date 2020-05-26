@@ -268,7 +268,7 @@ plugin.visualizers.register_function(
 )
 
 T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
-plugin.pipelines.register_function(
+plugin.methods.register_function(
     function=filter_reads,
     inputs={'demultiplexed_sequences': SampleData[T],
             'database': Bowtie2Index},

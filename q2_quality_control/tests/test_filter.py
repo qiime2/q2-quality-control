@@ -44,7 +44,7 @@ class TestFilterSingle(QualityControlTestsBase):
             self.get_data_path('sars2-indexed.qza'))
 
     def test_filter_single_exclude_seqs(self):
-        obs_art, = self.plugin.pipelines['filter_reads'](
+        obs_art, = self.plugin.methods['filter_reads'](
             self.demuxed_art, self.indexed_genome, exclude_seqs=True)
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
@@ -59,7 +59,7 @@ class TestFilterSingle(QualityControlTestsBase):
                     self.assertTrue(obs_id in seq_id_that_does_not_map)
 
     def test_filter_single_keep_seqs(self):
-        obs_art, = self.plugin.pipelines['filter_reads'](
+        obs_art, = self.plugin.methods['filter_reads'](
             self.demuxed_art, self.indexed_genome, exclude_seqs=False)
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
@@ -84,7 +84,7 @@ class TestFilterPaired(QualityControlTestsBase):
             self.get_data_path('sars2-indexed.qza'))
 
     def test_filter_single_exclude_seqs(self):
-        obs_art, = self.plugin.pipelines['filter_reads'](
+        obs_art, = self.plugin.methods['filter_reads'](
             self.demuxed_art, self.indexed_genome, exclude_seqs=True)
         obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
@@ -99,7 +99,7 @@ class TestFilterPaired(QualityControlTestsBase):
                     self.assertTrue(obs_id in seq_id_that_does_not_map)
 
     def test_filter_single_keep_seqs(self):
-        obs_art, = self.plugin.pipelines['filter_reads'](
+        obs_art, = self.plugin.methods['filter_reads'](
             self.demuxed_art, self.indexed_genome, exclude_seqs=False)
         obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)

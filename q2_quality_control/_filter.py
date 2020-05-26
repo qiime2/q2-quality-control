@@ -9,15 +9,11 @@
 import os
 import shutil
 import tempfile
-import pandas as pd
 
-import qiime2
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.bowtie2 import Bowtie2IndexDirFmt
 from q2_types.per_sample_sequences import (
     CasavaOneEightSingleLanePerSampleDirFmt,
-    SingleLanePerSampleSingleEndFastqDirFmt,
-    SingleLanePerSamplePairedEndFastqDirFmt,
 )
 
 from ._utilities import _run_command
@@ -56,33 +52,23 @@ def bowtie2_build(sequences: DNAFASTAFormat,
 
 
 def filter_reads(
-        ctx,
-        demultiplexed_sequences,
-        database,
-        n_threads=_filter_defaults['n_threads'],
-        mode=_filter_defaults['mode'],
-        sensitivity=_filter_defaults['sensitivity'],
-        ref_gap_open_penalty=_filter_defaults['ref_gap_open_penalty'],
-        ref_gap_ext_penalty=_filter_defaults['ref_gap_ext_penalty'],
-        exclude_seqs=_filter_defaults['exclude_seqs']):
+        demultiplexed_sequences: CasavaOneEightSingleLanePerSampleDirFmt,
+        database: Bowtie2IndexDirFmt,
+        n_threads: int = _filter_defaults['n_threads'],
+        mode: str = _filter_defaults['mode'],
+        sensitivity: str = _filter_defaults['sensitivity'],
+        ref_gap_open_penalty: str = _filter_defaults['ref_gap_open_penalty'],
+        ref_gap_ext_penalty: str = _filter_defaults['ref_gap_ext_penalty'],
+        exclude_seqs: str = _filter_defaults['exclude_seqs']) \
+            -> CasavaOneEightSingleLanePerSampleDirFmt:
     filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
-    database = database.view(Bowtie2IndexDirFmt)
-    seqstype = str(demultiplexed_sequences.type)
-    if seqstype == 'SampleData[SequencesWithQuality]':
-        demultiplexed_sequences = demultiplexed_sequences.view(
-            SingleLanePerSampleSingleEndFastqDirFmt)
-        df = demultiplexed_sequences.manifest.view(pd.DataFrame)
-        fastq_paths = [(fwd, None) for _, fwd in df.itertuples()]
-    else:
-        demultiplexed_sequences = demultiplexed_sequences.view(
-            SingleLanePerSamplePairedEndFastqDirFmt)
-        df = demultiplexed_sequences.manifest.view(pd.DataFrame)
-        fastq_paths = [(fwd, rev) for _, fwd, rev in df.itertuples()]
+    df = demultiplexed_sequences.manifest
+    fastq_paths = [record[1:] for record in df.itertuples()]
+
     for fwd, rev in fastq_paths:
         _bowtie2_filter(fwd, rev, filtered_seqs, database, n_threads, mode,
                         sensitivity, ref_gap_open_penalty, ref_gap_ext_penalty,
                         exclude_seqs)
-    filtered_seqs = qiime2.Artifact.import_data(seqstype, filtered_seqs)
     return filtered_seqs
 
 

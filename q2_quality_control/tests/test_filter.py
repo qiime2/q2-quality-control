@@ -83,7 +83,7 @@ class TestFilterPaired(QualityControlTestsBase):
         self.indexed_genome = Artifact.load(
             self.get_data_path('sars2-indexed.qza'))
 
-    def test_filter_single_exclude_seqs(self):
+    def test_filter_paired_exclude_seqs(self):
         obs_art, = self.plugin.methods['filter_reads'](
             self.demuxed_art, self.indexed_genome, exclude_seqs=True)
         obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
@@ -98,7 +98,7 @@ class TestFilterPaired(QualityControlTestsBase):
                     self.assertTrue(obs_id not in seq_ids_that_map)
                     self.assertTrue(obs_id in seq_id_that_does_not_map)
 
-    def test_filter_single_keep_seqs(self):
+    def test_filter_paired_keep_seqs(self):
         obs_art, = self.plugin.methods['filter_reads'](
             self.demuxed_art, self.indexed_genome, exclude_seqs=False)
         obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)

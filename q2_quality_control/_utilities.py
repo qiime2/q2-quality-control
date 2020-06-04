@@ -18,9 +18,24 @@ import matplotlib.pyplot as plt
 import q2_taxa
 import q2templates
 import pkg_resources
+import subprocess
 
 
 TEMPLATES = pkg_resources.resource_filename('q2_quality_control', 'assets')
+
+
+# Replace this function with QIIME2 API for wrapping commands/binaries,
+# pending https://github.com/qiime2/qiime2/issues/224
+def _run_command(cmd, verbose=True, stdout=None, stdin=None, cwd=None):
+    if verbose:
+        print('Running external command line application. This may print '
+              'messages to stdout and/or stderr.')
+        print('The commands to be run are below. These commands cannot '
+              'be manually re-run as they will depend on temporary files that '
+              'no longer exist.')
+        print('\nCommand:', end=' ')
+        print(' '.join(cmd), end='\n\n')
+    subprocess.run(cmd, check=True, stdout=stdout, stdin=stdin, cwd=cwd)
 
 
 def _validate_metadata_is_superset(metadata, table):

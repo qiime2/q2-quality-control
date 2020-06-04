@@ -9,11 +9,17 @@
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
                            MetadataColumn, Categorical, Citations, TypeMap,
-                           Visualization)
+                           Visualization, TypeMatch)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+from q2_types.sample_data import SampleData
+from q2_types.per_sample_sequences import (
+    SequencesWithQuality, PairedEndSequencesWithQuality)
 from q2_types.feature_table import FeatureTable, RelativeFrequency
+from q2_types.bowtie2 import Bowtie2Index
+
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy)
+from ._filter import bowtie2_build, filter_reads
 
 
 citations = Citations.load('citations.bib', package='q2_quality_control')
@@ -51,6 +57,32 @@ taxa_inputs_descriptions = {
              'test (e.g., 1 = root, 7 = species for the greengenes '
              'reference sequence database).',
     'palette': 'Color palette to utilize for plotting.'}
+
+filter_input = {'demultiplexed_sequences': 'The sequences to be trimmed.',
+                'database': 'Bowtie2 indexed database.'}
+filter_output = {'filtered_sequences': 'The resulting filtered sequences.'}
+
+filter_parameters = {
+    'n_threads': Int % Range(1, None),
+    'mode': Str % Choices(['local', 'global']),
+    'sensitivity': Str % Choices([
+        'very-fast', 'fast', 'sensitive', 'very-sensitive']),
+    'ref_gap_open_penalty': Int % Range(1, None),
+    'ref_gap_ext_penalty': Int % Range(1, None),
+    'exclude_seqs': Bool,
+}
+
+filter_parameter_descriptions = {
+    'n_threads': 'Number of alignment threads to launch.',
+    'mode': 'Bowtie2 alignment settings. See bowtie2 manual for more details.',
+    'sensitivity': 'Bowtie2 alignment sensitivity. See bowtie2 manual for '
+                   'details.',
+    'ref_gap_open_penalty': 'Reference gap open penalty.',
+    'ref_gap_ext_penalty': 'Reference gap extend penalty.',
+    'exclude_seqs': 'Exclude sequences that align to reference. Set this '
+                    'option to False to exclude sequences that do not align '
+                    'to the reference database.'
+}
 
 P_method, P_left_justify, _ = TypeMap({
     (Str % Choices("blast", "blastn-short"), Bool % Choices(False)):
@@ -233,4 +265,39 @@ plugin.visualizers.register_function(
         'simulated or mock community sequences that have known taxonomic '
         'affiliations.',
     citations=[citations['bokulich2018optimizing']]
+)
+
+T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+plugin.methods.register_function(
+    function=filter_reads,
+    inputs={'demultiplexed_sequences': SampleData[T],
+            'database': Bowtie2Index},
+    parameters=filter_parameters,
+    outputs=[('filtered_sequences', SampleData[T])],
+    input_descriptions=filter_input,
+    parameter_descriptions=filter_parameter_descriptions,
+    output_descriptions=filter_output,
+    name='Filter demultiplexed sequences by alignment to reference database.',
+    description=(
+        'Filter out (or keep) demultiplexed single- or paired-end sequences '
+        'that align to a reference database, using bowtie2 and samtools. This '
+        'method can be used to filter out human DNA sequences and other '
+        'contaminants in any FASTQ sequence data (e.g., shotgun genome or '
+        'amplicon sequence data), or alternatively (when exclude_seqs is '
+        'False) to only keep sequences that do align to the reference.'),
+    citations=[citations['langmead2012fast'], citations['heng2009samtools']]
+)
+
+plugin.methods.register_function(
+    function=bowtie2_build,
+    inputs={'sequences': FeatureData[Sequence]},
+    parameters={'n_threads': Int % Range(1, None)},
+    outputs=[('database', Bowtie2Index)],
+    input_descriptions={
+        'sequences': 'Reference sequences used to build bowtie2 index.'},
+    parameter_descriptions={'n_threads': 'Number of threads to launch'},
+    output_descriptions={'database': 'Bowtie2 index.'},
+    name='Build bowtie2 index from reference sequences.',
+    description='Build bowtie2 index from reference sequences.',
+    citations=[citations['langmead2012fast']]
 )

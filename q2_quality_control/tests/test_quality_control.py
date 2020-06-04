@@ -52,6 +52,9 @@ def load_evaluate_seqs(query_sequences, reference_sequences, exp_fp):
 class QualityControlTestsBase(TestPluginBase):
     package = 'q2_quality_control.tests'
 
+    def setUp(self):
+        super().setUp()
+
 
 class SequenceQualityControlBase(QualityControlTestsBase):
 

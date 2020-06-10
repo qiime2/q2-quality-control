@@ -123,10 +123,10 @@ def _bowtie2_filter(f_read, r_read, outdir, database, n_threads, mode,
                         bamfile_sorted_output_path, bamfile_output_path)
 
             # Convert to FASTQ with samtools
-            fwd = str(outdir.path / os.path.basename(f_read)) + '.fastq.gz'
+            fwd = str(outdir.path / os.path.basename(f_read))
             _reads = ['-1', fwd]
             if r_read is not None:
-                rev = str(outdir.path / os.path.basename(r_read)) + '.fastq.gz'
+                rev = str(outdir.path / os.path.basename(r_read))
                 _reads += ['-2', rev]
             # -s /dev/null excludes singletons
             # -0 /dev/null excludes supplementary and secondary reads

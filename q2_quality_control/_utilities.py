@@ -151,8 +151,8 @@ def _evaluate_composition(exp, obs, depth, palette, metadata, plot_tar,
 
 def _match_samples_by_index(df_a, df_b):
     # find all rows (samples) in df_a that do not match df_b, and vice versa
-    df_a_new = df_a.loc[df_b.index]
-    df_b_new = df_b.loc[df_a.index]
+    df_a_new = df_a.reindex(df_b.index)
+    df_b_new = df_b.reindex(df_a.index)
     return df_a_new, df_b_new
 
 
@@ -186,7 +186,7 @@ def _compute_per_level_accuracy(exp, obs, metadata, depth):
             # concatenate obs/exp observations to align features
             joined_table = pd.concat(
                 [exp_collapsed.loc[exp_id],
-                 obs_collapsed.loc[sample]], axis=1).fillna(0)
+                 obs_collapsed.loc[sample]], axis=1, sort=True).fillna(0)
             # split joined table apart again for computing stats
             exp_vector = joined_table.iloc[:, 0]
             obs_vector = joined_table.iloc[:, 1]
@@ -392,7 +392,7 @@ def _visualize(output_dir, title, running_title, results,
                composition_regression=None, score_plot=None,
                mismatch_histogram=None, alignments=None):
 
-    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_colwidth', None)
 
     # save results
     results.to_csv(join(output_dir, 'results.tsv'), sep='\t')

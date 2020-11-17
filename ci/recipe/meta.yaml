@@ -19,7 +19,7 @@ requirements:
 
   run:
     - python {{ python }}
-    - pandas <1
+    - pandas >=1
     - seaborn
     - blast >=2.6.0
     # There are issues with 2.8.2, and no OS X builds exist after 2.7.0

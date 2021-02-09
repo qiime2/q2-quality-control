@@ -9,7 +9,7 @@
 import qiime2
 import biom
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types.feature_data._transformer import _dnafastaformats_to_series
+from qiime2.plugin import util
 import pandas as pd
 
 from ._blast import _search_seqs
@@ -40,7 +40,8 @@ def exclude_seqs(query_sequences: DNAFASTAFormat,
         left_justify=left_justify)
 
     # convert query_sequences to series for filtering
-    query_series = _dnafastaformats_to_series(query_sequences)
+    query_series = util.transform(query_sequences, from_type=DNAFASTAFormat,
+                                  to_type=pd.Series)
 
     # if no hits are in hit_ids, return empty hits and query_series as misses
     if len(hit_ids) < 1:

@@ -30,6 +30,9 @@ requirements:
     - q2-types {{ release }}.*
     - q2templates {{ release }}.*
     - q2-taxa {{ release }}.*
+    # TODO: revert this pin
+    # https://www.biostars.org/p/494922/
+    - tbb 2020.2
 
 test:
   imports:

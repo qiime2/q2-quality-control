@@ -50,6 +50,6 @@ jobs:
     - uses: qiime2/action-library-packaging@alpha1
       with:
         package-name: q2-quality-control
-        build-target: staging
+        build-target: tested
         additional-tests: py.test --pyargs q2_quality_control
         library-token: ${{ secrets.LIBRARY_TOKEN }}

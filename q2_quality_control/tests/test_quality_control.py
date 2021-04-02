@@ -14,7 +14,7 @@ import biom
 from warnings import filterwarnings
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import DNAFASTAFormat
-import pandas.util.testing as pdt
+import pandas.testing as pdt
 
 from q2_quality_control.quality_control import (
     exclude_seqs, evaluate_composition, evaluate_seqs, evaluate_taxonomy)

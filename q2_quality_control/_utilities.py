@@ -293,8 +293,8 @@ def _regplot_from_dict(vectors, palette, legend_title):
     handles = []
     for level in yvals:
         color = next(colors)
-        sns.regplot(np.array(vectors[level]['exp']),
-                    np.array(vectors[level]['obs']), ax=axes, color=color)
+        sns.regplot(x=np.array(vectors[level]['exp']),
+                    y=np.array(vectors[level]['obs']), ax=axes, color=color)
         handles.append(mpatches.Patch(color=color, label=level))
     axes.legend(
         handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
@@ -441,6 +441,8 @@ def _visualize(output_dir, title, running_title, results,
             output_dir, 'alignments.png'), bbox_inches='tight')
         alignments.savefig(join(
             output_dir, 'alignments.pdf'), bbox_inches='tight')
+
+    plt.close('all')
 
     index = join(TEMPLATES, 'index.html')
     q2templates.render(index, output_dir, context={

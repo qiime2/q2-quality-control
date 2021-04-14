@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from os.path import join
+import biom
 from scipy.stats import linregress
 from scipy.spatial.distance import braycurtis, jaccard
 import seaborn as sns
@@ -321,8 +322,12 @@ def _plot_histogram(mismatches):
 
 
 def _collapse_table(table, level):
-    return q2_taxa._method.collapse(table, pd.Series(
+    biom_table = biom.Table(table.T.values, table.columns, table.index)
+    collapsed = q2_taxa._method.collapse(biom_table, pd.Series(
         table.columns, index=table.columns, name='Taxon'), level)
+    transposed = collapsed.transpose().to_dataframe(dense=True)
+    transposed.columns.name = 'Taxon'
+    return transposed
 
 
 def _identify_incorrect_classifications(obs_features, exp_features):

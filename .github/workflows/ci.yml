@@ -51,5 +51,5 @@ jobs:
       with:
         package-name: q2-quality-control
         build-target: tested
-        # additional-tests: py.test --pyargs q2_quality_control
+        additional-tests: py.test --pyargs q2_quality_control
         library-token: ${{ secrets.LIBRARY_TOKEN }}

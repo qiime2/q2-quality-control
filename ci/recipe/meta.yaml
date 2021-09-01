@@ -1,6 +1,5 @@
 {% set data = load_setup_py_data() %}
 {% set version = data.get('version') or 'placehold' %}
-{% set release = '.'.join(version.split('.')[:2]) %}
 
 package:
   name: q2-quality-control
@@ -26,10 +25,10 @@ requirements:
     - vsearch <=2.7.0
     - samtools >=1.7
     - bowtie2
-    - qiime2 {{ qiime2 }}
-    - q2-types {{ q2_types }}
-    - q2templates {{ q2templates }}
-    - q2-taxa {{ q2_taxa }}
+    - qiime2 {{ qiime2_epoch }}.*
+    - q2-types {{ qiime2_epoch }}.*
+    - q2templates {{ qiime2_epoch }}.*
+    - q2-taxa {{ qiime2_epoch }}.*
     # TODO: revert this pin
     # https://www.biostars.org/p/494922/
     - tbb 2020.2
@@ -37,6 +36,10 @@ requirements:
 
 test:
   requires:
+    - qiime2 >={{ qiime2 }}
+    - q2-types >={{ q2_types }}
+    - q2templates >={{ q2templates }}
+    - q2-taxa >={{ q2_taxa }}
     - pytest
 
   imports:

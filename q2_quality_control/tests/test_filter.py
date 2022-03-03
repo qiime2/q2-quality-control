@@ -50,6 +50,7 @@ class TestFilterSingle(QualityControlTestsBase):
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         for _, obs_fp in obs_seqs:
             with gzip.open(str(obs_fp), 'rt') as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
                 # Iterate over expected and observed reads, side-by-side
                 for records in itertools.zip_longest(*[obs_fh] * 4):
                     (obs_seq_h, obs_seq, _, obs_qual) = records
@@ -65,6 +66,7 @@ class TestFilterSingle(QualityControlTestsBase):
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         for _, obs_fp in obs_seqs:
             with gzip.open(str(obs_fp), 'rt') as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
                 # Iterate over expected and observed reads, side-by-side
                 for records in itertools.zip_longest(*[obs_fh] * 4):
                     (obs_seq_h, obs_seq, _, obs_qual) = records
@@ -90,6 +92,7 @@ class TestFilterPaired(QualityControlTestsBase):
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         for _, obs_fp in obs_seqs:
             with gzip.open(str(obs_fp), 'rt') as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
                 # Iterate over expected and observed reads, side-by-side
                 for records in itertools.zip_longest(*[obs_fh] * 4):
                     (obs_seq_h, obs_seq, _, obs_qual) = records
@@ -105,6 +108,7 @@ class TestFilterPaired(QualityControlTestsBase):
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         for _, obs_fp in obs_seqs:
             with gzip.open(str(obs_fp), 'rt') as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
                 # Iterate over expected and observed reads, side-by-side
                 for records in itertools.zip_longest(*[obs_fh] * 4):
                     (obs_seq_h, obs_seq, _, obs_qual) = records

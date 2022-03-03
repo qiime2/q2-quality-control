@@ -124,14 +124,14 @@ def _bowtie2_filter(f_read, r_read, outdir, database, n_threads, mode,
 
             # Convert to FASTQ with samtools
             fwd = str(outdir.path / os.path.basename(f_read))
-            _reads = ['-1', fwd]
-            if r_read is not None:
+            if r_read is None:
+                _reads = ['-0', fwd]
+            else:
                 rev = str(outdir.path / os.path.basename(r_read))
-                _reads += ['-2', rev]
+                _reads = ['-0', '/dev/null', '-1', fwd, '-2', rev]
             # -s /dev/null excludes singletons
-            # -0 /dev/null excludes supplementary and secondary reads
             # -n keeps samtools from altering header IDs!
             convert_command = [
-                'samtools', 'fastq', *_reads, '-0', '/dev/null',
-                '-s', '/dev/null', '-n', bamfile_output_path]
+                'samtools', 'fastq', *_reads, '-s', '/dev/null',
+                '-@', str(n_threads - 1), '-n', bamfile_output_path]
             _run_command(convert_command)

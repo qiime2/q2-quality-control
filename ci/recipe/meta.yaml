@@ -29,9 +29,6 @@ requirements:
     - q2-types {{ qiime2_epoch }}.*
     - q2templates {{ qiime2_epoch }}.*
     - q2-taxa {{ qiime2_epoch }}.*
-    # TODO: revert this pin
-    # https://www.biostars.org/p/494922/
-    - tbb 2020.2
     - biom-format {{ biom_format }}
 
 test:

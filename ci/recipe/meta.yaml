@@ -21,8 +21,7 @@ requirements:
     - pandas {{ pandas }}
     - seaborn
     - blast >=2.6.0
-    # There are issues with 2.8.2, and no OS X builds exist after 2.7.0
-    - vsearch <=2.7.0
+    - vsearch
     - samtools >=1.15
     - bowtie2
     - qiime2 {{ qiime2_epoch }}.*

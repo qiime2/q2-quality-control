@@ -17,8 +17,8 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     license='BSD-3-Clause',
     packages=find_packages(),
-    author="Nicholas Bokulich",
-    author_email="nbokulich@gmail.com",
+    author="Nicholas Bokulich and Jorden Rabasco",
+    author_email="nbokulich@gmail.com, jordenrabasco1@gmail.com",
     description="Quality control methods for feature and sequence data.",
     url="https://github.com/qiime2/q2-quality-control",
     entry_points={
@@ -27,7 +27,9 @@ setup(
     },
     package_data={
         'q2_quality_control': ['citations.bib', 'assets/*'],
-        'q2_quality_control.tests': ['data/*'],
+        'q2_quality_control.tests': ['data/*',
+                           'data/expected/*'],
+        'q2_quality_control._threshold_graph': ['assets/index.html'],
     },
     zip_safe=False,
 )

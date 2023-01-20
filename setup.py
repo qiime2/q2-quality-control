@@ -5,11 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 from setuptools import find_packages, setup
-
 import versioneer
-
 
 setup(
     name='q2-quality-control',

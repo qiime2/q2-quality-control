@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 import importlib
 import q2_quality_control
-import qiime2.plugin
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
                            MetadataColumn, Categorical, Citations, TypeMap,
                            Visualization, TypeMatch, Metadata)
@@ -15,19 +14,14 @@ from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.sample_data import SampleData
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality)
-from q2_types.feature_table import FeatureTable, RelativeFrequency
+from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency
 from q2_types.bowtie2 import Bowtie2Index
 
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy, decontam_identify, decontam_remove)
 from ._filter import bowtie2_build, filter_reads
 from ._threshold_graph import (decontam_score_viz)
-
-from q2_types.feature_data import FeatureData, Sequence
-from q2_types.feature_table import FeatureTable, Frequency
-
-from q2_quality_control._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
-
+from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
 
 citations = Citations.load('citations.bib', package='q2_quality_control')
 
@@ -314,12 +308,12 @@ plugin.methods.register_function(
     function=decontam_identify,
     inputs={'asv_or_otu_table': FeatureTable[Frequency]},
     parameters={ 'meta_data': Metadata,
-                'decon_method': qiime2.plugin.Str %
-                qiime2.plugin.Choices(_DECON_METHOD_OPT),
-                'freq_concentration_column': qiime2.plugin.Str,
-                'prev_control_or_exp_sample_column': qiime2.plugin.Str,
-                'prev_control_sample_indicator': qiime2.plugin.Str,},
-    outputs=[('score_table', FeatureData[DecontamScore])],
+                'decon_method': Str %
+                Choices(_DECON_METHOD_OPT),
+                'freq_concentration_column': Str,
+                'prev_control_or_exp_sample_column': Str,
+                'prev_control_sample_indicator': Str,},
+    outputs=[('decontam_score_table', FeatureData[DecontamScore])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
                              'rownames are sample id and column names are'
@@ -336,7 +330,7 @@ plugin.methods.register_function(
         'prev_control_sample_indicator': ('indicate the control sample identifier')
     },
     output_descriptions={
-        'score_table': ('The resulting table of scores from the input ASV table')
+        'decontam_score_table': ('The resulting table of scores from the input ASV and metadata tables')
 
     },
     name='Identify contaminants',
@@ -348,7 +342,7 @@ plugin.methods.register_function(
     function=decontam_remove,
     inputs={'decon_identify_table': FeatureData[DecontamScore],
             'asv_or_otu_table': FeatureTable[Frequency]},
-    parameters={'threshold': qiime2.plugin.Float},
+    parameters={'threshold': Float},
     outputs=[('no_contaminant_asv_table', FeatureTable[Frequency])],
     input_descriptions={
         'decon_identify_table': ('Output table from decontam identify'),
@@ -376,9 +370,9 @@ plugin.visualizers.register_function(
             'asv_or_otu_table': FeatureTable[Frequency]
     },
     parameters={
-        'threshold':  qiime2.plugin.Float,
-        'weighted': qiime2.plugin.Bool,
-        'bin_size': qiime2.plugin.Float
+        'threshold':  Float,
+        'weighted': Bool,
+        'bin_size': Float
     },
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',

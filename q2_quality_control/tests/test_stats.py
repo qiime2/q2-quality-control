@@ -7,17 +7,12 @@
 # ----------------------------------------------------------------------------
 
 import os
-
 import pandas as pd
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-
 from q2_quality_control._stats import DecontamScoreFormat
-
-
 class TestStatsBoilerplate(TestPluginBase):
     package = 'q2_quality_control.tests'
-
     def test_decontam_table_format_validate_positive(self):
         filenames = ['score-table-format.tsv', 'prevalence-score-table.tsv']
         filepaths = [self.get_data_path(os.path.join('expected', filename))
@@ -28,7 +23,6 @@ class TestStatsBoilerplate(TestPluginBase):
             # Should pass without error
             format.validate()
             self.assertTrue(True)
-
     def test_decontam_table_format_to_metadata(self):
         _, obs = self.transform_format(DecontamScoreFormat, qiime2.Metadata,
                                        os.path.join('expected',
@@ -44,7 +38,6 @@ class TestStatsBoilerplate(TestPluginBase):
                               index=index, columns=cols, dtype=float)
         exp = qiime2.Metadata(exp_df)
         self.assertEqual(exp, obs)
-
     def test_metadata_to_decontam_table_format(self):
         transformer = self.get_transformer(qiime2.Metadata, DecontamScoreFormat)
         index = pd.Index(['Seq1', 'Seq2','Seq3', 'Seq4','Seq5'], name='#OTU ID', dtype=object)
@@ -58,7 +51,6 @@ class TestStatsBoilerplate(TestPluginBase):
         # It shouldn't error
         transformer(md)
         self.assertTrue(True)
-
     def test_decontam_table_format_to_df(self):
         _, obs = self.transform_format(DecontamScoreFormat, pd.DataFrame,
                                        os.path.join('expected',
@@ -74,7 +66,6 @@ class TestStatsBoilerplate(TestPluginBase):
                               index=index, columns=cols, dtype=float)
         exp = exp_df
         self.assertEqual(exp, obs)
-
     def test_df_to_decontam_table_format(self):
         transformer = self.get_transformer(pd.DataFrame, DecontamScoreFormat)
         index = pd.Index(['Seq1', 'Seq2','Seq3', 'Seq4','Seq5'], name='#OTU ID', dtype=object)

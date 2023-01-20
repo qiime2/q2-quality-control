@@ -6,23 +6,22 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import qiime2
 import biom
 from q2_types.feature_data import DNAFASTAFormat
 import pandas as pd
 import os
 import tempfile
 import subprocess
-from qiime2.plugin.util import transform
-from ._stats import DecontamScore, DecontamScoreDirFmt, DecontamScoreFormat
 import qiime2.util
 
+from qiime2.plugin.util import transform
 from ._blast import _search_seqs
 from ._utilities import (
     _evaluate_composition, _visualize, _pointplot_multiple_y)
 from ._evaluate_seqs import _evaluate_seqs
 from ._evaluate_taxonomy import _evaluate_taxonomy
 from ._utilities import _run_command
+from ._stats import DecontamScoreFormat
 
 left_justify_supported_methods = {'vsearch'}
 
@@ -131,8 +130,6 @@ def evaluate_taxonomy(output_dir: str, expected_taxa: pd.DataFrame,
                mismatch_histogram=None, alignments=None)
 
 #decontam added code
-
-
 _WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
 _PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
 _COL_STR = (lambda x: x in { 'column_name', 'column_number'},

@@ -9,14 +9,13 @@
 import os.path
 import pkg_resources
 
+import decimal
 import q2templates
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import qiime2
-import q2_decontam
-from itertools import repeat
+
 
 _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 
@@ -24,14 +23,12 @@ TEMPLATES = pkg_resources.resource_filename('q2_decontam._threshold_graph',
                                             'assets')
 def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1, weighted: bool=True, bin_size: float=0.02):
 
-
     df = decon_identify_table.to_dataframe()
     values = df['p'].tolist()
     values = np.array(values)
     temp = asv_or_otu_table.sum(axis='columns')
     read_nums = np.array(temp.tolist())
 
-    # Manually create `discreetlevel` bins anchored to  `threshold`
     contam_asvs = 0
     true_asvs = 0
     contam_reads = 0
@@ -45,10 +42,11 @@ def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or
             true_asvs = true_asvs + 1
             true_reads = true_reads + read_nums[index]
         index = index + 1
-
     binwidth = bin_size
     bin_diff = threshold % binwidth
-    bin_corr = binwidth - bin_diff
+    temp_dec = decimal.Decimal(str(binwidth))
+    num_dec = abs(temp_dec.as_tuple().exponent)
+    bin_diff = round(bin_diff,num_dec)
     bins = np.concatenate([
         np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
     ])
@@ -63,8 +61,6 @@ def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or
         blue_lab = "True ASVs"
         red_lab = "Contaminant ASVs"
         h, bins, patches = plt.hist(values, bins)
-
-
 
     plt.xlim(0.0, 1.0)
     plt.xlabel('score value')
@@ -84,11 +80,9 @@ def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or
                  label=blue_lab)
 
     plt.axvline(threshold, ymin=-.1,ymax=1.1 ,color='k', linestyle='dashed', linewidth=1, label="Threshold")
-
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
     plt.legend(by_label.values(), by_label.keys(), loc="upper left", framealpha=1)
-
 
     percent_reads = (100*float(contam_reads)/float((contam_reads+true_reads)))
     percent_asvs = (100*float(contam_asvs)/float((contam_asvs+true_asvs)))

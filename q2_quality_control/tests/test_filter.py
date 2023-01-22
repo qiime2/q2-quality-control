@@ -18,8 +18,6 @@ from q2_types.per_sample_sequences import (
 from qiime2 import Artifact
 from .test_quality_control import QualityControlTestsBase
 
-import numpy as np
-import numpy.testing as npt
 import pandas as pd
 import qiime2
 import biom

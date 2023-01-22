@@ -164,7 +164,7 @@ def _decontam_identify_helper(track_fp, decon_method):
     df.index.name = '#OTU ID'
     # removes last column containing true/false information from the dataframe
     df = df.drop(df.columns[[(len(df.columns)-1)]], axis=1)
-    if decon_method is 'combined':
+    if decon_method == 'combined':
         df = df.fillna(0)
 
     # removes all columns that are completely empty
@@ -209,11 +209,12 @@ def decontam_identify(asv_or_otu_table: pd.DataFrame,
             _run_command(cmd)
         except subprocess.CalledProcessError as e:
             if e.returncode == 2:
-                raise ValueError("There was an issue running"
+                raise ValueError("There was an issue running "
                                  "run_decontam.R please check your inputs")
             else:
-                raise Exception("An error was encountered while running Decontam"
-                                " in R (return code %d), please inspect stdout"
+                raise Exception("An error was encountered "
+                                "while running Decontam in R "
+                                "(return code %d), please inspect stdout"
                                 " and stderr to learn more." % e.returncode)
         return _decontam_identify_helper(track_fp, decon_method)
 
@@ -224,12 +225,15 @@ def decontam_remove(decon_identify_table: qiime2.Metadata,
                     ) -> (biom.Table):
     with tempfile.TemporaryDirectory() as temp_dir_name:
         df = decon_identify_table.to_dataframe()
-        df.loc[(df['p'].astype(float) <= threshold), 'contaminant_seq'] = 'True'
-        df.loc[(df['p'].astype(float) > threshold), 'contaminant_seq'] = 'False'
+        df.loc[(df['p'].astype(float) <= threshold),
+               'contaminant_seq'] = 'True'
+        df.loc[(df['p'].astype(float) > threshold),
+               'contaminant_seq'] = 'False'
         df = df[df.contaminant_seq == 'True']
         remove_these = df.index
         for bad_seq in list(remove_these):
-            asv_or_otu_table = asv_or_otu_table[asv_or_otu_table.index != bad_seq]
+            asv_or_otu_table = (asv_or_otu_table
+                                [asv_or_otu_table.index != bad_seq])
         output = os.path.join(temp_dir_name, 'temp.tsv.biom')
         temp_transposed_table = asv_or_otu_table.transpose()
         temp_transposed_table.to_csv(output, sep="\t")

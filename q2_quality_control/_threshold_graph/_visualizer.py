@@ -19,8 +19,8 @@ import qiime2
 
 _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 
-TEMPLATES = pkg_resources.resource_filename('q2_decontam._threshold_graph',
-                                            'assets')
+TEMPLATES = pkg_resources.resource_filename(
+    'q2_quality_control._threshold_graph', 'assets')
 
 
 def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata,

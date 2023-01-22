@@ -21,6 +21,9 @@ requirements:
     - pandas {{ pandas }}
     - seaborn
     - blast >=2.6.0
+    - bioconductor-decontam
+    - r-base {{ r_base }}
+    - r-optparse >=1.7.1
     - vsearch
     - samtools >=1.15
     - bowtie2

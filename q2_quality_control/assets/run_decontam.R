@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-#install.packages("optparse", repos='http://cran.us.r-project.org')
-
 library("decontam")
 library("optparse")
 
@@ -28,9 +26,6 @@ option_list = list(
 )
 opt = parse_args(OptionParser(option_list=option_list))
 
-
-#--asv_table_path /Users/jrabasc/Desktop/temp_ASV_table.csv --meta_table_path /Users/jrabasc/Desktop/test_metadata.tsv --control_sample_indicator Control  --control_sample_id_method column_name --control_column_id Sample_or_ConTrol
-
 # Assign each of the arguments, in positional order, to an appropriately named R variable
 
 inp.loc <- opt$asv_table_path
@@ -41,18 +36,6 @@ decon.mode<-opt$decon_method
 prev.control.col <- opt$prev_control_or_exp_sample_column
 prev.id.controls<-opt$prev_control_sample_indicator
 freq.control.col<-opt$freq_con_column
-
-#testing variables
-
-#inp.loc <- '/Users/jrabasc/Desktop/temp_ASV_table.csv' 
-#out.path <- '/Users/jrabasc/Desktop/temp_summary_decontam.tsv'
-#threshold<-0.1
-#out.track <- '/Users/jrabasc/Desktop/temp_decontam.tsv'
-#metadata.loc<-'/Users/jrabasc/Desktop/temp_metadata.csv'
-#decon.mode<-'combined'
-#prev.control.col <- 'Sample_or_ConTrol'
-#prev.id.controls<-'Control'
-#freq.control.col<-'quant_reading'
 
 if(!file.exists(inp.loc)) {
   errQuit("Input ASV table does not exist.")

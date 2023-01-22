@@ -324,16 +324,19 @@ plugin.methods.register_function(
                       'experiment are control samples, '
                       'assumes sample names in file correspond '
                       'to ASV_or_OTU_table'),
-        'decon_method': ('Select how to which method ' 
+        'decon_method': ('Select how to which method '
                          'to id contaminants with'),
-        'freq_concentration_column': ('Input column name that has ' 
-                                      'concentration information for the samples'),
+        'freq_concentration_column': ('Input column name that has '
+                                      'concentration information for '
+                                      'the samples'),
         'prev_control_or_exp_sample_column': ('Input column name containing ' 
-                                              'experimental or control sample metadata'),
-        'prev_control_sample_indicator': ('indicate the control sample identifier')
+                                              'experimental or control '
+                                              'sample metadata'),
+        'prev_control_sample_indicator': ('indicate the '
+                                          'control sample identifier')
     },
     output_descriptions={
-        'decontam_score_table': ('The resulting table of scores ' 
+        'decontam_score_table': ('The resulting table of scores '
                                  'from the input ASV and metadata tables')
 
     },
@@ -358,7 +361,7 @@ plugin.methods.register_function(
         'threshold': ('Select threshold cutoff for decontam algorithm scores')
     },
     output_descriptions={
-        'no_contaminant_asv_table': ('The resulting table of scores ' 
+        'no_contaminant_asv_table': ('The resulting table of scores '
                                      'once contaminants are removed')
 
     },

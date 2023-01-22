@@ -329,7 +329,7 @@ plugin.methods.register_function(
         'freq_concentration_column': ('Input column name that has '
                                       'concentration information for '
                                       'the samples'),
-        'prev_control_or_exp_sample_column': ('Input column name containing ' 
+        'prev_control_or_exp_sample_column': ('Input column name containing '
                                               'experimental or control '
                                               'sample metadata'),
         'prev_control_sample_indicator': ('indicate the '
@@ -385,12 +385,15 @@ plugin.visualizers.register_function(
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',
     input_descriptions={
-        'decon_identify_table': 'Output from decontam identify to be vizualized',
-        'asv_or_otu_table': 'Raw OTU/ASV table that was used as input to identify'
+        'decon_identify_table': 'Output from decontam identify '
+                                'to be vizualized',
+        'asv_or_otu_table': 'Raw OTU/ASV table that was used '
+                            'as input to identify'
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores'),
-        'weighted': ('weight the decontam scores by their assoicated read number'),
+        'weighted': ('weight the decontam scores by their '
+                     'assoicated read number'),
         'bin_size': ('Select bin size for the histogram')
     }
 )

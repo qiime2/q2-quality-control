@@ -986,8 +986,8 @@ class TestIdentify(TestPluginBase):
             output_feature_table,
             from_type=DecontamScoreFormat,
             to_type=pd.DataFrame)
-        df_output_feature_table=df_output_feature_table.round(decimals=6)
-        exp_table=exp_table.round(decimals=6)
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.round(decimals=6)
         with tempfile.TemporaryDirectory() as temp_dir_name:
             test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
             expected_biom_fp = os.path.join(temp_dir_name,
@@ -999,14 +999,14 @@ class TestIdentify(TestPluginBase):
             with open(expected_biom_fp) as th:
                 expecter_table = biom.Table.from_tsv(th, None, None, None)
 
-            self.assertEqual(test_table,expecter_table)
+            self.assertEqual(test_table, expecter_table)
 
     def test_frequency(self):
         exp_table = pd.read_csv(
             self.get_data_path('expected/frequency-score-table.tsv'),
             sep='\t', index_col=0)
         temp_transposed_table = exp_table.transpose()
-        temp_transposed_table=temp_transposed_table.dropna()
+        temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = decontam_identify(
             asv_or_otu_table=self.asv_table,
@@ -1017,8 +1017,8 @@ class TestIdentify(TestPluginBase):
             output_feature_table,
             from_type=DecontamScoreFormat,
             to_type=pd.DataFrame)
-        df_output_feature_table=df_output_feature_table.round(decimals=6)
-        exp_table=exp_table.round(decimals=6)
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.round(decimals=6)
         with tempfile.TemporaryDirectory() as temp_dir_name:
             test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
             expected_biom_fp = os.path.join(temp_dir_name,
@@ -1029,14 +1029,14 @@ class TestIdentify(TestPluginBase):
                 test_table = biom.Table.from_tsv(fh, None, None, None)
             with open(expected_biom_fp) as th:
                 expecter_table = biom.Table.from_tsv(th, None, None, None)
-            self.assertEqual(test_table,expecter_table)
+            self.assertEqual(test_table, expecter_table)
 
     def test_combined(self):
         exp_table = pd.read_csv(
             self.get_data_path('expected/combined-score-table.tsv'),
             sep='\t', index_col=0)
         temp_transposed_table = exp_table.transpose()
-        temp_transposed_table=temp_transposed_table.dropna()
+        temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = decontam_identify(
             asv_or_otu_table=self.asv_table,
@@ -1049,8 +1049,8 @@ class TestIdentify(TestPluginBase):
             output_feature_table,
             from_type=DecontamScoreFormat,
             to_type=pd.DataFrame)
-        df_output_feature_table=df_output_feature_table.round(decimals=6)
-        exp_table=exp_table.round(decimals=6)
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.round(decimals=6)
         with tempfile.TemporaryDirectory() as temp_dir_name:
             test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
             expected_biom_fp = os.path.join(temp_dir_name,
@@ -1061,7 +1061,7 @@ class TestIdentify(TestPluginBase):
                 test_table = biom.Table.from_tsv(fh, None, None, None)
             with open(expected_biom_fp) as th:
                 expecter_table = biom.Table.from_tsv(th, None, None, None)
-            self.assertEqual(test_table,expecter_table)
+            self.assertEqual(test_table, expecter_table)
 
 
 class TestRemove(TestPluginBase):
@@ -1075,6 +1075,7 @@ class TestRemove(TestPluginBase):
         id_table = qiime2.Artifact.load(
             self.get_data_path('expected/decon_default_score_table.qza'))
         self.identify_table = id_table.view(qiime2.Metadata)
+
     def test_remove(self):
         exp_table = pd.read_csv(
             self.get_data_path('expected/no-contaminant-asv-table.tsv'),

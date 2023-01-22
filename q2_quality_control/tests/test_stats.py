@@ -38,50 +38,65 @@ class TestStatsBoilerplate(TestPluginBase):
         exp_df = pd.DataFrame(
             [[0.323531341965556, 549, 0.1, 1, 1],
              [0.0988730071632247, 538, 0.2, 1, 1],
-             [0.0036748885600188, 160, 0.3, 0.328517354005742, 0.328517354005742],
+             [0.0036748885600188, 160, 0.3, 0.328517354005742,
+              0.328517354005742],
              [0.067621013578574, 519, 0.4, 1, 1],
-             [0.045234471701338, 354, 0.5, 0.99999999979982, 0.99999999979982]],
+             [0.045234471701338, 354, 0.5, 0.99999999979982,
+              0.99999999979982]],
             index=index, columns=cols, dtype=float)
         exp = qiime2.Metadata(exp_df)
         self.assertEqual(exp, obs)
+
     def test_metadata_to_decontam_table_format(self):
         transformer = self.get_transformer(qiime2.Metadata, DecontamScoreFormat)
-        index = pd.Index(['Seq1', 'Seq2','Seq3', 'Seq4','Seq5'], name='#OTU ID', dtype=object)
+        index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
+                         name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
-        md = pd.DataFrame([[0.323531341965556,549,0.1,1,1],
-                               [0.0988730071632247,538,0.2,1,1],
-                               [0.0036748885600188,160,0.3,0.328517354005742, 0.328517354005742],
-                               [0.067621013578574, 519, 0.4, 1, 1],
-                               [0.045234471701338, 354,0.5,0.99999999979982,0.99999999979982]],
-                              index=index, columns=cols, dtype=float)
-        # It shouldn't error
+        md = pd.DataFrame(
+            [[0.323531341965556, 549, 0.1, 1, 1],
+             [0.0988730071632247, 538, 0.2, 1, 1],
+             [0.0036748885600188, 160, 0.3, 0.328517354005742,
+              0.328517354005742],
+             [0.067621013578574, 519, 0.4, 1, 1],
+             [0.045234471701338, 354, 0.5, 0.99999999979982,
+              0.99999999979982]],
+            index=index, columns=cols, dtype=float)
         transformer(md)
         self.assertTrue(True)
+
     def test_decontam_table_format_to_df(self):
         _, obs = self.transform_format(DecontamScoreFormat, pd.DataFrame,
                                        os.path.join('expected',
                                                     'score-table-format.tsv'))
 
-        index = pd.Index(['Seq1', 'Seq2','Seq3', 'Seq4','Seq5'], name='#OTU ID', dtype=object)
+        index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
+                         name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
-        exp_df = pd.DataFrame([[0.323531341965556,549,0.1,1,1],
-                               [0.0988730071632247,538,0.2,1,1],
-                               [0.0036748885600188,160,0.3,0.328517354005742, 0.328517354005742],
-                               [0.067621013578574, 519, 0.4, 1, 1],
-                               [0.045234471701338, 354,0.5,0.99999999979982,0.99999999979982]],
-                              index=index, columns=cols, dtype=float)
+        exp_df = pd.DataFrame(
+            [[0.323531341965556, 549, 0.1, 1, 1],
+             [0.0988730071632247, 538, 0.2, 1, 1],
+             [0.0036748885600188, 160, 0.3, 0.328517354005742,
+              0.328517354005742],
+             [0.067621013578574, 519, 0.4, 1, 1],
+             [0.045234471701338, 354, 0.5, 0.99999999979982,
+              0.99999999979982]],
+            index=index, columns=cols, dtype=float)
         exp = exp_df
         self.assertEqual(exp, obs)
+
     def test_df_to_decontam_table_format(self):
         transformer = self.get_transformer(pd.DataFrame, DecontamScoreFormat)
-        index = pd.Index(['Seq1', 'Seq2','Seq3', 'Seq4','Seq5'], name='#OTU ID', dtype=object)
+        index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
+                         name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
-        df = pd.DataFrame([[0.323531341965556,549,0.1,1,1],
-                               [0.0988730071632247,538,0.2,1,1],
-                               [0.0036748885600188,160,0.3,0.328517354005742, 0.328517354005742],
-                               [0.067621013578574, 519, 0.4, 1, 1],
-                               [0.045234471701338, 354,0.5,0.99999999979982,0.99999999979982]],
-                              index=index, columns=cols, dtype=float)
+        df = pd.DataFrame(
+            [[0.323531341965556, 549, 0.1, 1, 1],
+             [0.0988730071632247, 538, 0.2, 1, 1],
+             [0.0036748885600188, 160, 0.3, 0.328517354005742,
+              0.328517354005742],
+             [0.067621013578574, 519, 0.4, 1, 1],
+             [0.045234471701338, 354, 0.5, 0.99999999979982,
+              0.99999999979982]], index=index, columns=cols, dtype=float)
         # It shouldn't error
         transformer(df)
         self.assertTrue(True)

@@ -32,7 +32,7 @@ class TestStatsBoilerplate(TestPluginBase):
     def test_decontam_table_format_to_metadata(self):
         _, obs = self.transform_format(
             DecontamScoreFormat, qiime2.Metadata,
-            os.path.join('expected','score-table-format.tsv'))
+            os.path.join('expected', 'score-table-format.tsv'))
 
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
@@ -67,7 +67,8 @@ class TestStatsBoilerplate(TestPluginBase):
         obs_table = transform(
             obs_df, from_type=qiime2.Metadata, to_type=DecontamScoreFormat)
         decontam_table = transform(
-            decontam_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
+            decontam_table, from_type=DecontamScoreFormat,
+            to_type=qiime2.Metadata)
         obs_table = transform(
             obs_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
         self.assertEqual(decontam_table, obs_table)
@@ -119,5 +120,7 @@ class TestStatsBoilerplate(TestPluginBase):
 
         self.assertEqual(exp_test, obs)
 
+
 if __name__ == '__main__':
     unittest.main()
+    

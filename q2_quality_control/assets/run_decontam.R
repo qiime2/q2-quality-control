@@ -40,7 +40,7 @@ if(!file.exists(inp.loc)) {
 }else if(!file.exists(metadata.loc)) {
   errQuit("Input metadata file does not exist.")
 }else{
-  print("Congrats your files exist")
+  print("Input ASV and Metadata files found")
 }
 
 meta_data_cols <-function(metadata_df, control.col){

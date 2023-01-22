@@ -77,17 +77,21 @@ def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata,
         plt.setp([p for p, b in zip(patches, bins) if b >= threshold],
                  color='b', edgecolor="white", label=blue_lab)
     else:
-        plt.setp([p for p, b in zip(patches, bins) if b == (threshold - bin_diff)],
-                 color='m', edgecolor="white")
-        plt.setp([p for p, b in zip(patches, bins) if b < (threshold-bin_diff)], color='r', edgecolor="white",
+        plt.setp([p for p, b in zip(patches, bins)
+                  if b == (threshold - bin_diff)], color='m', edgecolor="white")
+        plt.setp([p for p, b in zip(patches, bins)
+                  if b < (threshold-bin_diff)], color='r', edgecolor="white",
                  label=red_lab)
-        plt.setp([p for p, b in zip(patches, bins) if b > threshold], color='b', edgecolor="white",
+        plt.setp([p for p, b in zip(patches, bins)
+                  if b > threshold], color='b', edgecolor="white",
                  label=blue_lab)
 
-    plt.axvline(threshold, ymin=-.1,ymax=1.1 ,color='k', linestyle='dashed', linewidth=1, label="Threshold")
+    plt.axvline(threshold, ymin=-.1, ymax=1.1 , color='k',
+                linestyle='dashed', linewidth=1, label="Threshold")
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), loc="upper left", framealpha=1)
+    plt.legend(by_label.values(), by_label.keys(),
+               loc="upper left", framealpha=1)
 
     percent_reads = (100*float(contam_reads)/float((contam_reads+true_reads)))
     percent_asvs = (100*float(contam_asvs)/float((contam_asvs+true_asvs)))
@@ -97,10 +101,15 @@ def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata,
         plt.savefig(img_fp)
     index_fp = os.path.join(TEMPLATES, 'index.html')
 
-    if (weighted == True):
-        q2templates.render(index_fp, output_dir, context={'contamer': str("{:,}".format(int(contam_reads))), 'truer': str("{:,}".format(int(true_reads))), 'percenter': str("%.2f" % percent_reads),
-                                                          'contam_label': str(red_lab), 'true_label': str(blue_lab)})
+    if weighted is True:
+        q2templates.render(index_fp, output_dir, context={
+            'contamer': str("{:,}".format(int(contam_reads))),
+            'truer': str("{:,}".format(int(true_reads))),
+            'percenter': str("%.2f" % percent_reads),
+            'contam_label': str(red_lab), 'true_label': str(blue_lab)})
     else:
-        q2templates.render(index_fp, output_dir, context={'contamer': str("{:,}".format(int(contam_asvs))), 'truer': str("{:,}".format(int(true_asvs))), 'percenter': str("%.2f" % percent_asvs),
-                                                          'contam_label': str(red_lab), 'true_label': str(blue_lab)})
-
+        q2templates.render(index_fp, output_dir, context={
+            'contamer': str("{:,}".format(int(contam_asvs))),
+            'truer': str("{:,}".format(int(true_asvs))),
+            'percenter': str("%.2f" % percent_asvs),
+            'contam_label': str(red_lab), 'true_label': str(blue_lab)})

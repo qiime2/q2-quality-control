@@ -26,8 +26,6 @@ option_list = list(
 )
 opt = parse_args(OptionParser(option_list=option_list))
 
-# Assign each of the arguments, in positional order, to an appropriately named R variable
-
 inp.loc <- opt$asv_table_path
 threshold <- if(opt$threshold=='NULL') NULL else as.numeric(opt$threshold)
 out.track <- opt$output_track
@@ -58,41 +56,33 @@ meta_data_cols <-function(metadata_df, control.col){
 }
 
 outputer<-function(decon_output, out.track,asv_df, out.path){
-  ### WRITE OUTPUT AND QUIT ###
   cat("7) Write output\n")
   write.table(decon_output, out.track, sep="\t",
               row.names=TRUE, col.names=NA, quote=FALSE)
-  
   q(status=0)
 }
 
 asv_df <- read.csv(file = inp.loc)
-rownames(asv_df) <- asv_df[, 1]  ## set rownames
+rownames(asv_df) <- asv_df[, 1] 
 asv_df <- asv_df[, -1]
 numero_df <- as.matrix(sapply(asv_df, as.numeric)) 
 metadata_df<-read.csv(file = metadata.loc)
 
 if(decon.mode == 'prevalence'){
   control_vec <- meta_data_cols(metadata_df, prev.control.col)
-  #genretates true/false vec for is contamination
   true_false_control_vec<-grepl(prev.id.controls,control_vec)
-  # Prevalence-based contaminant classification
   prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='prevalence')
   outputer(prev_contam, out.track,asv_df)
 }else if(decon.mode == 'frequency'){
   control_vec <- meta_data_cols(metadata_df, freq.control.col)
-  #genretates numeric vector for contamination analysis
   quant_vec<-as.numeric(control_vec)
-  # Prevalence-based contaminant classification
   freq_contam <- isContaminant(numero_df, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='frequency')
   outputer(freq_contam, out.track,asv_df)
 }else{
   prev_control_vec <- meta_data_cols(metadata_df, prev.control.col)
   quant_control_vec <- meta_data_cols(metadata_df, freq.control.col)
-
   quant_vec<-as.numeric(quant_control_vec)
   true_false_control_vec<-grepl(prev.id.controls, prev_control_vec)
-  
   comb_contam <- isContaminant(numero_df, neg=true_false_control_vec, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='combined')
   outputer(comb_contam, out.track,asv_df)
 }

@@ -25,22 +25,7 @@ import qiime2
 import biom
 import os
 import tempfile
-from warnings import filterwarnings
 from qiime2.plugin.testing import TestPluginBase
-from q2_types.feature_data import DNAFASTAFormat
-import pandas.testing as pdt
-from q2_quality_control.quality_control import (
-    exclude_seqs, evaluate_composition, evaluate_seqs, evaluate_taxonomy)
-from q2_quality_control._utilities import (
-    _evaluate_composition, _collapse_table, _drop_nans_zeros,
-    _compute_per_level_accuracy, compute_taxon_accuracy,
-    _tally_misclassifications, _identify_incorrect_classifications,
-    _find_nearest_common_lineage, _interpret_metric_selection,
-    _match_samples_by_index, _validate_metadata_and_exp_table)
-from q2_quality_control._evaluate_seqs import _evaluate_seqs
-from q2_quality_control._evaluate_taxonomy import (
-    _evaluate_taxonomy, _extract_taxa_names, _index_is_subset,
-    _validate_indices_and_set_joining_mode)
 from qiime2.plugin.util import transform
 from q2_quality_control.quality_control import (decontam_identify,
                                                 decontam_remove)

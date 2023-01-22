@@ -11,8 +11,6 @@ import numpy.testing as npt
 import pandas as pd
 import qiime2
 import biom
-import os
-import tempfile
 from warnings import filterwarnings
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import DNAFASTAFormat
@@ -29,10 +27,6 @@ from q2_quality_control._evaluate_seqs import _evaluate_seqs
 from q2_quality_control._evaluate_taxonomy import (
     _evaluate_taxonomy, _extract_taxa_names, _index_is_subset,
     _validate_indices_and_set_joining_mode)
-from qiime2.plugin.util import transform
-from q2_quality_control.quality_control import (decontam_identify,
-                                                decontam_remove)
-from q2_quality_control._stats import DecontamScoreFormat
 
 filterwarnings("ignore", category=UserWarning)
 

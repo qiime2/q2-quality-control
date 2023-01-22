@@ -30,9 +30,9 @@ class TestStatsBoilerplate(TestPluginBase):
             self.assertTrue(True)
 
     def test_decontam_table_format_to_metadata(self):
-        _, obs = self.transform_format(DecontamScoreFormat, qiime2.Metadata,
-                                       os.path.join('expected',
-                                                    'score-table-format.tsv'))
+        _, obs = self.transform_format(
+            DecontamScoreFormat, qiime2.Metadata,
+            os.path.join('expected','score-table-format.tsv'))
 
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
@@ -48,9 +48,9 @@ class TestStatsBoilerplate(TestPluginBase):
         self.assertEqual(exp, obs)
 
     def test_metadata_to_decontam_table_format(self):
-        _, obs_df = self.transform_format(DecontamScoreFormat, qiime2.Metadata,
-                                          os.path.join('expected',
-                                                       'score-table-format.tsv'))
+        _, obs_df = self.transform_format(
+            DecontamScoreFormat, qiime2.Metadata,
+            os.path.join('expected', 'score-table-format.tsv'))
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
@@ -62,16 +62,20 @@ class TestStatsBoilerplate(TestPluginBase):
              [0.045234472, 354, 0.5, 1, 1]],
             index=index, columns=cols, dtype=float)
         exp = qiime2.Metadata(exp_df)
-        decontam_table = transform(exp, from_type=qiime2.Metadata, to_type=DecontamScoreFormat)
-        obs_table = transform(obs_df, from_type=qiime2.Metadata, to_type=DecontamScoreFormat)
-        decontam_table = transform(decontam_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
-        obs_table = transform(obs_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
+        decontam_table = transform(
+            exp, from_type=qiime2.Metadata, to_type=DecontamScoreFormat)
+        obs_table = transform(
+            obs_df, from_type=qiime2.Metadata, to_type=DecontamScoreFormat)
+        decontam_table = transform(
+            decontam_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
+        obs_table = transform(
+            obs_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
         self.assertEqual(decontam_table, obs_table)
 
     def test_decontam_table_format_to_df(self):
-        _, obs_df = self.transform_format(DecontamScoreFormat, pd.DataFrame,
-                                       os.path.join('expected',
-                                                    'score-table-format.tsv'))
+        _, obs_df = self.transform_format(
+            DecontamScoreFormat, pd.DataFrame,
+            os.path.join('expected', 'score-table-format.tsv'))
 
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
@@ -89,9 +93,9 @@ class TestStatsBoilerplate(TestPluginBase):
         self.assertEqual(exp, obs)
 
     def test_df_to_decontam_table_format(self):
-        _, obs_df = self.transform_format(DecontamScoreFormat, pd.DataFrame,
-                                          os.path.join('expected',
-                                                       'score-table-format.tsv'))
+        _, obs_df = self.transform_format(
+            DecontamScoreFormat, pd.DataFrame,
+            os.path.join('expected', 'score-table-format.tsv'))
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
@@ -102,10 +106,14 @@ class TestStatsBoilerplate(TestPluginBase):
              [0.067621014, 519, 0.4, 1, 1],
              [0.045234472, 354, 0.5, 1, 1]],
             index=index, columns=cols, dtype=float)
-        exp_table = transform(exp_df, from_type=pd.DataFrame, to_type=DecontamScoreFormat)
-        obs_table = transform(obs_df, from_type=pd.DataFrame, to_type=DecontamScoreFormat)
-        decontam_table = transform(exp_table, from_type=DecontamScoreFormat, to_type=pd.DataFrame)
-        obs_table = transform(obs_table, from_type=DecontamScoreFormat, to_type=pd.DataFrame)
+        exp_table = transform(
+            exp_df, from_type=pd.DataFrame, to_type=DecontamScoreFormat)
+        obs_table = transform(
+            obs_df, from_type=pd.DataFrame, to_type=DecontamScoreFormat)
+        decontam_table = transform(
+            exp_table, from_type=DecontamScoreFormat, to_type=pd.DataFrame)
+        obs_table = transform(
+            obs_table, from_type=DecontamScoreFormat, to_type=pd.DataFrame)
         exp_test = qiime2.Metadata(decontam_table)
         obs = qiime2.Metadata(obs_table)
 

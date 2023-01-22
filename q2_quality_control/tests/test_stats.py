@@ -98,6 +98,5 @@ class TestStatsBoilerplate(TestPluginBase):
              [0.067621013578574, 519, 0.4, 1, 1],
              [0.045234471701338, 354, 0.5, 0.99999999979982,
               0.99999999979982]], index=index, columns=cols, dtype=float)
-        # It shouldn't error
         transformer(df)
         self.assertTrue(True)

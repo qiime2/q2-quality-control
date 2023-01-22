@@ -964,14 +964,14 @@ class TestIdentify(TestPluginBase):
     def setUp(self):
         super().setUp()
         table = qiime2.Artifact.load(
-            self.get_data_path('expected/decon_default_ASV_table.qza'))
+            self.get_data_path('data/expected/decon_default_ASV_table.qza'))
         self.asv_table = table.view(qiime2.Metadata).to_dataframe()
         self.metadata_input = qiime2.Metadata.load(
-            self.get_data_path('expected/test_metadata.tsv'))
+            self.get_data_path('data/expected/test_metadata.tsv'))
 
     def test_prevalence(self):
         exp_table = pd.read_csv(
-            self.get_data_path('expected/prevalence-score-table.tsv'),
+            self.get_data_path('data/expected/prevalence-score-table.tsv'),
             sep='\t', index_col=0)
         temp_transposed_table = exp_table.transpose()
         temp_transposed_table = temp_transposed_table.dropna()

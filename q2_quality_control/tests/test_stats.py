@@ -9,8 +9,10 @@
 import os
 import pandas as pd
 import qiime2
+import unittest
 from qiime2.plugin.testing import TestPluginBase
 from q2_quality_control._stats import DecontamScoreFormat
+from qiime2.plugin.util import transform
 
 
 class TestStatsBoilerplate(TestPluginBase):
@@ -36,37 +38,38 @@ class TestStatsBoilerplate(TestPluginBase):
                          name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
         exp_df = pd.DataFrame(
-            [[0.323531341965556, 549, 0.1, 1, 1],
-             [0.0988730071632247, 538, 0.2, 1, 1],
-             [0.0036748885600188, 160, 0.3, 0.328517354005742,
-              0.328517354005742],
-             [0.067621013578574, 519, 0.4, 1, 1],
-             [0.045234471701338, 354, 0.5, 0.99999999979982,
-              0.99999999979982]],
+            [[0.323531342, 549, 0.1, 1, 1],
+             [0.098873007, 538, 0.2, 1, 1],
+             [0.003674889, 160, 0.3, 0.328517354, 0.328517354],
+             [0.067621014, 519, 0.4, 1, 1],
+             [0.045234472, 354, 0.5, 1, 1]],
             index=index, columns=cols, dtype=float)
         exp = qiime2.Metadata(exp_df)
         self.assertEqual(exp, obs)
 
     def test_metadata_to_decontam_table_format(self):
-        transformer = self.get_transformer(qiime2.Metadata,
-                                           DecontamScoreFormat)
+        _, obs_df = self.transform_format(DecontamScoreFormat, qiime2.Metadata,
+                                          os.path.join('expected',
+                                                       'score-table-format.tsv'))
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
-        md = pd.DataFrame(
-            [[0.323531341965556, 549, 0.1, 1, 1],
-             [0.0988730071632247, 538, 0.2, 1, 1],
-             [0.0036748885600188, 160, 0.3, 0.328517354005742,
-              0.328517354005742],
-             [0.067621013578574, 519, 0.4, 1, 1],
-             [0.045234471701338, 354, 0.5, 0.99999999979982,
-              0.99999999979982]],
+        exp_df = pd.DataFrame(
+            [[0.323531342, 549, 0.1, 1, 1],
+             [0.098873007, 538, 0.2, 1, 1],
+             [0.003674889, 160, 0.3, 0.328517354, 0.328517354],
+             [0.067621014, 519, 0.4, 1, 1],
+             [0.045234472, 354, 0.5, 1, 1]],
             index=index, columns=cols, dtype=float)
-        transformer(md)
-        self.assertTrue(True)
+        exp = qiime2.Metadata(exp_df)
+        decontam_table = transform(exp, from_type=qiime2.Metadata, to_type=DecontamScoreFormat)
+        obs_table = transform(obs_df, from_type=qiime2.Metadata, to_type=DecontamScoreFormat)
+        decontam_table = transform(decontam_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
+        obs_table = transform(obs_table, from_type=DecontamScoreFormat, to_type=qiime2.Metadata)
+        self.assertEqual(decontam_table, obs_table)
 
     def test_decontam_table_format_to_df(self):
-        _, obs = self.transform_format(DecontamScoreFormat, pd.DataFrame,
+        _, obs_df = self.transform_format(DecontamScoreFormat, pd.DataFrame,
                                        os.path.join('expected',
                                                     'score-table-format.tsv'))
 
@@ -74,29 +77,39 @@ class TestStatsBoilerplate(TestPluginBase):
                          name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
         exp_df = pd.DataFrame(
-            [[0.323531341965556, 549, 0.1, 1, 1],
-             [0.0988730071632247, 538, 0.2, 1, 1],
-             [0.0036748885600188, 160, 0.3, 0.328517354005742,
-              0.328517354005742],
-             [0.067621013578574, 519, 0.4, 1, 1],
-             [0.045234471701338, 354, 0.5, 0.99999999979982,
-              0.99999999979982]],
+            [[0.323531342, 549, 0.1, 1, 1],
+             [0.098873007, 538, 0.2, 1, 1],
+             [0.003674889, 160, 0.3, 0.328517354, 0.328517354],
+             [0.067621014, 519, 0.4, 1, 1],
+             [0.045234472, 354, 0.5, 1, 1]],
             index=index, columns=cols, dtype=float)
-        exp = exp_df
+        exp = qiime2.Metadata(exp_df)
+        obs = qiime2.Metadata(obs_df)
+
         self.assertEqual(exp, obs)
 
     def test_df_to_decontam_table_format(self):
-        transformer = self.get_transformer(pd.DataFrame, DecontamScoreFormat)
+        _, obs_df = self.transform_format(DecontamScoreFormat, pd.DataFrame,
+                                          os.path.join('expected',
+                                                       'score-table-format.tsv'))
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
-        df = pd.DataFrame(
-            [[0.323531341965556, 549, 0.1, 1, 1],
-             [0.0988730071632247, 538, 0.2, 1, 1],
-             [0.0036748885600188, 160, 0.3, 0.328517354005742,
-              0.328517354005742],
-             [0.067621013578574, 519, 0.4, 1, 1],
-             [0.045234471701338, 354, 0.5, 0.99999999979982,
-              0.99999999979982]], index=index, columns=cols, dtype=float)
-        transformer(df)
-        self.assertTrue(True)
+        exp_df = pd.DataFrame(
+            [[0.323531342, 549, 0.1, 1, 1],
+             [0.098873007, 538, 0.2, 1, 1],
+             [0.003674889, 160, 0.3, 0.328517354, 0.328517354],
+             [0.067621014, 519, 0.4, 1, 1],
+             [0.045234472, 354, 0.5, 1, 1]],
+            index=index, columns=cols, dtype=float)
+        exp_table = transform(exp_df, from_type=pd.DataFrame, to_type=DecontamScoreFormat)
+        obs_table = transform(obs_df, from_type=pd.DataFrame, to_type=DecontamScoreFormat)
+        decontam_table = transform(exp_table, from_type=DecontamScoreFormat, to_type=pd.DataFrame)
+        obs_table = transform(obs_table, from_type=DecontamScoreFormat, to_type=pd.DataFrame)
+        exp_test = qiime2.Metadata(decontam_table)
+        obs = qiime2.Metadata(obs_table)
+
+        self.assertEqual(exp_test, obs)
+
+if __name__ == '__main__':
+    unittest.main()

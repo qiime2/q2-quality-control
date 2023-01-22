@@ -48,7 +48,8 @@ class TestStatsBoilerplate(TestPluginBase):
         self.assertEqual(exp, obs)
 
     def test_metadata_to_decontam_table_format(self):
-        transformer = self.get_transformer(qiime2.Metadata, DecontamScoreFormat)
+        transformer = self.get_transformer(qiime2.Metadata,
+                                           DecontamScoreFormat)
         index = pd.Index(['Seq1', 'Seq2', 'Seq3', 'Seq4', 'Seq5'],
                          name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']

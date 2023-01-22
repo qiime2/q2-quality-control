@@ -21,7 +21,11 @@ _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 
 TEMPLATES = pkg_resources.resource_filename('q2_decontam._threshold_graph',
                                             'assets')
-def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1, weighted: bool=True, bin_size: float=0.02):
+
+
+def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata,
+                       asv_or_otu_table: pd.DataFrame, threshold: float = 0.1,
+                       weighted: bool = True, bin_size: float = 0.02):
 
     df = decon_identify_table.to_dataframe()
     values = df['p'].tolist()
@@ -46,15 +50,16 @@ def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or
     bin_diff = threshold % binwidth
     temp_dec = decimal.Decimal(str(binwidth))
     num_dec = abs(temp_dec.as_tuple().exponent)
-    bin_diff = round(bin_diff,num_dec)
+    bin_diff = round(bin_diff, num_dec)
     bins = np.concatenate([
         np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
     ])
-    if(weighted == True):
+    if weighted is True:
         y_lab = 'Number of Reads'
         blue_lab = "True Reads"
         red_lab = "Contaminant Reads"
-        h, bins, patches = plt.hist(values, bins, weights=np.array(temp.tolist()))
+        h, bins, patches = plt.hist(values, bins,
+                                    weights=np.array(temp.tolist()))
         plt.yscale('log')
     else:
         y_lab = 'number of ASVs'
@@ -67,16 +72,16 @@ def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or
     plt.ylabel(y_lab)
 
     if bin_diff == 0:
-        plt.setp([p for p, b in zip(patches, bins) if b < (threshold)], color='r', edgecolor="white",
-                 label=red_lab)
-        plt.setp([p for p, b in zip(patches, bins) if b >= (threshold)], color='b', edgecolor="white",
-                 label=blue_lab)
+        plt.setp([p for p, b in zip(patches, bins) if b < threshold],
+                 color='r', edgecolor="white", label=red_lab)
+        plt.setp([p for p, b in zip(patches, bins) if b >= threshold],
+                 color='b', edgecolor="white", label=blue_lab)
     else:
         plt.setp([p for p, b in zip(patches, bins) if b == (threshold - bin_diff)],
                  color='m', edgecolor="white")
         plt.setp([p for p, b in zip(patches, bins) if b < (threshold-bin_diff)], color='r', edgecolor="white",
                  label=red_lab)
-        plt.setp([p for p, b in zip(patches, bins) if b > (threshold)], color='b', edgecolor="white",
+        plt.setp([p for p, b in zip(patches, bins) if b > threshold], color='b', edgecolor="white",
                  label=blue_lab)
 
     plt.axvline(threshold, ymin=-.1,ymax=1.1 ,color='k', linestyle='dashed', linewidth=1, label="Threshold")

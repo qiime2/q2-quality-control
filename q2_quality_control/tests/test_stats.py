@@ -123,4 +123,3 @@ class TestStatsBoilerplate(TestPluginBase):
 
 if __name__ == '__main__':
     unittest.main()
-    

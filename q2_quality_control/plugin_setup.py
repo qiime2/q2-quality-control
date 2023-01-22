@@ -358,8 +358,8 @@ plugin.methods.register_function(
 
     },
     name='Removes contaminant',
-    description=('This method identifies contaminant sequences from an '
-                 'OTU or ASV table and reports them to the user')
+    description=('This method removes contaminant sequences from an '
+                 'OTU or ASV table and returns the amended table to the user')
 )
 
 

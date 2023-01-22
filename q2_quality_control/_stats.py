@@ -9,11 +9,15 @@
 from qiime2.plugin import SemanticType, model
 from q2_types.feature_data import FeatureData
 
-#defines types for DecontamScore
-DecontamScore = SemanticType('DecontamScore', variant_of=FeatureData.field['type'])
+# defines types for DecontamScore
+DecontamScore = SemanticType('DecontamScore',
+                             variant_of=FeatureData.field['type'])
+
+
 class DecontamScoreFormat(model.TextFileFormat):
     def validate(*args):
         pass
+
 
 DecontamScoreDirFmt = model.SingleFileDirectoryFormat(
     'DecontamScoreDirFmt', 'stats.tsv', DecontamScoreFormat)

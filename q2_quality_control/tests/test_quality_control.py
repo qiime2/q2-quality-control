@@ -30,10 +30,13 @@ from q2_quality_control._evaluate_taxonomy import (
     _evaluate_taxonomy, _extract_taxa_names, _index_is_subset,
     _validate_indices_and_set_joining_mode)
 from qiime2.plugin.util import transform
-from q2_quality_control.quality_control import decontam_identify, decontam_remove
+from q2_quality_control.quality_control import (decontam_identify,
+                                                decontam_remove)
 from q2_quality_control._stats import DecontamScoreFormat
 
 filterwarnings("ignore", category=UserWarning)
+
+
 def _dnafastaformats_to_series(fasta):
     fasta = qiime2.Artifact.import_data("FeatureData[Sequence]", fasta)
     return fasta.view(pd.Series)
@@ -952,14 +955,18 @@ exp_v = {
             0.10000000000000001, 0.14999999999999999, 0.0, 0.20000000000000001,
             0.14999999999999999, 0.0, 0.0, 0.25, 0.0]}}
 
-#Decontam tests
+# Decontam tests
+
+
 class TestIdentify(TestPluginBase):
     package = 'q2_quality_control.tests'
+
     def setUp(self):
         super().setUp()
         table = qiime2.Artifact.load(self.get_data_path('expected/decon_default_ASV_table.qza'))
         self.asv_table = table.view(qiime2.Metadata).to_dataframe()
         self.metadata_input = qiime2.Metadata.load(self.get_data_path('expected/test_metadata.tsv'))
+
     def test_prevalence(self):
         exp_table = pd.read_csv(self.get_data_path('expected/prevalence-score-table.tsv'), sep='\t', index_col=0)
         temp_transposed_table = exp_table.transpose()

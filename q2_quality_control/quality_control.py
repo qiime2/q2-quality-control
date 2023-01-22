@@ -164,7 +164,7 @@ def _decontam_identify_helper(track_fp, decon_method):
     df.index.name = '#OTU ID'
     # removes last column containing true/false information from the dataframe
     df = df.drop(df.columns[[(len(df.columns)-1)]], axis=1)
-    if(decon_method == 'combined'):
+    if decon_method is 'combined':
         df = df.fillna(0)
 
     # removes all columns that are completely empty
@@ -179,40 +179,42 @@ def _decontam_identify_helper(track_fp, decon_method):
 
 def decontam_identify(asv_or_otu_table: pd.DataFrame,
                       meta_data: qiime2.Metadata,
-                      decon_method: str='prevalence',
+                      decon_method: str = 'prevalence',
                       freq_concentration_column: str = 'NULL',
                       prev_control_or_exp_sample_column: str = 'NULL',
                       prev_control_sample_indicator: str = 'NULL'
                       ) -> (DecontamScoreFormat):
     _check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
-        track_fp = os.path.join(temp_dir_name,'track.tsv')
-        ASV_dest = os.path.join(temp_dir_name,'temp_ASV_table.csv')
+        track_fp = os.path.join(temp_dir_name, 'track.tsv')
+        ASV_dest = os.path.join(temp_dir_name, 'temp_ASV_table.csv')
         transposed_table = asv_or_otu_table.transpose()
         transposed_table.to_csv(os.path.join(ASV_dest))
         metadata = meta_data.to_dataframe()
-        meta_dest = os.path.join(temp_dir_name,'temp_metadata.csv')
+        meta_dest = os.path.join(temp_dir_name, 'temp_metadata.csv')
         metadata.to_csv(os.path.join(meta_dest))
 
         cmd = ['run_decontam.R',
-                   '--asv_table_path', str(ASV_dest),
-                   '--threshold', str(0.1),
-                   '--decon_method', decon_method,
-                   '--output_track', track_fp,
-                   '--meta_table_path', str(meta_dest),
-                   '--freq_con_column', str(freq_concentration_column),
-                   '--prev_control_or_exp_sample_column', str(prev_control_or_exp_sample_column),
-                   '--prev_control_sample_indicator', str(prev_control_sample_indicator)]
+               '--asv_table_path', str(ASV_dest),
+               '--threshold', str(0.1),
+               '--decon_method', decon_method,
+               '--output_track', track_fp,
+               '--meta_table_path', str(meta_dest),
+               '--freq_con_column', str(freq_concentration_column),
+               '--prev_control_or_exp_sample_column',
+               str(prev_control_or_exp_sample_column),
+               '--prev_control_sample_indicator',
+               str(prev_control_sample_indicator)]
         try:
             _run_command(cmd)
         except subprocess.CalledProcessError as e:
             if e.returncode == 2:
-                raise ValueError(
-                        "There was an issue running run_decontam.R please check your inputs")
+                raise ValueError("There was an issue running"
+                                 "run_decontam.R please check your inputs")
             else:
                 raise Exception("An error was encountered while running Decontam"
-                                    " in R (return code %d), please inspect stdout"
-                                    " and stderr to learn more." % e.returncode)
+                                " in R (return code %d), please inspect stdout"
+                                " and stderr to learn more." % e.returncode)
         return _decontam_identify_helper(track_fp, decon_method)
 
 

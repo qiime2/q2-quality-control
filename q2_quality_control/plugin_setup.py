@@ -18,7 +18,8 @@ from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency
 from q2_types.bowtie2 import Bowtie2Index
 
 from .quality_control import (exclude_seqs, evaluate_composition,
-                              evaluate_seqs, evaluate_taxonomy, decontam_identify, decontam_remove)
+                              evaluate_seqs, evaluate_taxonomy,
+                              decontam_identify, decontam_remove)
 from ._filter import bowtie2_build, filter_reads
 from ._threshold_graph import (decontam_score_viz)
 from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
@@ -303,16 +304,15 @@ plugin.methods.register_function(
     citations=[citations['langmead2012fast']]
 )
 
-#Decontam Actions
+# Decontam Actions
 plugin.methods.register_function(
     function=decontam_identify,
     inputs={'asv_or_otu_table': FeatureTable[Frequency]},
-    parameters={ 'meta_data': Metadata,
-                'decon_method': Str %
-                Choices(_DECON_METHOD_OPT),
+    parameters={'meta_data': Metadata,
+                'decon_method': Str % Choices(_DECON_METHOD_OPT),
                 'freq_concentration_column': Str,
                 'prev_control_or_exp_sample_column': Str,
-                'prev_control_sample_indicator': Str,},
+                'prev_control_sample_indicator': Str},
     outputs=[('decontam_score_table', FeatureData[DecontamScore])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
@@ -321,16 +321,20 @@ plugin.methods.register_function(
     },
     parameter_descriptions={
         'meta_data': ('metadata file indicating which samples in the '
-                           'experiment are control samples, '
-                           'assumes sample names in file correspond '
-                           'to ASV_or_OTU_table'),
-        'decon_method': ('Select how to which method to id contaminants with'),
-        'freq_concentration_column': ('Input column name that has concentration information for the samples'),
-        'prev_control_or_exp_sample_column': ('Input column name containing experimental or control sample metadata'),
+                      'experiment are control samples, '
+                      'assumes sample names in file correspond '
+                      'to ASV_or_OTU_table'),
+        'decon_method': ('Select how to which method ' 
+                         'to id contaminants with'),
+        'freq_concentration_column': ('Input column name that has ' 
+                                      'concentration information for the samples'),
+        'prev_control_or_exp_sample_column': ('Input column name containing ' 
+                                              'experimental or control sample metadata'),
         'prev_control_sample_indicator': ('indicate the control sample identifier')
     },
     output_descriptions={
-        'decontam_score_table': ('The resulting table of scores from the input ASV and metadata tables')
+        'decontam_score_table': ('The resulting table of scores ' 
+                                 'from the input ASV and metadata tables')
 
     },
     name='Identify contaminants',
@@ -354,7 +358,8 @@ plugin.methods.register_function(
         'threshold': ('Select threshold cutoff for decontam algorithm scores')
     },
     output_descriptions={
-        'no_contaminant_asv_table': ('The resulting table of scores once contaminants are removed')
+        'no_contaminant_asv_table': ('The resulting table of scores ' 
+                                     'once contaminants are removed')
 
     },
     name='Removes contaminant',
@@ -367,7 +372,7 @@ plugin.visualizers.register_function(
     function=decontam_score_viz,
     inputs={
         'decon_identify_table': FeatureData[DecontamScore],
-            'asv_or_otu_table': FeatureTable[Frequency]
+        'asv_or_otu_table': FeatureTable[Frequency]
     },
     parameters={
         'threshold':  Float,

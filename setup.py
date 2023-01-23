@@ -22,9 +22,9 @@ setup(
         'qiime2.plugins':
         ['q2-quality-control=q2_quality_control.plugin_setup:plugin']
     },
+    scripts=['q2_quality_control/decontam_assets/run_decontam.R'],
     package_data={
         'q2_quality_control': ['citations.bib', 'assets/*'],
-        'q2_quality_control.assets': ['run_decontam.R'],
         'q2_quality_control.tests': ['data/*', 'data/expected/*'],
         'q2_quality_control._threshold_graph': ['assets/index.html'],
     },

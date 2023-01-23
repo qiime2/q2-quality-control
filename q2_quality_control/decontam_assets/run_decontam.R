@@ -12,7 +12,7 @@ option_list = list(
   make_option(c("--threshold"), action="store", default='NULL', type='character',
               help="threshold value for decontam algorithm"),
   make_option(c("--decon_method"), action="store", default='NULL', type='character',
-              help="algoithm mode"),
+              help="algorithm mode"),
   make_option(c("--output_track"), action="store", default='NULL', type='character',
               help="File path to tracking tsv file. If already exists, will be overwritten"),
   make_option(c("--meta_table_path"), action="store", default='NULL', type='character',
@@ -20,7 +20,7 @@ option_list = list(
   make_option(c("--freq_con_column"), action="store", default='NULL', type='character',
               help="Name of column for frequency method"),
   make_option(c("--prev_control_or_exp_sample_column"), action="store", default='NULL', type='character',
-              help="Name of column for prevelance method"),
+              help="Name of column for prevalence method"),
   make_option(c("--prev_control_sample_indicator"), action="store", default='NULL', type='character',
               help="Indicator to identify control samples")
 )

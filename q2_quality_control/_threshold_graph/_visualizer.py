@@ -23,14 +23,14 @@ TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
 
 
-def decontam_score_viz(output_dir, decon_identify_table: qiime2.Metadata,
-                       asv_or_otu_table: pd.DataFrame, threshold: float = 0.1,
+def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
+                       table: pd.DataFrame, threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
 
-    df = decon_identify_table.to_dataframe()
+    df = decontam_scores.to_dataframe()
     values = df['p'].tolist()
     values = np.array(values)
-    temp = asv_or_otu_table.sum(axis='columns')
+    temp = table.sum(axis='columns')
     read_nums = np.array(temp.tolist())
 
     contam_asvs = 0

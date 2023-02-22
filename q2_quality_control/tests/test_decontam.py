@@ -40,11 +40,11 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = decontam_identify(
-            asv_or_otu_table=self.asv_table,
-            meta_data=self.metadata_input,
-            decon_method='prevalence',
-            prev_control_or_exp_sample_column='Sample_or_ConTrol',
-            prev_control_sample_indicator='Control')
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='prevalence',
+            prev_control_column='Sample_or_ConTrol',
+            prev_control_indicator='Control')
         df_output_feature_table = transform(
             output_feature_table,
             from_type=DecontamScoreFormat,
@@ -72,9 +72,9 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = decontam_identify(
-            asv_or_otu_table=self.asv_table,
-            meta_data=self.metadata_input,
-            decon_method='frequency',
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='frequency',
             freq_concentration_column='quant_reading')
         df_output_feature_table = transform(
             output_feature_table,
@@ -102,11 +102,11 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = decontam_identify(
-            asv_or_otu_table=self.asv_table,
-            meta_data=self.metadata_input,
-            decon_method='combined',
-            prev_control_or_exp_sample_column='Sample_or_ConTrol',
-            prev_control_sample_indicator='Control',
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='combined',
+            prev_control_column='Sample_or_ConTrol',
+            prev_control_indicator='Control',
             freq_concentration_column='quant_reading')
         df_output_feature_table = transform(
             output_feature_table,
@@ -144,8 +144,8 @@ class TestRemove(TestPluginBase):
             self.get_data_path('expected/no-contaminant-asv-table.tsv'),
             sep='\t', index_col=0)
         output_asv_table = decontam_remove(
-            asv_or_otu_table=self.asv_table,
-            decon_identify_table=self.identify_table,
+            table=self.asv_table,
+            decontam_scores=self.identify_table,
             threshold=0.1)
         temp_table = output_asv_table.to_dataframe()
         with tempfile.TemporaryDirectory() as temp_dir_name:

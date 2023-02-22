@@ -307,37 +307,47 @@ plugin.methods.register_function(
 # Decontam Actions
 plugin.methods.register_function(
     function=decontam_identify,
-    inputs={'asv_or_otu_table': FeatureTable[Frequency]},
-    parameters={'meta_data': Metadata,
-                'decon_method': Str % Choices(_DECON_METHOD_OPT),
+    inputs={'table': FeatureTable[Frequency]},
+    parameters={'metadata': Metadata,
+                'method': Str % Choices(_DECON_METHOD_OPT),
                 'freq_concentration_column': Str,
-                'prev_control_or_exp_sample_column': Str,
-                'prev_control_sample_indicator': Str},
-    outputs=[('decontam_score_table', FeatureData[DecontamScore])],
+                'prev_control_column': Str,
+                'prev_control_indicator': Str},
+    outputs=[('decontam_scores', FeatureData[DecontamScore])],
     input_descriptions={
-        'asv_or_otu_table': ('Table with presence counts in the matrix '
-                             'rownames are sample id and column names are'
-                             'seqeunce id')
+        'table': ('ASV or OTU table which contaminate sequences '
+                  'will be identified from')
     },
     parameter_descriptions={
-        'meta_data': ('metadata file indicating which samples in the '
-                      'experiment are control samples, '
-                      'assumes sample names in file correspond '
-                      'to ASV_or_OTU_table'),
-        'decon_method': ('Select how to which method '
-                         'to id contaminants with'),
+        'metadata': ('metadata file indicating which samples in the '
+                     'experiment are control samples, '
+                     'assumes sample names in file correspond '
+                     'to the `table` input parameter'),
+        'method': ('Select how to which method '
+                   'to id contaminants with;\n'
+                   'Prevalence: Utilizes control ASVs/OTUs '
+                   'to identify contaminants\n'
+                   'Frequency: Utilizes sample concentration '
+                   'information to identify contaminants\n'
+                   'Combined: Utilizes both Prevalence and '
+                   'Frequency methods when identifying '
+                   'contaminants'),
         'freq_concentration_column': ('Input column name that has '
                                       'concentration information for '
                                       'the samples'),
-        'prev_control_or_exp_sample_column': ('Input column name containing '
-                                              'experimental or control '
-                                              'sample metadata'),
-        'prev_control_sample_indicator': ('indicate the '
-                                          'control sample identifier')
+        'prev_control_column': ('Input column name containing '
+                                'experimental or control '
+                                'sample metadata'),
+        'prev_control_indicator': ('indicate the '
+                                   'control sample identifier '
+                                   '(e.g. "control" or "blank")')
     },
     output_descriptions={
-        'decontam_score_table': ('The resulting table of scores '
-                                 'from the input ASV and metadata tables')
+        'decontam_scores': ('The resulting table of scores '
+                            'from the decontam algorithm '
+                            'which scores each ASV or OTU on '
+                            'how likely they are to be a '
+                            'contaminant sequence')
 
     },
     name='Identify contaminants',
@@ -347,22 +357,21 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=decontam_remove,
-    inputs={'decon_identify_table': FeatureData[DecontamScore],
-            'asv_or_otu_table': FeatureTable[Frequency]},
+    inputs={'decontam_scores': FeatureData[DecontamScore],
+            'table': FeatureTable[Frequency]},
     parameters={'threshold': Float},
-    outputs=[('no_contaminant_asv_table', FeatureTable[Frequency])],
+    outputs=[('filtered_table', FeatureTable[Frequency])],
     input_descriptions={
-        'decon_identify_table': ('Output table from decontam identify'),
-        'asv_or_otu_table': ('Table with presence counts in the matrix '
-                             'rownames are sample id and column names are'
-                             'seqeunce id')
+        'decontam_scores': ('Output table from decontam identify'),
+        'table': ('ASV or OTU table which contaminate sequences '
+                  'will be identified from')
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores')
     },
     output_descriptions={
-        'no_contaminant_asv_table': ('The resulting table of scores '
-                                     'once contaminants are removed')
+        'filtered_table': ('The resulting feature table of scores '
+                           'once contaminants are removed')
 
     },
     name='Removes contaminant',
@@ -374,8 +383,8 @@ plugin.methods.register_function(
 plugin.visualizers.register_function(
     function=decontam_score_viz,
     inputs={
-        'decon_identify_table': FeatureData[DecontamScore],
-        'asv_or_otu_table': FeatureTable[Frequency]
+        'decontam_scores': FeatureData[DecontamScore],
+        'table': FeatureTable[Frequency]
     },
     parameters={
         'threshold':  Float,
@@ -385,15 +394,15 @@ plugin.visualizers.register_function(
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',
     input_descriptions={
-        'decon_identify_table': 'Output from decontam identify '
-                                'to be vizualized',
-        'asv_or_otu_table': 'Raw OTU/ASV table that was used '
-                            'as input to identify'
+        'decontam_scores': 'Output from decontam identify '
+                           'to be visualized',
+        'table': 'Raw OTU/ASV table that was used '
+                 'as input to decontam-identify'
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores'),
         'weighted': ('weight the decontam scores by their '
-                     'assoicated read number'),
+                     'associated read number'),
         'bin_size': ('Select bin size for the histogram')
     }
 )

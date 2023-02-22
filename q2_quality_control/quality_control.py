@@ -141,13 +141,13 @@ _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 # Better to choose to skip, than to implicitly ignore things that KeyError
 _SKIP = (lambda x: True, '')
 _valid_inputs = {
-    'asv_or_otu_table': _SKIP,
-    'meta_data': _SKIP,
+    'table': _SKIP,
+    'metadata': _SKIP,
     'threshold': _PER_NUM,
-    'decon_method': _DECON_METHOD_STR,
+    'method': _DECON_METHOD_STR,
     'freq_concentration_column': _SKIP,
-    'prev_control_or_exp_sample_column': _SKIP,
-    'prev_control_sample_indicator': _SKIP,
+    'prev_control_column': _SKIP,
+    'prev_control_indicator': _SKIP,
 }
 
 
@@ -159,12 +159,12 @@ def _check_inputs(**kwargs):
                              % (param, arg, explanation))
 
 
-def _decontam_identify_helper(track_fp, decon_method):
+def _decontam_identify_helper(track_fp, method):
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
     # removes last column containing true/false information from the dataframe
     df = df.drop(df.columns[[(len(df.columns)-1)]], axis=1)
-    if decon_method == 'combined':
+    if method == 'combined':
         df = df.fillna(0)
 
     # removes all columns that are completely empty
@@ -177,34 +177,34 @@ def _decontam_identify_helper(track_fp, decon_method):
     return metadata
 
 
-def decontam_identify(asv_or_otu_table: pd.DataFrame,
-                      meta_data: qiime2.Metadata,
-                      decon_method: str = 'prevalence',
+def decontam_identify(table: pd.DataFrame,
+                      metadata: qiime2.Metadata,
+                      method: str = 'prevalence',
                       freq_concentration_column: str = 'NULL',
-                      prev_control_or_exp_sample_column: str = 'NULL',
-                      prev_control_sample_indicator: str = 'NULL'
+                      prev_control_column: str = 'NULL',
+                      prev_control_indicator: str = 'NULL'
                       ) -> (DecontamScoreFormat):
     _check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         track_fp = os.path.join(temp_dir_name, 'track.tsv')
         ASV_dest = os.path.join(temp_dir_name, 'temp_ASV_table.csv')
-        transposed_table = asv_or_otu_table.transpose()
+        transposed_table = table.transpose()
         transposed_table.to_csv(os.path.join(ASV_dest))
-        metadata = meta_data.to_dataframe()
+        metadata = metadata.to_dataframe()
         meta_dest = os.path.join(temp_dir_name, 'temp_metadata.csv')
         metadata.to_csv(os.path.join(meta_dest))
 
         cmd = ['run_decontam.R',
                '--asv_table_path', str(ASV_dest),
                '--threshold', str(0.1),
-               '--decon_method', decon_method,
+               '--decon_method', method,
                '--output_track', track_fp,
                '--meta_table_path', str(meta_dest),
                '--freq_con_column', str(freq_concentration_column),
                '--prev_control_or_exp_sample_column',
-               str(prev_control_or_exp_sample_column),
+               str(prev_control_column),
                '--prev_control_sample_indicator',
-               str(prev_control_sample_indicator)]
+               str(prev_control_indicator)]
         try:
             _run_command(cmd)
         except subprocess.CalledProcessError as e:
@@ -216,15 +216,15 @@ def decontam_identify(asv_or_otu_table: pd.DataFrame,
                                 "while running Decontam in R "
                                 "(return code %d), please inspect stdout"
                                 " and stderr to learn more." % e.returncode)
-        return _decontam_identify_helper(track_fp, decon_method)
+        return _decontam_identify_helper(track_fp, method)
 
 
-def decontam_remove(decon_identify_table: qiime2.Metadata,
-                    asv_or_otu_table: pd.DataFrame,
+def decontam_remove(decontam_scores: qiime2.Metadata,
+                    table: pd.DataFrame,
                     threshold: float = 0.1
                     ) -> (biom.Table):
     with tempfile.TemporaryDirectory() as temp_dir_name:
-        df = decon_identify_table.to_dataframe()
+        df = decontam_scores.to_dataframe()
         df.loc[(df['p'].astype(float) <= threshold),
                'contaminant_seq'] = 'True'
         df.loc[(df['p'].astype(float) > threshold),
@@ -232,10 +232,9 @@ def decontam_remove(decon_identify_table: qiime2.Metadata,
         df = df[df.contaminant_seq == 'True']
         remove_these = df.index
         for bad_seq in list(remove_these):
-            asv_or_otu_table = (asv_or_otu_table
-                                [asv_or_otu_table.index != bad_seq])
+            table = (table[table.index != bad_seq])
         output = os.path.join(temp_dir_name, 'temp.tsv.biom')
-        temp_transposed_table = asv_or_otu_table.transpose()
+        temp_transposed_table = table.transpose()
         temp_transposed_table.to_csv(output, sep="\t")
         with open(output) as fh:
             no_contam_table = biom.Table.from_tsv(fh, None, None, None)

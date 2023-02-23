@@ -188,8 +188,7 @@ def decontam_identify(table: pd.DataFrame,
     with tempfile.TemporaryDirectory() as temp_dir_name:
         track_fp = os.path.join(temp_dir_name, 'track.tsv')
         ASV_dest = os.path.join(temp_dir_name, 'temp_ASV_table.csv')
-        transposed_table = table.transpose()
-        transposed_table.to_csv(os.path.join(ASV_dest))
+        table.to_csv(os.path.join(ASV_dest))
         metadata = metadata.to_dataframe()
         meta_dest = os.path.join(temp_dir_name, 'temp_metadata.csv')
         metadata.to_csv(os.path.join(meta_dest))
@@ -231,10 +230,11 @@ def decontam_remove(decontam_scores: qiime2.Metadata,
                'contaminant_seq'] = 'False'
         df = df[df.contaminant_seq == 'True']
         remove_these = df.index
+        trans_table = table.transpose()
         for bad_seq in list(remove_these):
-            table = (table[table.index != bad_seq])
+            trans_table = (trans_table[trans_table.index != bad_seq])
         output = os.path.join(temp_dir_name, 'temp.tsv.biom')
-        temp_transposed_table = table.transpose()
+        temp_transposed_table = trans_table.transpose()
         temp_transposed_table.to_csv(output, sep="\t")
         with open(output) as fh:
             no_contam_table = biom.Table.from_tsv(fh, None, None, None)

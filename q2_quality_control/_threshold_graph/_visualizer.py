@@ -30,7 +30,8 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
     df = decontam_scores.to_dataframe()
     values = df['p'].tolist()
     values = np.array(values)
-    temp = table.sum(axis='columns')
+    table_trans = table.transpose()
+    temp = table_trans.sum(axis='columns')
     read_nums = np.array(temp.tolist())
 
     contam_asvs = 0

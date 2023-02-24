@@ -16,10 +16,9 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality)
 from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency
 from q2_types.bowtie2 import Bowtie2Index
-
 from .quality_control import (exclude_seqs, evaluate_composition,
-                              evaluate_seqs, evaluate_taxonomy,
-                              decontam_identify, decontam_remove)
+                              evaluate_seqs, evaluate_taxonomy)
+from .decontam import (decontam_identify, decontam_remove)
 from ._filter import bowtie2_build, filter_reads
 from ._threshold_graph import (decontam_score_viz)
 from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt

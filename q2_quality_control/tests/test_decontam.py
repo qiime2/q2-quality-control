@@ -10,15 +10,10 @@ import pandas as pd
 import qiime2
 import biom
 from qiime2.plugin.testing import TestPluginBase
-from qiime2.plugin.util import transform
-from q2_quality_control.quality_control import (decontam_identify,
-                                                decontam_remove)
-from q2_quality_control._stats import DecontamScoreFormat
+from q2_quality_control.decontam import (decontam_identify,
+                                         decontam_remove)
 import os
 import tempfile
-
-
-# Decontam tests
 
 
 class TestIdentify(TestPluginBase):
@@ -39,16 +34,12 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table = exp_table.transpose()
         temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
-        output_feature_table = decontam_identify(
+        df_output_feature_table = decontam_identify(
             table=self.asv_table,
             metadata=self.metadata_input,
             method='prevalence',
-            prev_control_column='Sample_or_ConTrol',
-            prev_control_indicator='Control')
-        df_output_feature_table = transform(
-            output_feature_table,
-            from_type=DecontamScoreFormat,
-            to_type=pd.DataFrame)
+            prev_control_column='Sample_or_Control',
+            prev_control_indicator='Control Sample')
         df_output_feature_table = df_output_feature_table.round(decimals=6)
         exp_table = exp_table.round(decimals=6)
         with tempfile.TemporaryDirectory() as temp_dir_name:
@@ -71,15 +62,11 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table = exp_table.transpose()
         temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
-        output_feature_table = decontam_identify(
+        df_output_feature_table = decontam_identify(
             table=self.asv_table,
             metadata=self.metadata_input,
             method='frequency',
             freq_concentration_column='quant_reading')
-        df_output_feature_table = transform(
-            output_feature_table,
-            from_type=DecontamScoreFormat,
-            to_type=pd.DataFrame)
         df_output_feature_table = df_output_feature_table.round(decimals=6)
         exp_table = exp_table.round(decimals=6)
         with tempfile.TemporaryDirectory() as temp_dir_name:
@@ -101,17 +88,13 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table = exp_table.transpose()
         temp_transposed_table = temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
-        output_feature_table = decontam_identify(
+        df_output_feature_table = decontam_identify(
             table=self.asv_table,
             metadata=self.metadata_input,
             method='combined',
-            prev_control_column='Sample_or_ConTrol',
-            prev_control_indicator='Control',
+            prev_control_column='Sample_or_Control',
+            prev_control_indicator='Control Sample',
             freq_concentration_column='quant_reading')
-        df_output_feature_table = transform(
-            output_feature_table,
-            from_type=DecontamScoreFormat,
-            to_type=pd.DataFrame)
         df_output_feature_table = df_output_feature_table.round(decimals=6)
         exp_table = exp_table.round(decimals=6)
         with tempfile.TemporaryDirectory() as temp_dir_name:
@@ -153,6 +136,7 @@ class TestRemove(TestPluginBase):
             expected_biom_fp = os.path.join(temp_dir_name,
                                             'expected_output.tsv')
             temp_table.to_csv(test_biom_fp, sep="\t")
+            exp_table = exp_table.transpose()
             exp_table.to_csv(expected_biom_fp, sep="\t")
             with open(test_biom_fp) as fh:
                 test_table = biom.Table.from_tsv(fh, None, None, None)

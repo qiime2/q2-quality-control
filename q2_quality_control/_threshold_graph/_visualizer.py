@@ -16,8 +16,25 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import qiime2
 
-
+_PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
 _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
+_PRESENT = (lambda x: x is not None, '')
+# Better to choose to skip, than to implicitly ignore things that KeyError
+_SKIP = (lambda x: True, '')
+_valid_inputs = {
+    'output_dir': _SKIP,
+    'table': _SKIP,
+    'decontam_scores': _SKIP,
+    'threshold': _PER_NUM,
+    'bin_size': _PER_NUM,
+    'weighted': _BOOLEAN,
+}
+def _check_inputs(**kwargs):
+    for param, arg in kwargs.items():
+        check_is_valid, explanation = _valid_inputs[param]
+        if not check_is_valid(arg):
+            raise ValueError('Argument to %r was %r, should be %s.'
+                             % (param, arg, explanation))
 
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
@@ -26,7 +43,7 @@ TEMPLATES = pkg_resources.resource_filename(
 def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        table: pd.DataFrame, threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
-
+    _check_inputs(**locals())
     df = decontam_scores.to_dataframe()
     values = df['p'].tolist()
     values = np.array(values)

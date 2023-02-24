@@ -1,5 +1,14 @@
 #!/usr/bin/env Rscript
 
+options(error = function() {
+  sink(stderr())
+  on.exit(sink(NULL))
+  traceback(3)
+  if (!interactive()) {
+    q(status = 1)
+  }
+})
+
 library("decontam")
 library("optparse")
 
@@ -31,9 +40,9 @@ threshold <- if(opt$threshold=='NULL') NULL else as.numeric(opt$threshold)
 out.track <- opt$output_track
 metadata.loc<-opt$meta_table_path
 decon.mode<-opt$decon_method
-prev.control.col <- opt$prev_control_or_exp_sample_column
+prev.control.col <- opt$prev_control_or_exp_sample_column 
 prev.id.controls<-opt$prev_control_sample_indicator
-freq.control.col<-opt$freq_con_column
+freq.con.col<-opt$freq_con_column
 
 if(!file.exists(inp.loc)) {
   errQuit("Input ASV table does not exist.")
@@ -48,22 +57,23 @@ meta_data_cols <-function(metadata_df, control.col){
   index<-0
   for (id in colnames(metadata_df)) {
     index=index+1
-    if(tolower(id) == tolower(control.col)){
+    if(id == control.col){
       control_vec<-metadata_df[,c(index)]
     }
   }
   return(control_vec)
 }
 
-outputer<-function(decon_output, out.track,asv_df, out.path){
-  cat("7) Write output\n")
+outputer<-function(decon_output, out.track){
+  cat("Write output\n")
+  
   write.table(decon_output, out.track, sep="\t",
               row.names=TRUE, col.names=NA, quote=FALSE)
   q(status=0)
 }
 
-asv_df <- read.csv(file = inp.loc)
-rownames(asv_df) <- asv_df[, 1] 
+asv_df <- read.csv(file = inp.loc, check.names=FALSE)
+rownames(asv_df) <- asv_df[, 1]
 asv_df <- asv_df[, -1]
 numero_df <- as.matrix(sapply(asv_df, as.numeric)) 
 metadata_df<-read.csv(file = metadata.loc)
@@ -72,25 +82,17 @@ if(decon.mode == 'prevalence'){
   control_vec <- meta_data_cols(metadata_df, prev.control.col)
   true_false_control_vec<-grepl(prev.id.controls,control_vec)
   prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='prevalence')
-  outputer(prev_contam, out.track,asv_df)
+  outputer(prev_contam, out.track)
 }else if(decon.mode == 'frequency'){
-  control_vec <- meta_data_cols(metadata_df, freq.control.col)
-  quant_vec<-as.numeric(control_vec)
+  temp_quant_vec <- meta_data_cols(metadata_df, freq.con.col)
+  quant_vec<-as.numeric(temp_quant_vec)
   freq_contam <- isContaminant(numero_df, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='frequency')
-  outputer(freq_contam, out.track,asv_df)
+  outputer(freq_contam, out.track)
 }else{
   prev_control_vec <- meta_data_cols(metadata_df, prev.control.col)
-  quant_control_vec <- meta_data_cols(metadata_df, freq.control.col)
-  quant_vec<-as.numeric(quant_control_vec)
+  temp_quant_vec <- meta_data_cols(metadata_df, freq.con.col)
+  quant_vec<-as.numeric(temp_quant_vec)
   true_false_control_vec<-grepl(prev.id.controls, prev_control_vec)
   comb_contam <- isContaminant(numero_df, neg=true_false_control_vec, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='combined')
-  outputer(comb_contam, out.track,asv_df)
+  outputer(comb_contam, out.track)
 }
-
-
-
-
-
-
-
-  

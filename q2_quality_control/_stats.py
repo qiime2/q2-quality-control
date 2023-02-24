@@ -16,7 +16,7 @@ DecontamScore = SemanticType('DecontamScore',
 
 
 class DecontamScoreFormat(model.TextFileFormat):
-    def validate(*args):
+    def _validate_(self, level='max'):
         pass
 
 

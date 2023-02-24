@@ -83,6 +83,7 @@ def _check_column_inputs(metadata, method, freq_concentration_column,
             else:
                 print("All inputs are found")
 
+
 def _decontam_identify_helper(track_fp, method):
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
@@ -105,12 +106,10 @@ def decontam_identify(table: pd.DataFrame,
                       prev_control_column: str = None,
                       prev_control_indicator: str = None
                       ) -> (pd.DataFrame):
-    #checks inputs
     _check_inputs(**locals())
     metadata = metadata.to_dataframe()
     _check_column_inputs(metadata, method, freq_concentration_column,
                          prev_control_column, prev_control_indicator)
-    # if all checks pass it runs the decontam algorithm
     with tempfile.TemporaryDirectory() as temp_dir_name:
         track_fp = os.path.join(temp_dir_name, 'track.tsv')
         ASV_dest = os.path.join(temp_dir_name, 'temp_ASV_table.csv')

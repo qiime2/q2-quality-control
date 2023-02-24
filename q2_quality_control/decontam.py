@@ -44,20 +44,21 @@ def _check_inputs(**kwargs):
 
 def _check_column_inputs(metadata, method, freq_concentration_column,
                          prev_control_column, prev_control_indicator):
-    if(method == 'prevalence'):
-        if(prev_control_column not in metadata.columns):
+    if method == 'prevalence':
+        if prev_control_column not in metadata.columns:
             raise ValueError('Prevalence column not found, please '
                              'select from:\n'
                              + str(', '.join(metadata.columns)))
         else:
-            if prev_control_indicator not in list(metadata[prev_control_column]):
+            if prev_control_indicator not in list(
+                    metadata[prev_control_column]):
                 raise ValueError('No control values found, please select '
                                  'from:\n'+
                                  str(', '.join(metadata[prev_control_column].unique())))
             else:
                 print("All inputs are found")
-    elif(method == 'frequency'):
-        if(freq_concentration_column not in metadata.columns):
+    elif method == 'frequency':
+        if freq_concentration_column not in metadata.columns:
             raise ValueError('Frequency column not found, please '
                              'select from:\n'
                              + str(', '.join(metadata.columns)))

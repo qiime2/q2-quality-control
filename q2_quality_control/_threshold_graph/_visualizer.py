@@ -29,12 +29,15 @@ _valid_inputs = {
     'bin_size': _PER_NUM,
     'weighted': _BOOLEAN,
 }
+
+
 def _check_inputs(**kwargs):
     for param, arg in kwargs.items():
         check_is_valid, explanation = _valid_inputs[param]
         if not check_is_valid(arg):
             raise ValueError('Argument to %r was %r, should be %s.'
                              % (param, arg, explanation))
+
 
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')

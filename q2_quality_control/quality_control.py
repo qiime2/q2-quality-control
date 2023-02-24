@@ -9,19 +9,12 @@
 import biom
 from q2_types.feature_data import DNAFASTAFormat
 import pandas as pd
-import os
-import tempfile
-import subprocess
 import qiime2.util
-
-from qiime2.plugin.util import transform
 from ._blast import _search_seqs
 from ._utilities import (
     _evaluate_composition, _visualize, _pointplot_multiple_y)
 from ._evaluate_seqs import _evaluate_seqs
 from ._evaluate_taxonomy import _evaluate_taxonomy
-from ._utilities import _run_command
-from ._stats import DecontamScoreFormat
 
 left_justify_supported_methods = {'vsearch'}
 

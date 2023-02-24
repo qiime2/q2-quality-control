@@ -53,8 +53,10 @@ def _check_column_inputs(metadata, method, freq_concentration_column,
             if prev_control_indicator not in list(
                     metadata[prev_control_column]):
                 raise ValueError('No control values found, please select '
-                                 'from:\n'+
-                                 str(', '.join(metadata[prev_control_column].unique())))
+                                 'from:\n' +
+                                 str(', '.join(
+                                     metadata[prev_control_column]
+                                     .unique())))
             else:
                 print("All inputs are found")
     elif method == 'frequency':
@@ -65,16 +67,19 @@ def _check_column_inputs(metadata, method, freq_concentration_column,
         else:
             print("All inputs are found")
     else:
-        if((freq_concentration_column not in metadata.columns) or
+        if ((freq_concentration_column not in metadata.columns) or
                 (prev_control_column not in metadata.columns)):
             raise ValueError('Column id input error, please '
                              'select from:\n'
                              + str(', '.join(metadata.columns)))
         else:
-            if prev_control_indicator not in list(metadata[prev_control_column]):
+            if prev_control_indicator not in list(
+                    metadata[prev_control_column]):
                 raise ValueError('No control values found, please select '
                                  'from:\n' +
-                                 str(', '.join(metadata[prev_control_column].unique())))
+                                 str(', '.join(
+                                     metadata[prev_control_column]
+                                     .unique())))
             else:
                 print("All inputs are found")
 

@@ -42,30 +42,50 @@ def _check_inputs(**kwargs):
                              % (param, arg, explanation))
 
 
-def _check_column_inputs(metadata, method, freq_concentration_column,
+def _check_column_inputs_helper(table, metadata,
+                                prev_control_column,
+                                prev_control_indicator):
+    if prev_control_column not in metadata.columns:
+        raise ValueError('Prevalence column not found, please '
+                         'select from:\n'
+                         + str(', '.join(metadata.columns)))
+    else:
+        if prev_control_indicator not in list(
+                metadata[prev_control_column]):
+            raise ValueError('No control values found, please select '
+                             'from:\n' +
+                             str(', '.join(
+                                 metadata[prev_control_column]
+                                 .unique())))
+        else:
+            prev_controls = metadata.loc[
+                metadata[prev_control_column] == prev_control_indicator]
+            prev_sample_names = prev_controls.index.values
+            indic = 0
+            for name in prev_sample_names:
+                if name in table.index.values:
+                    indic = indic + 1
+            if indic < 5:
+                raise ValueError('At least 5 Control Samples needed '
+                                 + str(indic) + ' found')
+            else:
+                print("All appropriate inputs are found")
+
+
+def _check_column_inputs(table, metadata, method, freq_concentration_column,
                          prev_control_column, prev_control_indicator):
     if method == 'prevalence':
-        if prev_control_column not in metadata.columns:
-            raise ValueError('Prevalence column not found, please '
-                             'select from:\n'
-                             + str(', '.join(metadata.columns)))
-        else:
-            if prev_control_indicator not in list(
-                    metadata[prev_control_column]):
-                raise ValueError('No control values found, please select '
-                                 'from:\n' +
-                                 str(', '.join(
-                                     metadata[prev_control_column]
-                                     .unique())))
-            else:
-                print("All inputs are found")
+        _check_column_inputs_helper(table, metadata,
+                                    prev_control_column,
+                                    prev_control_indicator)
+
     elif method == 'frequency':
         if freq_concentration_column not in metadata.columns:
             raise ValueError('Frequency column not found, please '
                              'select from:\n'
                              + str(', '.join(metadata.columns)))
         else:
-            print("All inputs are found")
+            print("All appropriate inputs are found")
     else:
         if ((freq_concentration_column not in metadata.columns) or
                 (prev_control_column not in metadata.columns)):
@@ -73,15 +93,9 @@ def _check_column_inputs(metadata, method, freq_concentration_column,
                              'select from:\n'
                              + str(', '.join(metadata.columns)))
         else:
-            if prev_control_indicator not in list(
-                    metadata[prev_control_column]):
-                raise ValueError('No control values found, please select '
-                                 'from:\n' +
-                                 str(', '.join(
-                                     metadata[prev_control_column]
-                                     .unique())))
-            else:
-                print("All inputs are found")
+            _check_column_inputs_helper(table, metadata,
+                                        prev_control_column,
+                                        prev_control_indicator)
 
 
 def _decontam_identify_helper(track_fp, method):
@@ -106,7 +120,7 @@ def decontam_identify(table: pd.DataFrame,
                       ) -> (pd.DataFrame):
     _check_inputs(**locals())
     metadata = metadata.to_dataframe()
-    _check_column_inputs(metadata, method, freq_concentration_column,
+    _check_column_inputs(table, metadata, method, freq_concentration_column,
                          prev_control_column, prev_control_indicator)
     with tempfile.TemporaryDirectory() as temp_dir_name:
         track_fp = os.path.join(temp_dir_name, 'track.tsv')

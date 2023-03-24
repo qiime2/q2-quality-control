@@ -104,8 +104,6 @@ def _decontam_identify_helper(track_fp, method):
     df = df.drop(df.columns[(len(df.columns)-1)], axis=1)
     if method == 'combined':
         df = df.fillna(0)
-
-    # removes all columns that are completely empty
     df = df.dropna(axis='columns')
     return df
 

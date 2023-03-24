@@ -93,9 +93,7 @@ def _decontam_identify_helper(track_fp, method):
         df = df.fillna(0)
 
     # removes all columns that are completely empty
-    temp_transposed_table = df.transpose()
-    temp_transposed_table = temp_transposed_table.dropna()
-    df = temp_transposed_table.transpose()
+    df = df.dropna(axis='columns')
     return df
 
 

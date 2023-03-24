@@ -323,11 +323,11 @@ plugin.methods.register_function(
                      'assumes sample names in file correspond '
                      'to the `table` input parameter'),
         'method': ('Select how to which method '
-                   'to id contaminants with;\n'
+                   'to id contaminants with; '
                    'Prevalence: Utilizes control ASVs/OTUs '
-                   'to identify contaminants\n'
+                   'to identify contaminants, '
                    'Frequency: Utilizes sample concentration '
-                   'information to identify contaminants\n'
+                   'information to identify contaminants, '
                    'Combined: Utilizes both Prevalence and '
                    'Frequency methods when identifying '
                    'contaminants'),

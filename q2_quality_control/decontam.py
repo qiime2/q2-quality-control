@@ -101,7 +101,6 @@ def _check_column_inputs(table, metadata, method, freq_concentration_column,
 def _decontam_identify_helper(track_fp, method):
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
-    # removes last column containing true/false information from the dataframe
     df = df.drop(df.columns[(len(df.columns)-1)], axis=1)
     if method == 'combined':
         df = df.fillna(0)

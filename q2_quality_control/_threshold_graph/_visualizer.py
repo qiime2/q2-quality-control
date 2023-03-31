@@ -48,8 +48,11 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        weighted: bool = True, bin_size: float = 0.02):
     _check_inputs(**locals())
     df = decontam_scores.to_dataframe()
+    df = df.fillna(0)
     values = df['p'].tolist()
     values = np.array(values)
+    if sum(values) == 0:
+        raise ValueError("All input p values are either NA or 0")
     table_trans = table.transpose()
     temp = table_trans.sum(axis='columns')
     read_nums = np.array(temp.tolist())

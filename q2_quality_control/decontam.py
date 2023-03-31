@@ -102,9 +102,12 @@ def _decontam_identify_helper(track_fp, method):
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
     df = df.drop(df.columns[(len(df.columns)-1)], axis=1)
-    if method == 'combined':
-        df = df.fillna(0)
-    df = df.dropna(axis='columns')
+    if method == 'frequency':
+        df = df.drop(df.columns[[1, 2, 3]], axis=1)
+    elif method == 'prevalence':
+        df = df.drop(df.columns[[0, 2, 3]], axis=1)
+    else:
+        print("We need all of these columns")
     return df
 
 

@@ -85,9 +85,6 @@ class TestIdentify(TestPluginBase):
         exp_table = pd.read_csv(
             self.get_data_path('expected/combined-score-table.tsv'),
             sep='\t', index_col=0)
-        temp_transposed_table = exp_table.transpose()
-        temp_transposed_table = temp_transposed_table.dropna()
-        exp_table = temp_transposed_table.transpose()
         df_output_feature_table = decontam_identify(
             table=self.asv_table,
             metadata=self.metadata_input,
@@ -95,8 +92,12 @@ class TestIdentify(TestPluginBase):
             prev_control_column='Sample_or_Control',
             prev_control_indicator='Control Sample',
             freq_concentration_column='quant_reading')
+        df_output_feature_table = df_output_feature_table.fillna(0)
         df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.fillna(0)
         exp_table = exp_table.round(decimals=6)
+        print(df_output_feature_table)
+        print(exp_table)
         with tempfile.TemporaryDirectory() as temp_dir_name:
             test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
             expected_biom_fp = os.path.join(temp_dir_name,
@@ -136,7 +137,6 @@ class TestRemove(TestPluginBase):
             expected_biom_fp = os.path.join(temp_dir_name,
                                             'expected_output.tsv')
             temp_table.to_csv(test_biom_fp, sep="\t")
-            exp_table = exp_table.transpose()
             exp_table.to_csv(expected_biom_fp, sep="\t")
             with open(test_biom_fp) as fh:
                 test_table = biom.Table.from_tsv(fh, None, None, None)

@@ -63,9 +63,9 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
     true_reads = 0
     index = 0
     values = []
-    true_read_nums=[]
+    true_read_nums = []
     for val in temp_values:
-        if np.isnan(val) == False:
+        if np.isnan(val) is False:
             values.append(val)
             true_read_nums.append(read_nums[index])
             if val < threshold:

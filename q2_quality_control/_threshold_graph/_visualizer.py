@@ -48,11 +48,11 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        weighted: bool = True, bin_size: float = 0.02):
     _check_inputs(**locals())
     df = decontam_scores.to_dataframe()
-    df = df.fillna(0)
-    values = df['p'].tolist()
-    values = np.array(values)
-    if sum(values) == 0:
-        raise ValueError("All input p values are either NA or 0")
+    temp_values = df['p'].tolist()
+    temp_values = np.array(temp_values)
+    if np.count_nonzero(np.isnan(temp_values)) == len(temp_values):
+        raise ValueError("All input p values are NA")
+
     table_trans = table.transpose()
     temp = table_trans.sum(axis='columns')
     read_nums = np.array(temp.tolist())
@@ -62,13 +62,18 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
     contam_reads = 0
     true_reads = 0
     index = 0
-    for val in values:
-        if val < threshold:
-            contam_asvs = contam_asvs + 1
-            contam_reads = contam_reads + read_nums[index]
-        else:
-            true_asvs = true_asvs + 1
-            true_reads = true_reads + read_nums[index]
+    values = []
+    true_read_nums=[]
+    for val in temp_values:
+        if np.isnan(val) == False:
+            values.append(val)
+            true_read_nums.append(read_nums[index])
+            if val < threshold:
+                contam_asvs = contam_asvs + 1
+                contam_reads = contam_reads + read_nums[index]
+            else:
+                true_asvs = true_asvs + 1
+                true_reads = true_reads + read_nums[index]
         index = index + 1
     binwidth = bin_size
     bin_diff = threshold % binwidth
@@ -83,7 +88,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         blue_lab = "True Reads"
         red_lab = "Contaminant Reads"
         h, bins, patches = plt.hist(values, bins,
-                                    weights=np.array(temp.tolist()))
+                                    weights=np.array(true_read_nums))
         plt.yscale('log')
     else:
         y_lab = 'number of ASVs'

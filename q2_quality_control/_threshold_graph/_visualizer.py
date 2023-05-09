@@ -126,7 +126,6 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
     plt.legend(by_label.values(), by_label.keys(),
                loc="upper left", framealpha=1)
 
-
     for ext in ['png', 'svg']:
         img_fp = os.path.join(output_dir, 'identify-table-histogram.%s' % ext)
         plt.savefig(img_fp)

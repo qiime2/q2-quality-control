@@ -40,7 +40,7 @@ threshold <- if(opt$threshold=='NULL') NULL else as.numeric(opt$threshold)
 out.track <- opt$output_track
 metadata.loc<-opt$meta_table_path
 decon.mode<-opt$decon_method
-prev.control.col <- opt$prev_control_or_exp_sample_column 
+prev.control.col <- opt$prev_control_or_exp_sample_column
 prev.id.controls<-opt$prev_control_sample_indicator
 freq.con.col<-opt$freq_con_column
 
@@ -52,7 +52,7 @@ if(!file.exists(inp.loc)) {
   print("Input ASV and Metadata files found")
 }
 
-meta_data_cols <-function(metadata_df, control.col){
+meta_data_cols <-function(asv_df, metadata_df, control.col){
   control_vec<-c()
   index<-0
   for (id in colnames(metadata_df)) {
@@ -61,12 +61,17 @@ meta_data_cols <-function(metadata_df, control.col){
       control_vec<-metadata_df[,c(index)]
     }
   }
+  # We need to align the metadata to the asv table
+  mapped_ids <- match(rownames(metadata_df), rownames(asv_df))
+  control_vec <- control_vec[mapped_ids]
+  # drop sample IDs not in the asv table
+  control_vec <- na.omit(control_vec)
   return(control_vec)
 }
 
 outputer<-function(decon_output, out.track){
   cat("Write output\n")
-  
+
   write.table(decon_output, out.track, sep="\t",
               row.names=TRUE, col.names=NA, quote=FALSE)
   q(status=0)
@@ -75,22 +80,24 @@ outputer<-function(decon_output, out.track){
 asv_df <- read.csv(file = inp.loc, check.names=FALSE)
 rownames(asv_df) <- asv_df[, 1]
 asv_df <- asv_df[, -1]
-numero_df <- as.matrix(sapply(asv_df, as.numeric)) 
+numero_df <- as.matrix(sapply(asv_df, as.numeric))
+
 metadata_df<-read.csv(file = metadata.loc)
+rownames(metadata_df) <- metadata_df[, 1]
 
 if(decon.mode == 'prevalence'){
-  control_vec <- meta_data_cols(metadata_df, prev.control.col)
+  control_vec <- meta_data_cols(asv_df, metadata_df, prev.control.col)
   true_false_control_vec<-grepl(prev.id.controls,control_vec)
   prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='prevalence')
   outputer(prev_contam, out.track)
 }else if(decon.mode == 'frequency'){
-  temp_quant_vec <- meta_data_cols(metadata_df, freq.con.col)
+  temp_quant_vec <- meta_data_cols(asv_df, metadata_df, freq.con.col)
   quant_vec<-as.numeric(temp_quant_vec)
   freq_contam <- isContaminant(numero_df, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='frequency')
   outputer(freq_contam, out.track)
 }else{
-  prev_control_vec <- meta_data_cols(metadata_df, prev.control.col)
-  temp_quant_vec <- meta_data_cols(metadata_df, freq.con.col)
+  prev_control_vec <- meta_data_cols(asv_df, metadata_df, prev.control.col)
+  temp_quant_vec <- meta_data_cols(asv_df, metadata_df, freq.con.col)
   quant_vec<-as.numeric(temp_quant_vec)
   true_false_control_vec<-grepl(prev.id.controls, prev_control_vec)
   comb_contam <- isContaminant(numero_df, neg=true_false_control_vec, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='combined')

@@ -96,8 +96,6 @@ class TestIdentify(TestPluginBase):
         df_output_feature_table = df_output_feature_table.round(decimals=6)
         exp_table = exp_table.fillna(0)
         exp_table = exp_table.round(decimals=6)
-        print(df_output_feature_table)
-        print(exp_table)
         with tempfile.TemporaryDirectory() as temp_dir_name:
             test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
             expected_biom_fp = os.path.join(temp_dir_name,
@@ -137,6 +135,192 @@ class TestRemove(TestPluginBase):
             expected_biom_fp = os.path.join(temp_dir_name,
                                             'expected_output.tsv')
             temp_table.to_csv(test_biom_fp, sep="\t")
+            exp_table.to_csv(expected_biom_fp, sep="\t")
+            with open(test_biom_fp) as fh:
+                test_table = biom.Table.from_tsv(fh, None, None, None)
+            with open(expected_biom_fp) as th:
+                expecter_table = biom.Table.from_tsv(th, None, None, None)
+            self.assertEqual(test_table, expecter_table)
+
+
+class TestIdentify_mixed_names(TestPluginBase):
+    package = 'q2_quality_control.tests'
+
+    def setUp(self):
+        super().setUp()
+        table = qiime2.Artifact.load(
+            self.get_data_path('expected/decon_default_ASV_table.qza'))
+        self.asv_table = table.view(qiime2.Metadata).to_dataframe()
+        self.metadata_input = qiime2.Metadata.load(
+            self.get_data_path('expected/test_metadata_different_ordered_names.tsv'))
+
+    def test_prevalence(self):
+        exp_table = pd.read_csv(
+            self.get_data_path('expected/prevalence-score-table.tsv'),
+            sep='\t', index_col=0)
+        temp_transposed_table = exp_table.transpose()
+        temp_transposed_table = temp_transposed_table.dropna()
+        exp_table = temp_transposed_table.transpose()
+        df_output_feature_table = decontam_identify(
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='prevalence',
+            prev_control_column='Sample_or_Control',
+            prev_control_indicator='Control Sample')
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.round(decimals=6)
+        with tempfile.TemporaryDirectory() as temp_dir_name:
+            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+            expected_biom_fp = os.path.join(temp_dir_name,
+                                            'expected_output.tsv')
+            df_output_feature_table.to_csv(test_biom_fp, sep="\t")
+            exp_table.to_csv(expected_biom_fp, sep="\t")
+            with open(test_biom_fp) as fh:
+                test_table = biom.Table.from_tsv(fh, None, None, None)
+            with open(expected_biom_fp) as th:
+                expecter_table = biom.Table.from_tsv(th, None, None, None)
+
+            self.assertEqual(test_table, expecter_table)
+
+    def test_frequency(self):
+        exp_table = pd.read_csv(
+            self.get_data_path('expected/frequency-score-table.tsv'),
+            sep='\t', index_col=0)
+        temp_transposed_table = exp_table.transpose()
+        temp_transposed_table = temp_transposed_table.dropna()
+        exp_table = temp_transposed_table.transpose()
+        df_output_feature_table = decontam_identify(
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='frequency',
+            freq_concentration_column='quant_reading')
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.round(decimals=6)
+        with tempfile.TemporaryDirectory() as temp_dir_name:
+            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+            expected_biom_fp = os.path.join(temp_dir_name,
+                                            'expected_output.tsv')
+            df_output_feature_table.to_csv(test_biom_fp, sep="\t")
+            exp_table.to_csv(expected_biom_fp, sep="\t")
+            with open(test_biom_fp) as fh:
+                test_table = biom.Table.from_tsv(fh, None, None, None)
+            with open(expected_biom_fp) as th:
+                expecter_table = biom.Table.from_tsv(th, None, None, None)
+            self.assertEqual(test_table, expecter_table)
+
+    def test_combined(self):
+        exp_table = pd.read_csv(
+            self.get_data_path('expected/combined-score-table.tsv'),
+            sep='\t', index_col=0)
+        df_output_feature_table = decontam_identify(
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='combined',
+            prev_control_column='Sample_or_Control',
+            prev_control_indicator='Control Sample',
+            freq_concentration_column='quant_reading')
+        df_output_feature_table = df_output_feature_table.fillna(0)
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.fillna(0)
+        exp_table = exp_table.round(decimals=6)
+        with tempfile.TemporaryDirectory() as temp_dir_name:
+            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+            expected_biom_fp = os.path.join(temp_dir_name,
+                                            'expected_output.tsv')
+            df_output_feature_table.to_csv(test_biom_fp, sep="\t")
+            exp_table.to_csv(expected_biom_fp, sep="\t")
+            with open(test_biom_fp) as fh:
+                test_table = biom.Table.from_tsv(fh, None, None, None)
+            with open(expected_biom_fp) as th:
+                expecter_table = biom.Table.from_tsv(th, None, None, None)
+            self.assertEqual(test_table, expecter_table)
+
+
+class TestIdentify_more_names(TestPluginBase):
+    package = 'q2_quality_control.tests'
+
+    def setUp(self):
+        super().setUp()
+        table = qiime2.Artifact.load(
+            self.get_data_path('expected/decon_default_ASV_table.qza'))
+        self.asv_table = table.view(qiime2.Metadata).to_dataframe()
+        self.metadata_input = qiime2.Metadata.load(
+            self.get_data_path('expected/test_metadata_more_sample_names.tsv'))
+
+    def test_prevalence(self):
+        exp_table = pd.read_csv(
+            self.get_data_path('expected/prevalence-score-table.tsv'),
+            sep='\t', index_col=0)
+        temp_transposed_table = exp_table.transpose()
+        temp_transposed_table = temp_transposed_table.dropna()
+        exp_table = temp_transposed_table.transpose()
+        df_output_feature_table = decontam_identify(
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='prevalence',
+            prev_control_column='Sample_or_Control',
+            prev_control_indicator='Control Sample')
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.round(decimals=6)
+        with tempfile.TemporaryDirectory() as temp_dir_name:
+            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+            expected_biom_fp = os.path.join(temp_dir_name,
+                                            'expected_output.tsv')
+            df_output_feature_table.to_csv(test_biom_fp, sep="\t")
+            exp_table.to_csv(expected_biom_fp, sep="\t")
+            with open(test_biom_fp) as fh:
+                test_table = biom.Table.from_tsv(fh, None, None, None)
+            with open(expected_biom_fp) as th:
+                expecter_table = biom.Table.from_tsv(th, None, None, None)
+
+            self.assertEqual(test_table, expecter_table)
+
+    def test_frequency(self):
+        exp_table = pd.read_csv(
+            self.get_data_path('expected/frequency-score-table.tsv'),
+            sep='\t', index_col=0)
+        temp_transposed_table = exp_table.transpose()
+        temp_transposed_table = temp_transposed_table.dropna()
+        exp_table = temp_transposed_table.transpose()
+        df_output_feature_table = decontam_identify(
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='frequency',
+            freq_concentration_column='quant_reading')
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.round(decimals=6)
+        with tempfile.TemporaryDirectory() as temp_dir_name:
+            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+            expected_biom_fp = os.path.join(temp_dir_name,
+                                            'expected_output.tsv')
+            df_output_feature_table.to_csv(test_biom_fp, sep="\t")
+            exp_table.to_csv(expected_biom_fp, sep="\t")
+            with open(test_biom_fp) as fh:
+                test_table = biom.Table.from_tsv(fh, None, None, None)
+            with open(expected_biom_fp) as th:
+                expecter_table = biom.Table.from_tsv(th, None, None, None)
+            self.assertEqual(test_table, expecter_table)
+
+    def test_combined(self):
+        exp_table = pd.read_csv(
+            self.get_data_path('expected/combined-score-table.tsv'),
+            sep='\t', index_col=0)
+        df_output_feature_table = decontam_identify(
+            table=self.asv_table,
+            metadata=self.metadata_input,
+            method='combined',
+            prev_control_column='Sample_or_Control',
+            prev_control_indicator='Control Sample',
+            freq_concentration_column='quant_reading')
+        df_output_feature_table = df_output_feature_table.fillna(0)
+        df_output_feature_table = df_output_feature_table.round(decimals=6)
+        exp_table = exp_table.fillna(0)
+        exp_table = exp_table.round(decimals=6)
+        with tempfile.TemporaryDirectory() as temp_dir_name:
+            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+            expected_biom_fp = os.path.join(temp_dir_name,
+                                            'expected_output.tsv')
+            df_output_feature_table.to_csv(test_biom_fp, sep="\t")
             exp_table.to_csv(expected_biom_fp, sep="\t")
             with open(test_biom_fp) as fh:
                 test_table = biom.Table.from_tsv(fh, None, None, None)

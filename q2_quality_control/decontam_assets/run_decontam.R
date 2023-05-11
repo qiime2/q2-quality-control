@@ -62,7 +62,7 @@ meta_data_cols <-function(asv_df, metadata_df, control.col){
     }
   }
   # We need to align the metadata to the asv table
-  mapped_ids <- match(rownames(metadata_df), rownames(asv_df))
+  mapped_ids <- match( rownames(asv_df),rownames(metadata_df))
   control_vec <- control_vec[mapped_ids]
   # drop sample IDs not in the asv table
   control_vec <- na.omit(control_vec)

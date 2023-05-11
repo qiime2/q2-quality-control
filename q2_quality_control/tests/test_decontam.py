@@ -152,7 +152,8 @@ class TestIdentify_mixed_names(TestPluginBase):
             self.get_data_path('expected/decon_default_ASV_table.qza'))
         self.asv_table = table.view(qiime2.Metadata).to_dataframe()
         self.metadata_input = qiime2.Metadata.load(
-            self.get_data_path('expected/test_metadata_different_ordered_names.tsv'))
+            self.get_data_path(
+                'expected/test_metadata_different_ordered_names.tsv'))
 
     def test_prevalence(self):
         exp_table = pd.read_csv(
@@ -245,7 +246,8 @@ class TestIdentify_more_names(TestPluginBase):
             self.get_data_path('expected/decon_default_ASV_table.qza'))
         self.asv_table = table.view(qiime2.Metadata).to_dataframe()
         self.metadata_input = qiime2.Metadata.load(
-            self.get_data_path('expected/test_metadata_more_sample_names.tsv'))
+            self.get_data_path(
+                'expected/test_metadata_more_sample_names.tsv'))
 
     def test_prevalence(self):
         exp_table = pd.read_csv(

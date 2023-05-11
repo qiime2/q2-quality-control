@@ -74,6 +74,15 @@ def _check_column_inputs_helper(table, metadata,
 
 def _check_column_inputs(table, metadata, method, freq_concentration_column,
                          prev_control_column, prev_control_indicator):
+    meta_sample_names = metadata.index.values
+    no_info = []
+    for name in table.index.values:
+        if name not in meta_sample_names:
+            no_info.append(name)
+    if len(no_info) > 0:
+        raise ValueError('The following samples have no '
+                         'metadata:\n'
+                         + str(', '.join(no_info)))
     if method == 'prevalence':
         _check_column_inputs_helper(table, metadata,
                                     prev_control_column,

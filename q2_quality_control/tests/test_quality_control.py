@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -15,7 +14,6 @@ from warnings import filterwarnings
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import DNAFASTAFormat
 import pandas.testing as pdt
-
 from q2_quality_control.quality_control import (
     exclude_seqs, evaluate_composition, evaluate_seqs, evaluate_taxonomy)
 from q2_quality_control._utilities import (
@@ -28,7 +26,6 @@ from q2_quality_control._evaluate_seqs import _evaluate_seqs
 from q2_quality_control._evaluate_taxonomy import (
     _evaluate_taxonomy, _extract_taxa_names, _index_is_subset,
     _validate_indices_and_set_joining_mode)
-
 
 filterwarnings("ignore", category=UserWarning)
 

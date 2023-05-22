@@ -6,11 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import qiime2
 import biom
 from q2_types.feature_data import DNAFASTAFormat
 import pandas as pd
-
+import qiime2.util
 from ._blast import _search_seqs
 from ._utilities import (
     _evaluate_composition, _visualize, _pointplot_multiple_y)

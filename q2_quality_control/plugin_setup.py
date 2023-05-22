@@ -5,22 +5,23 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
+import importlib
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
                            MetadataColumn, Categorical, Citations, TypeMap,
-                           Visualization, TypeMatch)
+                           Visualization, TypeMatch, Metadata)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.sample_data import SampleData
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality)
-from q2_types.feature_table import FeatureTable, RelativeFrequency
+from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency
 from q2_types.bowtie2 import Bowtie2Index
-
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy)
+from .decontam import (decontam_identify, decontam_remove)
 from ._filter import bowtie2_build, filter_reads
-
+from ._threshold_graph import (decontam_score_viz)
+from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
 
 citations = Citations.load('citations.bib', package='q2_quality_control')
 
@@ -36,7 +37,7 @@ plugin = Plugin(
         'Plugin for quality control of feature and sequence data.')
 )
 
-
+_DECON_METHOD_OPT = {'frequency', 'prevalence', 'combined'}
 seq_inputs = {'query_sequences': FeatureData[Sequence],
               'reference_sequences': FeatureData[Sequence]}
 
@@ -301,3 +302,112 @@ plugin.methods.register_function(
     description='Build bowtie2 index from reference sequences.',
     citations=[citations['langmead2012fast']]
 )
+
+# Decontam Actions
+plugin.methods.register_function(
+    function=decontam_identify,
+    inputs={'table': FeatureTable[Frequency]},
+    parameters={'metadata': Metadata,
+                'method': Str % Choices(_DECON_METHOD_OPT),
+                'freq_concentration_column': Str,
+                'prev_control_column': Str,
+                'prev_control_indicator': Str},
+    outputs=[('decontam_scores', FeatureData[DecontamScore])],
+    input_descriptions={
+        'table': ('ASV or OTU table which contaminate sequences '
+                  'will be identified from')
+    },
+    parameter_descriptions={
+        'metadata': ('metadata file indicating which samples in the '
+                     'experiment are control samples, '
+                     'assumes sample names in file correspond '
+                     'to the `table` input parameter'),
+        'method': ('Select how to which method '
+                   'to id contaminants with; '
+                   'Prevalence: Utilizes control ASVs/OTUs '
+                   'to identify contaminants, '
+                   'Frequency: Utilizes sample concentration '
+                   'information to identify contaminants, '
+                   'Combined: Utilizes both Prevalence and '
+                   'Frequency methods when identifying '
+                   'contaminants'),
+        'freq_concentration_column': ('Input column name that has '
+                                      'concentration information for '
+                                      'the samples'),
+        'prev_control_column': ('Input column name containing '
+                                'experimental or control '
+                                'sample metadata'),
+        'prev_control_indicator': ('indicate the '
+                                   'control sample identifier '
+                                   '(e.g. "control" or "blank")')
+    },
+    output_descriptions={
+        'decontam_scores': ('The resulting table of scores '
+                            'from the decontam algorithm '
+                            'which scores each ASV or OTU on '
+                            'how likely they are to be a '
+                            'contaminant sequence')
+
+    },
+    name='Identify contaminants',
+    description=('This method identifies contaminant sequences from an '
+                 'OTU or ASV table and reports them to the user')
+)
+
+plugin.methods.register_function(
+    function=decontam_remove,
+    inputs={'decontam_scores': FeatureData[DecontamScore],
+            'table': FeatureTable[Frequency]},
+    parameters={'threshold': Float},
+    outputs=[('filtered_table', FeatureTable[Frequency])],
+    input_descriptions={
+        'decontam_scores': ('Output table from decontam identify'),
+        'table': ('ASV or OTU table which contaminate sequences '
+                  'will be identified from')
+    },
+    parameter_descriptions={
+        'threshold': ('Select threshold cutoff for decontam algorithm scores')
+    },
+    output_descriptions={
+        'filtered_table': ('The resulting feature table of scores '
+                           'once contaminants are removed')
+
+    },
+    name='Removes contaminant',
+    description=('This method removes contaminant sequences from an '
+                 'OTU or ASV table and returns the amended table to the user')
+)
+
+
+plugin.visualizers.register_function(
+    function=decontam_score_viz,
+    inputs={
+        'decontam_scores': FeatureData[DecontamScore],
+        'table': FeatureTable[Frequency]
+    },
+    parameters={
+        'threshold':  Float,
+        'weighted': Bool,
+        'bin_size': Float
+    },
+    name='Generate a histogram representation of the scores',
+    description='Creates histogram based on the output of decontam identify',
+    input_descriptions={
+        'decontam_scores': 'Output from decontam identify '
+                           'to be visualized',
+        'table': 'Raw OTU/ASV table that was used '
+                 'as input to decontam-identify'
+    },
+    parameter_descriptions={
+        'threshold': ('Select threshold cutoff for decontam algorithm scores'),
+        'weighted': ('weight the decontam scores by their '
+                     'associated read number'),
+        'bin_size': ('Select bin size for the histogram')
+    }
+)
+
+plugin.register_formats(DecontamScoreFormat, DecontamScoreDirFmt)
+plugin.register_semantic_types(DecontamScore)
+plugin.register_semantic_type_to_format(
+    FeatureData[DecontamScore], DecontamScoreDirFmt)
+importlib.import_module('q2_quality_control._transformer')

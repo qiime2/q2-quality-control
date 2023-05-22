@@ -1,0 +1,7 @@
+#OTU ID	freq	prev	p.freq	p.prev	p
+#q2:types	numeric	numeric	numeric	numeric	numeric
+Seq1	0.323531342	549	0.1	1	1
+Seq2	0.098873007	538	0.2	1	1
+Seq3	0.003674889	160	0.3	0.328517354	0.328517354
+Seq4	0.067621014	519	0.4	1	1
+Seq5	0.045234472	354	0.5	1	1

@@ -30,7 +30,6 @@ def _2(obj: qiime2.Metadata) -> DecontamScoreFormat:
 
 @plugin.register_transformer
 def _3(df: pd.DataFrame) -> DecontamScoreFormat:
-
     return _dataframe_to_tsv_DecontamScore_format(df)
 
 

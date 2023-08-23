@@ -119,10 +119,22 @@ def decontam_fast(ctx, table,
     decon = ctx.get_action('quality_control', 'decontam_identify')
     decon_rem = ctx.get_action('quality_control', 'decontam_remove')
     results = []
-    identify_temp_output, = decon(table=table, metadata=metadata, method=method,
-                        freq_concentration_column=freq_concentration_column,
-                        prev_control_column=prev_control_column,
-                        prev_control_indicator=prev_control_indicator)
-    results.append(identify_temp_output)
-    results += decon_rem(decontam_scores=identify_temp_output, table=table, threshold=threshold)
+    if method == 'combinded':
+        identify_temp_output, = decon(table=table, metadata=metadata, method=method,
+                            freq_concentration_column=freq_concentration_column,
+                            prev_control_column=prev_control_column,
+                            prev_control_indicator=prev_control_indicator)
+        results.append(identify_temp_output)
+        results += decon_rem(decontam_scores=identify_temp_output, table=table, threshold=threshold)
+    elif method == 'prevalence':
+        identify_temp_output, = decon(table=table, metadata=metadata, method=method,
+                            prev_control_column=prev_control_column,
+                            prev_control_indicator=prev_control_indicator)
+        results.append(identify_temp_output)
+        results += decon_rem(decontam_scores=identify_temp_output, table=table, threshold=threshold)
+    else:
+        identify_temp_output, = decon(table=table, metadata=metadata, method=method,
+                            freq_concentration_column=freq_concentration_column)
+        results.append(identify_temp_output)
+        results += decon_rem(decontam_scores=identify_temp_output, table=table, threshold=threshold)
     return tuple(results)

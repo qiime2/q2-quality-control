@@ -12,13 +12,19 @@ import qiime2
 import biom
 from q2_types.feature_table import FeatureTable, Frequency
 
-def decontam_identify_batches(ctx, table, metadata,
-                              split_columns,
-                              filter_empty_features,
-                              method,
-                              freq_concentration_column,
-                              prev_control_column,
-                              prev_control_indicator):
+def _subset_metadata(table: biom.Table, metadata):
+    print(table)
+    return metadata
+
+
+def decontam_identify_batches(ctx, table,
+                      metadata,
+                      split_columns,
+                      filter_empty_features,
+                      method,
+                      freq_concentration_column,
+                      prev_control_column,
+                      prev_control_indicator):
 
     #Gets Actions for pipeline and sets up results arrays
     decon = ctx.get_action('quality_control', 'decontam_identify')
@@ -43,26 +49,22 @@ def decontam_identify_batches(ctx, table, metadata,
             for inter_col in split_col:
                 temp_dict = {}
                 for subject_table_key in subject_table_dict.keys():
-
                     # Gets apporpriate table and metadata for splitter method
                     subject_table = subject_table_dict[subject_table_key]
+                    subject_metadata = _subset_metadata(subject_table, subject_metadata)
                     df = subject_table.view(pd.DataFrame)
+
                     metadata_df = subject_metadata.to_dataframe()
                     metadata_df = metadata_df[metadata_df.index.isin(df.index)]
-
-                    #checks if the subset created a table with no entries
                     if((len(df.index) == 0 ) or (len(metadata_df) == 0)):
-                        print("We are skipping this one - " + str(subject_table_key))
+                        print("One or More of your table subsets has 0 entries")
                     else:
                         subject_metadata = qiime2.Metadata(metadata_df)
                         split_tables, = spliter(table=subject_table, metadata=subject_metadata.get_column(inter_col),
                                        filter_empty_features=filter_empty_features)
                         table_col = split_tables.collection
-                        table_dic = dict(table_col)
-                        if('NA' in table_dic.keys()):
-                            del table_dic["NA"]
 
-                        #checks for base case vs exponential case
+                        table_dic = dict(table_col)
                         if len(subject_table_dict.keys()) == 1:
                             temp_dict.update(table_dic)
                         else:
@@ -88,21 +90,12 @@ def decontam_identify_batches(ctx, table, metadata,
         new_key_feature = ('ASV-table-' + str(keyer))
         new_table_dic[new_key_feature] = split_tables_dict[keyer]
         sub_table = new_table_dic[new_key_feature]
-        if method == 'combined':
-            temp_results, = decon(table=sub_table, metadata=metadata, method=method,
-                    freq_concentration_column=freq_concentration_column,
-                    prev_control_column=prev_control_column,
-                    prev_control_indicator=prev_control_indicator)
-            decon_results[('decon-scores-' + str(keyer))] = temp_results
-        elif method == 'prevalence':
-            temp_results, = decon(table=sub_table, metadata=metadata, method=method,
-                    prev_control_column=prev_control_column,
-                    prev_control_indicator=prev_control_indicator)
-            decon_results[('decon-scores-' + str(keyer))] = temp_results
-        else:
-            temp_results, = decon(table=sub_table, metadata=metadata, method=method,
-                    freq_concentration_column=freq_concentration_column)
-            decon_results[('decon-scores-' + str(keyer))] = temp_results
+
+        temp_results, = decon(table=sub_table, metadata=metadata, method=method,
+                freq_concentration_column=freq_concentration_column,
+                prev_control_column=prev_control_column,
+                prev_control_indicator=prev_control_indicator)
+        decon_results[('decon-scores-' + str(keyer))] = temp_results
 
     #split_tables.collection = new_table_dic
     results.append(new_table_dic)

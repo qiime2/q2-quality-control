@@ -66,9 +66,8 @@ def _check_column_inputs_helper(table, metadata,
                 if name in table.index.values:
                     indic = indic + 1
             if indic < 5:
-                '''raise ValueError('At least 5 Control Samples needed '
-                                 + str(indic) + ' found')'''
-                print("We recommend 5 control samples - " + str(indic) + " found")
+                raise ValueError('At least 5 Control Samples needed '
+                                 + str(indic) + ' found')
             else:
                 print("All appropriate inputs are found")
 

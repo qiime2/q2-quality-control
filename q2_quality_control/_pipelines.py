@@ -32,6 +32,7 @@ def decontam_identify_batches(ctx, table, metadata,
         list_combinations += list(combinations(split_column_arr, n))
     list_combinations.pop(0)
     list_combinations = sorted(list_combinations, key=lambda l: (len(l), l), reverse=True)
+    print(list_combinations)
 
     #Intitates action algorithm
     split_tables_dict = {'original': table}
@@ -39,16 +40,31 @@ def decontam_identify_batches(ctx, table, metadata,
     for split_col in list_combinations:
         subject_table_dict = {'original': table}
         subject_metadata = metadata
+        print("---------------------------------------------------------")
+        print(split_col)
+        print(already_done_arr)
         if split_col not in already_done_arr:
+            print("Made it")
+
             for inter_col in split_col:
                 temp_dict = {}
+                print(subject_table_dict)
                 for subject_table_key in subject_table_dict.keys():
+                    subject_metadata = metadata
+                    print(subject_table_dict.keys())
+                    print(subject_table_dict.values())
+                    print(subject_table_key)
 
                     # Gets apporpriate table and metadata for splitter method
                     subject_table = subject_table_dict[subject_table_key]
                     df = subject_table.view(pd.DataFrame)
+                    print(len(df))
                     metadata_df = subject_metadata.to_dataframe()
                     metadata_df = metadata_df[metadata_df.index.isin(df.index)]
+                    print(len(metadata_df))
+
+
+
 
                     #checks if the subset created a table with no entries
                     if((len(df.index) == 0 ) or (len(metadata_df) == 0)):
@@ -59,6 +75,7 @@ def decontam_identify_batches(ctx, table, metadata,
                                        filter_empty_features=filter_empty_features)
                         table_col = split_tables.collection
                         table_dic = dict(table_col)
+
                         if('NA' in table_dic.keys()):
                             del table_dic["NA"]
 
@@ -67,8 +84,10 @@ def decontam_identify_batches(ctx, table, metadata,
                             temp_dict.update(table_dic)
                         else:
                             for key in table_dic:
+                                print(key)
                                 keyer = subject_table_key + '-' + key
                                 feat_table = table_dic[key]
+                                print(feat_table)
                                 temp_dict[keyer] = feat_table
                 subject_table_dict = temp_dict
                 split_tables_dict.update(subject_table_dict)
@@ -77,6 +96,7 @@ def decontam_identify_batches(ctx, table, metadata,
                 temp_arr = split_col[0:((len(split_col)-1-index))]
                 already_done_arr.append(temp_arr)
                 index = index + 1
+            print("---------------------------------------------------------")
 
 
 

@@ -52,57 +52,48 @@ def decontam_identify_batches(ctx, table, metadata,
         list_combinations += list(combinations(split_column_arr, n))
     list_combinations.pop(0)
     list_combinations = sorted(list_combinations, key=lambda l: (len(l), l), reverse=True)
-    print(list_combinations)
 
     #Intitates action algorithm
     split_tables_dict = {'original': table}
-    already_done_arr = []
     for split_col in list_combinations:
         temp_ret = _find_tables(split_tables_dict, split_col, table)
         subject_table_dict = temp_ret[0]
         split_col = temp_ret[1]
-        already_done_arr = []
-        if split_col not in already_done_arr:
-            for inter_col in split_col:
-                temp_dict = {}
-                for subject_table_key in subject_table_dict.keys():
+        for inter_col in split_col:
+            temp_dict = {}
+            for subject_table_key in subject_table_dict.keys():
 
-                    subject_metadata = metadata
+                subject_metadata = metadata
 
-                    # Gets apporpriate table and metadata for splitter method
-                    subject_table = subject_table_dict[subject_table_key]
-                    df = subject_table.view(pd.DataFrame)
-                    metadata_df = subject_metadata.to_dataframe()
-                    metadata_df = metadata_df[metadata_df.index.isin(df.index)]
+                # Gets apporpriate table and metadata for splitter method
+                subject_table = subject_table_dict[subject_table_key]
+                df = subject_table.view(pd.DataFrame)
+                metadata_df = subject_metadata.to_dataframe()
+                metadata_df = metadata_df[metadata_df.index.isin(df.index)]
 
-                    #checks if the subset created a table with no entries
-                    subject_metadata = qiime2.Metadata(metadata_df)
-                    split_tables, = spliter(table=subject_table, metadata=subject_metadata.get_column(inter_col),
+                #checks if the subset created a table with no entries
+                subject_metadata = qiime2.Metadata(metadata_df)
+                split_tables, = spliter(table=subject_table, metadata=subject_metadata.get_column(inter_col),
                                        filter_empty_features=filter_empty_features)
-                    table_col = split_tables.collection
-                    table_dic = dict(table_col)
+                table_col = split_tables.collection
+                table_dic = dict(table_col)
 
-                    #deltes NA sample subset
-                    if('NA' in table_dic.keys()):
-                        del table_dic["NA"]
+                #deltes NA sample subset
+                if('NA' in table_dic.keys()):
+                    del table_dic["NA"]
 
-                    #checks for base case vs exponential case
-                    if subject_table_key == 'original':
-                        subject_table_key = ''
-                    else:
-                        subject_table_key = subject_table_key + '_'
+                #checks for base case vs exponential case
+                if subject_table_key == 'original':
+                    subject_table_key = ''
+                else:
+                    subject_table_key = subject_table_key + '_'
 
-                    #updates nomenclature
-                    for key in table_dic:
-                        keyer = subject_table_key + inter_col + '-' + key
-                        temp_dict[keyer] = table_dic[key]
-                subject_table_dict = temp_dict
-                split_tables_dict.update(subject_table_dict)
-            index = 0
-            while(index <= (len(split_col)-1)):
-                temp_arr = split_col[0:((len(split_col)-1-index))]
-                already_done_arr.append(temp_arr)
-                index = index + 1
+                #updates nomenclature
+                for key in table_dic:
+                    keyer = subject_table_key + inter_col + '-' + key
+                    temp_dict[keyer] = table_dic[key]
+            subject_table_dict = temp_dict
+            split_tables_dict.update(subject_table_dict)
 
     new_table_dic = {}
     decon_results = {}

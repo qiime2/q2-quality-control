@@ -10,7 +10,27 @@ import pandas as pd
 from qiime2.plugin.util import transform
 import qiime2
 import biom
+import re
 from q2_types.feature_table import FeatureTable, Frequency
+
+def _find_tables(split_tables_dict, split_col, table):
+    if len(split_tables_dict.keys()) == 1:
+        return [{'original': table}, split_col]
+    else:
+        for i in range((len(split_col)),0,-1):
+            find_these = split_col[0:i]
+            past_dict = {}
+            for key in split_tables_dict.keys():
+                key_arr = re.split('-|_', str(key))
+                if((set(find_these).issubset(set(key_arr)) == True) and (len(str(key).split('_')) == len(find_these))):
+                    past_dict[key] = split_tables_dict[key]
+            if len(past_dict.keys()) != 0:
+                split_col = list(split_col)
+                for item in find_these:
+                    split_col.remove(item)
+                return [past_dict, split_col]
+        return [{'original': table}, split_col]
+
 
 def decontam_identify_batches(ctx, table, metadata,
                               split_columns,
@@ -38,13 +58,15 @@ def decontam_identify_batches(ctx, table, metadata,
     split_tables_dict = {'original': table}
     already_done_arr = []
     for split_col in list_combinations:
-        subject_table_dict = {'original': table}
-        print("---------------------------------------------------------")
+        temp_ret = _find_tables(split_tables_dict, split_col, table)
+        subject_table_dict = temp_ret[0]
+        split_col = temp_ret[1]
+        already_done_arr = []
         if split_col not in already_done_arr:
-            print(split_col)
             for inter_col in split_col:
                 temp_dict = {}
                 for subject_table_key in subject_table_dict.keys():
+
                     subject_metadata = metadata
 
                     # Gets apporpriate table and metadata for splitter method
@@ -76,16 +98,11 @@ def decontam_identify_batches(ctx, table, metadata,
                         temp_dict[keyer] = table_dic[key]
                 subject_table_dict = temp_dict
                 split_tables_dict.update(subject_table_dict)
-                print(split_tables_dict.keys())
             index = 0
-            #print(split_col)
-            #print(already_done_arr)
             while(index <= (len(split_col)-1)):
                 temp_arr = split_col[0:((len(split_col)-1-index))]
                 already_done_arr.append(temp_arr)
                 index = index + 1
-            #print(already_done_arr)
-            print("---------------------------------------------------------")
 
     new_table_dic = {}
     decon_results = {}

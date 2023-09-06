@@ -41,7 +41,10 @@
     </TR>
     </TABLE>
 
-    <hr>
+    {% if subset_id[index] != "Original" %}
+       <hr>
+    {% endif %}
+
   {% endfor %}
 
 {% endblock %}

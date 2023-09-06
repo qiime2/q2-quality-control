@@ -8,8 +8,8 @@
 import importlib
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataColumn, Categorical, Citations, TypeMap,
-                           Visualization, TypeMatch, Metadata, Collection)
+                           MetadataColumn, Visualization,Categorical, Citations, TypeMap,
+                           Visualization, TypeMatch, Metadata, Collection, List)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.sample_data import SampleData
 from q2_types.per_sample_sequences import (
@@ -19,7 +19,7 @@ from q2_types.bowtie2 import Bowtie2Index
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy)
 from .decontam import (decontam_identify, decontam_remove)
-from ._pipelines import (decontam_identify_batches, decontam_fast)
+from ._pipelines import (decontam_identify_batches)
 from ._filter import bowtie2_build, filter_reads
 from ._threshold_graph import (decontam_score_viz)
 from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
@@ -305,6 +305,9 @@ plugin.methods.register_function(
 )
 
 # Decontam Actions
+T1 = TypeMatch([FeatureData[DecontamScore]])
+T2 = TypeMatch([FeatureTable[Frequency]])
+
 plugin.methods.register_function(
     function=decontam_identify,
     inputs={'table': FeatureTable[Frequency]},
@@ -383,8 +386,8 @@ plugin.methods.register_function(
 plugin.visualizers.register_function(
     function=decontam_score_viz,
     inputs={
-        'decontam_scores': FeatureData[DecontamScore],
-        'table': FeatureTable[Frequency]
+        'decontam_scores': T1,
+        'table': T2
     },
     parameters={
         'threshold':  Float,
@@ -407,21 +410,24 @@ plugin.visualizers.register_function(
     }
 )
 
-T1 = TypeMatch([Frequency, RelativeFrequency, PresenceAbsence, Composition])
-
 #Heirarchical Decontam format Pipeline
 plugin.pipelines.register_function(
     function=decontam_identify_batches,
     inputs={'table': FeatureTable[Frequency]},
     parameters={'metadata': Metadata,
-                'split_columns': Str,
-                'filter_empty_features': Bool,
+                'split_column': Str,
                 'method': Str % Choices(_DECON_METHOD_OPT),
+                'filter_empty_features': Bool,
                 'freq_concentration_column': Str,
                 'prev_control_column': Str,
-                'prev_control_indicator': Str},
+                'prev_control_indicator': Str,
+                'threshold': Float,
+                'weighted': Bool,
+                'bin_size': Float
+                },
     outputs=[('batch_subset_tables', Collection[FeatureTable[Frequency]]),
              ('decontam_scores', Collection[FeatureData[DecontamScore]]),
+             ('score_histograms', Visualization)
              ],
     input_descriptions={
         'table': ('ASV or OTU table which contaminate sequences '
@@ -432,76 +438,19 @@ plugin.pipelines.register_function(
                      'experiment are control samples, '
                      'assumes sample names in file correspond '
                      'to the `table` input parameter'),
-        'split_columns': ('input metadata columns that you wish to subset the ASV table by'
+        'split_column': ('input metadata columns that you wish to subset the ASV table by'
                          'Note: Column names must be in quotes and delimited by a space'),
+        'method': ('Select how to which method '
+                   'to id contaminants with; '
+                   'Prevalence: Utilizes control ASVs/OTUs '
+                   'to identify contaminants, '
+                   'Frequency: Utilizes sample concentration '
+                   'information to identify contaminants, '
+                   'Combined: Utilizes both Prevalence and '
+                   'Frequency methods when identifying '
+                   'contaminants'),
         'filter_empty_features': 'If true, features which are not present in '
                                  'a split feature table are dropped.',
-        'method': ('Select how to which method '
-                   'to id contaminants with; '
-                   'Prevalence: Utilizes control ASVs/OTUs '
-                   'to identify contaminants, '
-                   'Frequency: Utilizes sample concentration '
-                   'information to identify contaminants, '
-                   'Combined: Utilizes both Prevalence and '
-                   'Frequency methods when identifying '
-                   'contaminants'),
-        'freq_concentration_column': ('Input column name that has '
-                                      'concentration information for '
-                                      'the samples'),
-        'prev_control_column': ('Input column name containing '
-                                'experimental or control '
-                                'sample metadata'),
-        'prev_control_indicator': ('indicate the '
-                                   'control sample identifier '
-                                   '(e.g. "control" or "blank")')
-    },
-    output_descriptions={
-        'batch_subset_tables': ('Directory where feature tables split based on metadata '
-                                'and parameter split_column values should be written.'),
-        'decontam_scores': ('The resulting table of scores '
-                            'from the decontam algorithm '
-                            'which scores each ASV or OTU on '
-                            'how likely they are to be a '
-                            'contaminant sequence'),
-    },
-    name='Identify contaminants in Batch Mode',
-    description=('This method breaks an ASV table into batches based on the given metadata and '
-                 'identifies contaminant sequences from an '
-                 'OTU or ASV table and reports them to the user')
-)
-
-#Pipeline Decontam Fast
-plugin.pipelines.register_function(
-    function=decontam_fast,
-    inputs={'table': FeatureTable[Frequency]},
-    parameters={'metadata': Metadata,
-                'method': Str % Choices(_DECON_METHOD_OPT),
-                'freq_concentration_column': Str,
-                'prev_control_column': Str,
-                'prev_control_indicator': Str,
-                'threshold': Float
-                },
-
-    outputs=[('decontam_scores', FeatureData[DecontamScore]),
-             ('filtered_table', FeatureTable[Frequency])],
-    input_descriptions={
-        'table': ('ASV or OTU table which contaminate sequences '
-                  'will be identified from')
-    },
-    parameter_descriptions={
-        'metadata': ('metadata file indicating which samples in the '
-                     'experiment are control samples, '
-                     'assumes sample names in file correspond '
-                     'to the `table` input parameter'),
-        'method': ('Select how to which method '
-                   'to id contaminants with; '
-                   'Prevalence: Utilizes control ASVs/OTUs '
-                   'to identify contaminants, '
-                   'Frequency: Utilizes sample concentration '
-                   'information to identify contaminants, '
-                   'Combined: Utilizes both Prevalence and '
-                   'Frequency methods when identifying '
-                   'contaminants'),
         'freq_concentration_column': ('Input column name that has '
                                       'concentration information for '
                                       'the samples'),
@@ -511,22 +460,26 @@ plugin.pipelines.register_function(
         'prev_control_indicator': ('indicate the '
                                    'control sample identifier '
                                    '(e.g. "control" or "blank")'),
-        'threshold': ('Select threshold cutoff for decontam algorithm scores')
+        'threshold': ('Select threshold cutoff for decontam algorithm scores'),
+        'weighted': ('weight the decontam scores by their '
+                     'associated read number'),
+        'bin_size': ('Select bin size for the histogram')
     },
     output_descriptions={
+        'batch_subset_tables': ('Directory where feature tables split based on metadata '
+                                'and parameter split_column values should be written.'),
         'decontam_scores': ('The resulting table of scores '
                             'from the decontam algorithm '
                             'which scores each ASV or OTU on '
                             'how likely they are to be a '
                             'contaminant sequence'),
-        'filtered_table': ('The resulting feature table of scores '
-                           'once contaminants are removed')
-
+        'score_histograms': ('The vizulaizer histograms for all decontam score objects '
+                            'generated from the pipeline')
     },
-    name='Identify and remove contaminants from ASV table',
-    description=('This method runs through the decontam_identify and decontam_remove actions'
-                 'automatically to facilitate fucntionality in pipelines'
-                 )
+    name='Identify contaminants in Batch Mode',
+    description=('This method breaks an ASV table into batches based on the given metadata and '
+                 'identifies contaminant sequences from an '
+                 'OTU or ASV table and reports them to the user')
 )
 
 plugin.register_formats(DecontamScoreFormat, DecontamScoreDirFmt)

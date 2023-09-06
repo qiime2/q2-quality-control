@@ -164,6 +164,7 @@ def decontam_identify(table: pd.DataFrame,
         return _decontam_identify_helper(track_fp, method)
 
 
+
 def decontam_remove(decontam_scores: qiime2.Metadata,
                     table: pd.DataFrame,
                     threshold: float = 0.1

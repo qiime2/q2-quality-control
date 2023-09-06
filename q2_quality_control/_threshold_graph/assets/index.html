@@ -1,28 +1,47 @@
 {% extends 'base.html' %}
 
+<style>
+        /* Customize the appearance of the horizontal line */
+        hr {
+            border: none;
+            border-top: 1px solid #888; /* Faint gray color */
+            margin: 20px 0; /* Adjust margin as needed */
+        }
+ </style>
+
+
 {% block content %}
 
-<h1 ALIGN=CENTER>
-  Decontam Histogram of Contaminant Scores
-</h1>
+  {% for index in range(image_paths|length) %}
 
-<div class='row' ALIGN=CENTER>
-  <div class='col-md-12' ALIGN=CENTER>
-    <img src='./identify-table-histogram.png'>
-  </div>
-</div>
+  <h1 ALIGN=CENTER>
+      {% if subset_id[index] == "Original" %}
+          Decontam Histogram of Contaminant Scores
+      {% else %}
+          Decontam Histogram of Contaminant Scores - Subset: {{subset_id[index]}}
+      {% endif %}
+  </h1>
 
-<TABLE BORDER=1 width="600px" ALIGN=CENTER>
-<TR> <TH style="text-align:center; background-color:LightPink">{{ contam_label }}</TH>
-  <TH style="text-align:center; background-color:LightSkyBlue">{{ true_label }}</TH>
-  <TH style="text-align:center; background-color:LightGray">{{ unknown_label }}</TH>
-  <TH style="text-align:center; background-color:LightYellow">% Contaminant</TH> </TR>
-<TR ALIGN=CENTER>
-<TD width="200px" bgcolor="LightPink">{{ contamer }}</TD>
-<TD width="200px" bgcolor="LightSkyBlue">{{ truer }}</TD>
-<TD width="200px" bgcolor="LightGray">{{ unknownr }}</TD>
-<TD width="200px" bgcolor="LightYellow">{{ percenter }}%</TD>
-</TR>
-</TABLE>
+    <div class='row' ALIGN=CENTER>
+      <div class='col-md-12' ALIGN=CENTER>
+        <img src='{{image_paths[index]}}'>
+      </div>
+    </div>
+
+    <TABLE BORDER=1 width="600px" ALIGN=CENTER>
+    <TR> <TH style="text-align:center; background-color:LightPink">{{  contam_label[index] }}</TH>
+      <TH style="text-align:center; background-color:LightSkyBlue">{{ true_label[index] }}</TH>
+      <TH style="text-align:center; background-color:LightGray">{{ unknown_label[index] }}</TH>
+      <TH style="text-align:center; background-color:LightYellow">% Contaminant</TH> </TR>
+    <TR ALIGN=CENTER>
+    <TD width="200px" bgcolor="LightPink">{{ contamer[index]  }}</TD>
+    <TD width="200px" bgcolor="LightSkyBlue">{{ truer[index]  }}</TD>
+    <TD width="200px" bgcolor="LightGray">{{ unknownr[index]  }}</TD>
+    <TD width="200px" bgcolor="LightYellow">{{ percenter[index]  }}%</TD>
+    </TR>
+    </TABLE>
+
+    <hr>
+  {% endfor %}
 
 {% endblock %}

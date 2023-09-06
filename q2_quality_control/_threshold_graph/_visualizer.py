@@ -5,7 +5,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
+from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
+                           MetadataColumn, Visualization,Categorical, Citations, TypeMap,
+                           Visualization, TypeMatch, Metadata, Collection, List)
+from typing import Dict
 import os.path
 import pkg_resources
 
@@ -42,100 +45,196 @@ def _check_inputs(**kwargs):
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
 
+def _decontam_score_viz_helper(decontam_scores, table):
+    temp_table_dict = {}
+    temp_scores_dict = {}
+
+    #seperates table into original tables
+    matching_indices = [i for i, index_value in enumerate(table.index) if 'this_is_new_table_' in index_value]
+    indexer = 0
+    for match in matching_indices:
+        first_row = match + 1
+        if indexer != (len(matching_indices)-1):
+            last_row = (matching_indices[indexer+1] - 1)
+        else:
+            last_row = len(table.index) - 1
+
+        sep_index = table.index[match]
+        sep_index_arr = str(sep_index).split('_')
+        temp_key = sep_index_arr[len(sep_index_arr)-2] + '_' + sep_index_arr[len(sep_index_arr)-1]
+
+        table['SampleID'] = table.index
+        table.reset_index(drop=True, inplace=True)
+        temp_table = table.loc[first_row:last_row]
+        temp_table.set_index('SampleID', inplace=True)
+        table.set_index('SampleID', inplace=True)
+        temp_table_dict[temp_key] = temp_table
+        indexer = indexer + 1
+
+    #Seperates decontam scores into origonal score tables
+    df = decontam_scores.to_dataframe()
+    matching_indices = [i for i, index_value in enumerate(df.index) if 'this_is_new_table_' in index_value]
+    indexer = 0
+    for match in matching_indices:
+        first_row = match + 1
+        if indexer != (len(matching_indices) - 1):
+            last_row = (matching_indices[indexer + 1] - 1)
+        else:
+            last_row = len(df.index) - 1
+
+        sep_index = df.index[match]
+        sep_index_arr = str(sep_index).split('_')
+        temp_key = sep_index_arr[len(sep_index_arr) - 2] + '_' + sep_index_arr[len(sep_index_arr) - 1]
+        df['#OTUID'] = df.index
+        df.reset_index(drop=True, inplace=True)
+        temp_table = df.loc[first_row:last_row]
+        temp_arr = []
+        for entry in temp_table['#OTUID']:
+            entry_arr = str(entry).split('_JORDENRABASCO_')
+            temp_arr.append(entry_arr[1])
+        temp_table.loc[:, '#OTUID'] = temp_arr
+        temp_table.set_index('#OTUID', inplace=True)
+        df.set_index('#OTUID', inplace=True)
+        temp_meta = qiime2.Metadata(temp_table)
+        temp_scores_dict[temp_key] = temp_meta
+        indexer = indexer + 1
+
+    return [temp_table_dict, temp_scores_dict]
 
 def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        table: pd.DataFrame, threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
     _check_inputs(**locals())
-    df = decontam_scores.to_dataframe()
-    if df['p'].isna().all():
-        raise ValueError("No p-values exist for the data provided.")
-
-    read_nums = table.sum(axis='rows')
-
-    p_vals = df['p'].dropna()
-    filt_read_nums = read_nums[p_vals.index]
-
-    contams = (p_vals < threshold)
-
-    contam_asvs = contams.sum()
-    true_asvs = len(contams) - contam_asvs
-    unknown_asvs = len(df['p']) - true_asvs - contam_asvs
-    percent_asvs = contam_asvs / (contam_asvs + true_asvs) * 100
-
-    contam_reads = filt_read_nums[contams[contams].index].sum()
-    true_reads = filt_read_nums.sum() - contam_reads
-    unknown_reads = read_nums.sum() - true_reads - contam_reads
-    percent_reads = contam_reads / (contam_reads + true_reads) * 100
-
-    binwidth = bin_size
-    bin_diff = threshold % binwidth
-    temp_dec = decimal.Decimal(str(binwidth))
-    num_dec = abs(temp_dec.as_tuple().exponent)
-    bin_diff = round(bin_diff, num_dec)
-    bins = np.concatenate([
-        np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
-    ])
-
-    if weighted is True:
-        y_lab = 'Number of Reads'
-        blue_lab = "True Reads"
-        red_lab = "Contaminant Reads"
-        gray_lab = "Unknown Reads"
-        contam_val = contam_reads
-        true_val = true_reads
-        unknown_val = unknown_reads
-        percent_val = percent_reads
-        h, bins, patches = plt.hist(p_vals, bins, weights=filt_read_nums)
-        plt.yscale('log')
+    #initalizes dictionaries for iteration
+    table_dict = {}
+    decontam_scores_dict = {}
+    if('this_is_new_table' not in table.index[0]):
+        table_dict['Original'] = table
+        decontam_scores_dict['Original'] = decontam_scores
     else:
-        y_lab = 'number of ASVs'
-        blue_lab = "True ASVs"
-        red_lab = "Contaminant ASVs"
-        gray_lab = "Unknown ASVs"
-        contam_val = contam_asvs
-        true_val = true_asvs
-        unknown_val = unknown_asvs
-        percent_val = percent_asvs
-        h, bins, patches = plt.hist(p_vals, bins)
+        dicts = _decontam_score_viz_helper(decontam_scores, table)
+        table_dict = dicts[0]
+        decontam_scores_dict = dicts[1]
 
-    plt.xlim(0.0, 1.0)
-    plt.xlabel('score value')
-    plt.ylabel(y_lab)
+    #intializes arrays to pass data to the html
+    image_paths_arr = []
+    subset_key_arr = []
+    contam_val_arr = []
+    true_val_arr = []
+    unknown_val_arr = []
+    percent_val_arr = []
+    gray_lab_arr = []
+    red_lab_arr = []
+    blue_lab_arr = []
 
-    if bin_diff == 0:
-        plt.setp([p for p, b in zip(patches, bins) if b < threshold],
-                 color='r', edgecolor="white", label=red_lab)
-        plt.setp([p for p, b in zip(patches, bins) if b >= threshold],
-                 color='b', edgecolor="white", label=blue_lab)
-    else:
-        plt.setp([p for p, b in zip(patches, bins)
-                  if b == (threshold - bin_diff)], color='m',
-                 edgecolor="white")
-        plt.setp([p for p, b in zip(patches, bins)
-                  if b < (threshold-bin_diff)], color='r', edgecolor="white",
-                 label=red_lab)
-        plt.setp([p for p, b in zip(patches, bins)
-                  if b > threshold], color='b', edgecolor="white",
-                 label=blue_lab)
+    for key in table_dict.keys():
+        table = table_dict[key]
+        decontam_scores = decontam_scores_dict[key]
+        df = decontam_scores.to_dataframe()
+        if df['p'].isna().all():
+            raise ValueError("No p-values exist for the data provided.")
 
-    plt.axvline(threshold, ymin=-.1, ymax=1.1, color='k',
-                linestyle='dashed', linewidth=1, label="Threshold")
-    handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(),
-               loc="upper left", framealpha=1)
+        read_nums = table.sum(axis='rows')
 
-    for ext in ['png', 'svg']:
-        img_fp = os.path.join(output_dir, 'identify-table-histogram.%s' % ext)
-        plt.savefig(img_fp)
+        p_vals = df['p'].dropna()
+        filt_read_nums = read_nums[p_vals.index]
+
+        contams = (p_vals < threshold)
+
+        contam_asvs = contams.sum()
+        true_asvs = len(contams) - contam_asvs
+        unknown_asvs = len(df['p']) - true_asvs - contam_asvs
+        percent_asvs = contam_asvs / (contam_asvs + true_asvs) * 100
+
+        contam_reads = filt_read_nums[contams[contams].index].sum()
+        true_reads = filt_read_nums.sum() - contam_reads
+        unknown_reads = read_nums.sum() - true_reads - contam_reads
+        percent_reads = contam_reads / (contam_reads + true_reads) * 100
+
+        binwidth = bin_size
+        bin_diff = threshold % binwidth
+        temp_dec = decimal.Decimal(str(binwidth))
+        num_dec = abs(temp_dec.as_tuple().exponent)
+        bin_diff = round(bin_diff, num_dec)
+        bins = np.concatenate([
+            np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
+        ])
+
+        if weighted is True:
+            y_lab = 'Number of Reads'
+            blue_lab = "True Reads"
+            red_lab = "Contaminant Reads"
+            gray_lab = "Unknown Reads"
+            contam_val = contam_reads
+            true_val = true_reads
+            unknown_val = unknown_reads
+            percent_val = percent_reads
+            h, bins, patches = plt.hist(p_vals, bins, weights=filt_read_nums)
+            plt.yscale('log')
+        else:
+            y_lab = 'number of ASVs'
+            blue_lab = "True ASVs"
+            red_lab = "Contaminant ASVs"
+            gray_lab = "Unknown ASVs"
+            contam_val = contam_asvs
+            true_val = true_asvs
+            unknown_val = unknown_asvs
+            percent_val = percent_asvs
+            h, bins, patches = plt.hist(p_vals, bins)
+
+        plt.xlim(0.0, 1.0)
+        plt.xlabel('score value')
+        plt.ylabel(y_lab)
+
+        if bin_diff == 0:
+            plt.setp([p for p, b in zip(patches, bins) if b < threshold],
+                     color='r', edgecolor="white", label=red_lab)
+            plt.setp([p for p, b in zip(patches, bins) if b >= threshold],
+                     color='b', edgecolor="white", label=blue_lab)
+        else:
+            plt.setp([p for p, b in zip(patches, bins)
+                      if b == (threshold - bin_diff)], color='m',
+                     edgecolor="white")
+            plt.setp([p for p, b in zip(patches, bins)
+                      if b < (threshold-bin_diff)], color='r', edgecolor="white",
+                     label=red_lab)
+            plt.setp([p for p, b in zip(patches, bins)
+                      if b > threshold], color='b', edgecolor="white",
+                     label=blue_lab)
+
+        plt.axvline(threshold, ymin=-.1, ymax=1.1, color='k',
+                    linestyle='dashed', linewidth=1, label="Threshold")
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        plt.legend(by_label.values(), by_label.keys(),
+                   loc="upper left", framealpha=1)
+
+        subset_key_arr.append(key)
+        image_prefix = key +'-'
+        for ext in ['png', 'svg']:
+            img_fp = os.path.join(output_dir, image_prefix +'identify-table-histogram.%s' % ext)
+            if ext == 'png':
+                image_paths_arr.append('./'+image_prefix + 'identify-table-histogram.png')
+            plt.savefig(img_fp)
+
+        #increments arrays for passing to html
+        contam_val_arr.append("{:.0f}".format(contam_val))
+        true_val_arr.append("{:.0f}".format(true_val))
+        unknown_val_arr.append("{:.0f}".format(unknown_val))
+        percent_val_arr.append("%.2f" % percent_val)
+        gray_lab_arr.append(gray_lab)
+        red_lab_arr.append(red_lab)
+        blue_lab_arr.append(blue_lab)
+
     index_fp = os.path.join(TEMPLATES, 'index.html')
-
     q2templates.render(index_fp, output_dir, context={
-        'contamer': "{:,}".format(contam_val),
-        'truer': "{:,}".format(true_val),
-        'unknownr': "{:,}".format(unknown_val),
-        'percenter': "%.2f" % percent_val,
-        'unknown_label': gray_lab,
-        'contam_label': red_lab,
-        'true_label': blue_lab})
+            'contamer': contam_val_arr,
+            'truer': true_val_arr,
+            'unknownr': unknown_val_arr,
+            'percenter': percent_val_arr,
+            'unknown_label': gray_lab_arr,
+            'contam_label': red_lab_arr,
+            'true_label': blue_lab_arr,
+            'image_paths': image_paths_arr,
+            'subset_id': subset_key_arr,
+    })

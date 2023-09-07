@@ -152,10 +152,16 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         percent_reads = contam_reads / (contam_reads + true_reads) * 100
 
         binwidth = bin_size
-        bin_diff = threshold % binwidth
+        bin_diff = threshold - (binwidth * int(threshold/binwidth))
         temp_dec = decimal.Decimal(str(binwidth))
         num_dec = abs(temp_dec.as_tuple().exponent)
+        temper_dec = decimal.Decimal(str(threshold))
+        numer_dec = abs(temper_dec.as_tuple().exponent)
+        if numer_dec > num_dec:
+            num_dec = numer_dec
         bin_diff = round(bin_diff, num_dec)
+        threshold = round(threshold, num_dec)
+        lower_bound = round((threshold - bin_diff), num_dec)
         bins = np.concatenate([
             np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
         ])
@@ -193,10 +199,10 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                      color='b', edgecolor="white", label=blue_lab)
         else:
             plt.setp([p for p, b in zip(patches, bins)
-                      if b == (threshold - bin_diff)], color='m',
+                      if b == lower_bound], color='m',
                      edgecolor="white")
             plt.setp([p for p, b in zip(patches, bins)
-                      if b < (threshold-bin_diff)], color='r', edgecolor="white",
+                      if b < lower_bound], color='r', edgecolor="white",
                      label=red_lab)
             plt.setp([p for p, b in zip(patches, bins)
                       if b > threshold], color='b', edgecolor="white",

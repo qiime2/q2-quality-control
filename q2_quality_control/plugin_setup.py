@@ -305,8 +305,8 @@ plugin.methods.register_function(
 )
 
 # Decontam Actions
-T1 = TypeMatch([FeatureData[DecontamScore]])
-T2 = TypeMatch([FeatureTable[Frequency]])
+T1 = TypeMatch([FeatureData[DecontamScore], Collection[FeatureData[DecontamScore]]])
+T2 = TypeMatch([FeatureTable[Frequency], Collection[FeatureTable[Frequency]]])
 
 plugin.methods.register_function(
     function=decontam_identify,

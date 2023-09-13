@@ -34,7 +34,6 @@ def decontam_identify_batches(ctx, table, metadata,
     decon = ctx.get_action('quality_control', 'decontam_identify')
     decon_score_viz = ctx.get_action('quality_control', 'decontam_score_viz')
     spliter = ctx.get_action('feature_table', 'split')
-    results = []
 
     #New Work Flow
     split_tables, = spliter(table=table, metadata=metadata.get_column(split_column),
@@ -88,12 +87,6 @@ def decontam_identify_batches(ctx, table, metadata,
     temp_viz_results, = decon_score_viz(decontam_scores=decontam_table,
                     table=q2_feature_table, threshold=threshold,
                     weighted=weighted, bin_size=bin_size)
-        #decon_viz_results[('decon-scores-hist_' + str(split_column) + '-' + key)] = temp_viz_results
 
-    #split_tables.collection = new_table_dic
-    results.append(split_tables_dict)
-    results.append(decon_results)
-    results.append(temp_viz_results)
-    #return (split_tables_dict, decon_results, *decon_viz_results)
-    return tuple(results)
+    return split_tables_dict, decon_results, temp_viz_results
 

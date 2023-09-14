@@ -156,9 +156,9 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                                   image_prefix +
                                   'identify-table-histogram.%s' % ext)
             if ext == 'png':
-                image_paths_arr.append('./' + 
-                                       image_prefix +
-                                       'identify-table-histogram.png')
+                image_paths_arr.append(
+                    './' + image_prefix + 'identify-table-histogram.png'
+                )
             plt.savefig(img_fp)
         plt.clf()
 

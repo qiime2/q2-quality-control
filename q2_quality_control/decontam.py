@@ -68,7 +68,8 @@ def _check_column_inputs_helper(table, metadata,
             if indic < 5:
                 '''raise ValueError('At least 5 Control Samples needed '
                                  + str(indic) + ' found')'''
-                print("We recommend 5 control samples - " + str(indic) + " found")
+                print("We recommend 5 control samples - " +
+                      str(indic) + " found")
             else:
                 print("All appropriate inputs are found")
 
@@ -162,7 +163,6 @@ def decontam_identify(table: pd.DataFrame,
                                 "(return code %d), please inspect stdout"
                                 " and stderr to learn more." % e.returncode)
         return _decontam_identify_helper(track_fp, method)
-
 
 
 def decontam_remove(decontam_scores: qiime2.Metadata,

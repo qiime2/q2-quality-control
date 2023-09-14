@@ -8,8 +8,9 @@
 import importlib
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataColumn, Visualization,Categorical, Citations, TypeMap,
-                           TypeMatch, Metadata, Collection, List)
+                           MetadataColumn, Visualization,
+                           Categorical, Citations, TypeMap,
+                           TypeMatch, Metadata, Collection)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.sample_data import SampleData
 from q2_types.per_sample_sequences import (
@@ -305,9 +306,6 @@ plugin.methods.register_function(
 )
 
 # Decontam Actions
-T1 = TypeMatch([FeatureData[DecontamScore], Collection[FeatureData[DecontamScore]]])
-T2 = TypeMatch([FeatureTable[Frequency], Collection[FeatureTable[Frequency]]])
-
 plugin.methods.register_function(
     function=decontam_identify,
     inputs={'table': FeatureTable[Frequency]},
@@ -410,7 +408,7 @@ plugin.visualizers.register_function(
     }
 )
 
-#Heirarchical Decontam format Pipeline
+# Heirarchical Decontam format Pipeline
 plugin.pipelines.register_function(
     function=decontam_identify_batches,
     inputs={'table': FeatureTable[Frequency]},
@@ -438,8 +436,9 @@ plugin.pipelines.register_function(
                      'experiment are control samples, '
                      'assumes sample names in file correspond '
                      'to the `table` input parameter'),
-        'split_column': ('input metadata columns that you wish to subset the ASV table by'
-                         'Note: Column names must be in quotes and delimited by a space'),
+        'split_column': (
+            'input metadata columns that you wish to subset the ASV table by'
+            'Note: Column names must be in quotes and delimited by a space'),
         'method': ('Select how to which method '
                    'to id contaminants with; '
                    'Prevalence: Utilizes control ASVs/OTUs '
@@ -466,20 +465,24 @@ plugin.pipelines.register_function(
         'bin_size': ('Select bin size for the histogram')
     },
     output_descriptions={
-        'batch_subset_tables': ('Directory where feature tables split based on metadata '
-                                'and parameter split_column values should be written.'),
+        'batch_subset_tables': (
+            'Directory where feature tables split based on metadata '
+            'and parameter split_column values should be written.'),
         'decontam_scores': ('The resulting table of scores '
                             'from the decontam algorithm '
                             'which scores each ASV or OTU on '
                             'how likely they are to be a '
                             'contaminant sequence'),
-        'score_histograms': ('The vizulaizer histograms for all decontam score objects '
-                            'generated from the pipeline')
+        'score_histograms': (
+            'The vizulaizer histograms for all decontam score objects '
+            'generated from the pipeline')
     },
     name='Identify contaminants in Batch Mode',
-    description=('This method breaks an ASV table into batches based on the given metadata and '
-                 'identifies contaminant sequences from an '
-                 'OTU or ASV table and reports them to the user')
+    description=(
+        'This method breaks an ASV table into '
+        'batches based on the given metadata and '
+        'identifies contaminant sequences from an '
+        'OTU or ASV table and reports them to the user')
 )
 
 plugin.register_formats(DecontamScoreFormat, DecontamScoreDirFmt)

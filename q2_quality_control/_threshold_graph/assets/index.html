@@ -14,10 +14,11 @@
   {% for index in range(image_paths|length) %}
 
   <h1 ALIGN=CENTER>
-      {% if subset_id[index] == "Original" %}
+      {% if subset_id|length <= 1 %}
           Decontam Histogram of Contaminant Scores
       {% else %}
-          Decontam Histogram of Contaminant Scores - Subset: {{subset_id[index]}}
+          Decontam Histogram of Contaminant Scores<br>
+          {{subset_id[index]}}
       {% endif %}
   </h1>
 
@@ -40,7 +41,7 @@
     </TR>
     </TABLE>
 
-    {% if subset_id[index] != "Original" %}
+    {% if subset_id|length > 1  %}
        <hr>
     {% endif %}
 

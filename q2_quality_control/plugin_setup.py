@@ -386,8 +386,8 @@ plugin.methods.register_function(
 plugin.visualizers.register_function(
     function=decontam_score_viz,
     inputs={
-        'decontam_scores': T1,
-        'table': T2
+        'decontam_scores': Collection[FeatureData[DecontamScore]],
+        'table': Collection[FeatureTable[Frequency]]
     },
     parameters={
         'threshold':  Float,

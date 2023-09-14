@@ -45,76 +45,13 @@ def _check_inputs(**kwargs):
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
 
-def _decontam_score_viz_helper(decontam_scores, table):
-    temp_table_dict = {}
-    temp_scores_dict = {}
-
-    #seperates table into original tables
-    matching_indices = [i for i, index_value in enumerate(table.index) if 'this_is_new_table_' in index_value]
-    indexer = 0
-    for match in matching_indices:
-        first_row = match + 1
-        if indexer != (len(matching_indices)-1):
-            last_row = (matching_indices[indexer+1] - 1)
-        else:
-            last_row = len(table.index) - 1
-
-        sep_index = table.index[match]
-        sep_index_arr = str(sep_index).split('_')
-        temp_key = sep_index_arr[len(sep_index_arr)-2] + '_' + sep_index_arr[len(sep_index_arr)-1]
-
-        table['SampleID'] = table.index
-        table.reset_index(drop=True, inplace=True)
-        temp_table = table.loc[first_row:last_row]
-        temp_table.set_index('SampleID', inplace=True)
-        table.set_index('SampleID', inplace=True)
-        temp_table_dict[temp_key] = temp_table
-        indexer = indexer + 1
-
-    #Seperates decontam scores into origonal score tables
-    df = decontam_scores.to_dataframe()
-    matching_indices = [i for i, index_value in enumerate(df.index) if 'this_is_new_table_' in index_value]
-    indexer = 0
-    for match in matching_indices:
-        first_row = match + 1
-        if indexer != (len(matching_indices) - 1):
-            last_row = (matching_indices[indexer + 1] - 1)
-        else:
-            last_row = len(df.index) - 1
-
-        sep_index = df.index[match]
-        sep_index_arr = str(sep_index).split('_')
-        temp_key = sep_index_arr[len(sep_index_arr) - 2] + '_' + sep_index_arr[len(sep_index_arr) - 1]
-        df['#OTUID'] = df.index
-        df.reset_index(drop=True, inplace=True)
-        temp_table = df.loc[first_row:last_row]
-        temp_arr = []
-        for entry in temp_table['#OTUID']:
-            entry_arr = str(entry).split('_JORDENRABASCO_')
-            temp_arr.append(entry_arr[1])
-        temp_table.loc[:, '#OTUID'] = temp_arr
-        temp_table.set_index('#OTUID', inplace=True)
-        df.set_index('#OTUID', inplace=True)
-        temp_meta = qiime2.Metadata(temp_table)
-        temp_scores_dict[temp_key] = temp_meta
-        indexer = indexer + 1
-
-    return [temp_table_dict, temp_scores_dict]
-
 def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        table: pd.DataFrame, threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
     _check_inputs(**locals())
     #initalizes dictionaries for iteration
-    table_dict = {}
-    decontam_scores_dict = {}
-    if('this_is_new_table' not in table.index[0]):
-        table_dict['Original'] = table
-        decontam_scores_dict['Original'] = decontam_scores
-    else:
-        dicts = _decontam_score_viz_helper(decontam_scores, table)
-        table_dict = dicts[0]
-        decontam_scores_dict = dicts[1]
+    table_dict = dict(table)
+    decontam_scores_dict = dict(decontam_scores)
 
     #intializes arrays to pass data to the html
     image_paths_arr = []
@@ -189,7 +126,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             h, bins, patches = plt.hist(p_vals, bins)
 
         plt.xlim(0.0, 1.0)
-        plt.xlabel('score value')
+        plt.xlabel('Score Value')
         plt.ylabel(y_lab)
 
         if bin_diff == 0:
@@ -222,6 +159,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             if ext == 'png':
                 image_paths_arr.append('./'+image_prefix + 'identify-table-histogram.png')
             plt.savefig(img_fp)
+        plt.clf()
 
         #increments arrays for passing to html
         contam_val_arr.append("{:.0f}".format(contam_val))

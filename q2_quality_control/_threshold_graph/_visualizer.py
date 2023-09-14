@@ -95,7 +95,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             num_dec = numer_dec
         bin_diff = round(bin_diff, num_dec)
         threshold = round(threshold, num_dec)
-        lower_bound = round((threshold - bin_diff), num_dec)
+        lower_bound = round(((threshold - bin_diff)), num_dec)
         bins = np.concatenate([
             np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
         ])
@@ -125,21 +125,22 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         plt.xlim(0.0, 1.0)
         plt.xlabel('Score Value')
         plt.ylabel(y_lab)
-
-        if bin_diff == 0:
+        arr_bins = list(bins)
+        rounded_bins = [round(number, num_dec) for number in arr_bins]
+        if threshold in rounded_bins:
             plt.setp([p for p, b in zip(patches, bins) if b < threshold],
                      color='r', edgecolor="white", label=red_lab)
             plt.setp([p for p, b in zip(patches, bins) if b >= threshold],
                      color='b', edgecolor="white", label=blue_lab)
         else:
             plt.setp([p for p, b in zip(patches, bins)
-                      if b == lower_bound], color='m',
+                      if b < threshold and b > (threshold - bin_size)], color='m',
                      edgecolor="white")
             plt.setp([p for p, b in zip(patches, bins)
                       if b < lower_bound], color='r', edgecolor="white",
                      label=red_lab)
             plt.setp([p for p, b in zip(patches, bins)
-                      if b > threshold], color='b', edgecolor="white",
+                      if b >= threshold], color='b', edgecolor="white",
                      label=blue_lab)
 
         plt.axvline(threshold, ymin=-.1, ymax=1.1, color='k',

@@ -134,7 +134,8 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                      color='b', edgecolor="white", label=blue_lab)
         else:
             plt.setp([p for p, b in zip(patches, bins)
-                      if b < threshold and b > (threshold - bin_size)], color='m',
+                      if b < threshold and b > (threshold - bin_size)],
+                     color='m',
                      edgecolor="white")
             plt.setp([p for p, b in zip(patches, bins)
                       if b < lower_bound], color='r', edgecolor="white",

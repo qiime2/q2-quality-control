@@ -5,10 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataColumn, Visualization,Categorical, Citations, TypeMap,
-                           Visualization, TypeMatch, Metadata, Collection, List)
-from typing import Dict
 import os.path
 import pkg_resources
 
@@ -45,15 +41,16 @@ def _check_inputs(**kwargs):
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
 
+
 def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        table: pd.DataFrame, threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
     _check_inputs(**locals())
-    #initalizes dictionaries for iteration
+    # initalizes dictionaries for iteration
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    #intializes arrays to pass data to the html
+    # intializes arrays to pass data to the html
     image_paths_arr = []
     subset_key_arr = []
     contam_val_arr = []
@@ -153,15 +150,19 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                    loc="upper left", framealpha=1)
 
         subset_key_arr.append(key)
-        image_prefix = key +'-'
+        image_prefix = key + '-'
         for ext in ['png', 'svg']:
-            img_fp = os.path.join(output_dir, image_prefix +'identify-table-histogram.%s' % ext)
+            img_fp = os.path.join(output_dir,
+                                  image_prefix +
+                                  'identify-table-histogram.%s' % ext)
             if ext == 'png':
-                image_paths_arr.append('./'+image_prefix + 'identify-table-histogram.png')
+                image_paths_arr.append('./' + 
+                                       image_prefix +
+                                       'identify-table-histogram.png')
             plt.savefig(img_fp)
         plt.clf()
 
-        #increments arrays for passing to html
+        # increments arrays for passing to html
         contam_val_arr.append("{:.0f}".format(contam_val))
         true_val_arr.append("{:.0f}".format(true_val))
         unknown_val_arr.append("{:.0f}".format(unknown_val))

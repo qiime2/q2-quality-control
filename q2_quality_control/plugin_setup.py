@@ -9,12 +9,12 @@ import importlib
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
                            MetadataColumn, Visualization,Categorical, Citations, TypeMap,
-                           Visualization, TypeMatch, Metadata, Collection, List)
+                           TypeMatch, Metadata, Collection, List)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.sample_data import SampleData
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality)
-from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency, PresenceAbsence, Composition
+from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency
 from q2_types.bowtie2 import Bowtie2Index
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy)

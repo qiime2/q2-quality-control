@@ -82,7 +82,7 @@ rownames(asv_df) <- asv_df[, 1]
 asv_df <- asv_df[, -1]
 numero_df <- as.matrix(sapply(asv_df, as.numeric))
 
-metadata_df<-read.csv(file = metadata.loc)
+metadata_df<-read.csv(file = metadata.loc, check.names=FALSE)
 rownames(metadata_df) <- metadata_df[, 1]
 
 if(decon.mode == 'prevalence'){

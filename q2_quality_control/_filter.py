@@ -10,7 +10,7 @@ import os
 import shutil
 import tempfile
 
-from qiime2.sdk.util import get_available_cores
+from qiime2.plugin import get_available_cores
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.bowtie2 import Bowtie2IndexDirFmt
 from q2_types.per_sample_sequences import (

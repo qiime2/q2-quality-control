@@ -22,7 +22,7 @@ left_justify_supported_methods = {'vsearch'}
 def exclude_seqs(query_sequences: DNAFASTAFormat,
                  reference_sequences: DNAFASTAFormat, method: str = 'blast',
                  perc_identity: float = 0.97, evalue: float = None,
-                 perc_query_aligned: float = 0.97, threads: str = 1,
+                 perc_query_aligned: float = 0.97, threads: int = 1,
                  left_justify: bool = False,
                  ) -> (pd.Series, pd.Series):
 

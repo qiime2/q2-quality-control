@@ -28,6 +28,7 @@ from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
 citations = Citations.load('citations.bib', package='q2_quality_control')
 
 plugin = Plugin(
+
     name='quality-control',
     version=q2_quality_control.__version__,
     website='https://github.com/qiime2/q2-quality-control',
@@ -359,20 +360,24 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=decontam_remove,
     inputs={'decontam_scores': FeatureData[DecontamScore],
-            'table': FeatureTable[Frequency]},
+            'table': FeatureTable[Frequency],
+            'rep_seqs': FeatureData[Sequence]},
     parameters={'threshold': Float},
-    outputs=[('filtered_table', FeatureTable[Frequency])],
+    outputs=[('filtered_table', FeatureTable[Frequency]), ('filtered_rep_seqs', FeatureData[Sequence])],
     input_descriptions={
         'decontam_scores': ('Output table from decontam identify'),
         'table': ('ASV or OTU table which contaminate sequences '
-                  'will be identified from')
+                  'will be identified from'),
+        'rep_seqs': ('temp')
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores')
     },
     output_descriptions={
         'filtered_table': ('The resulting feature table of scores '
-                           'once contaminants are removed')
+                           'once contaminants are removed'),
+        'filtered_rep_seqs': ('The resulting rep_seq table of scores '
+                               'once contaminants are removed')
 
     },
     name='Removes contaminant',

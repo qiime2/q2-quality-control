@@ -164,12 +164,6 @@ class TestRemove(TestPluginBase):
             self.assertEqual(test_table, expecter_table)
             self.assertEqual(_sort_seqs(output_rep_seqs), _sort_seqs(exp_rep_seqs))
 
-
-
-
-
-
-
 class TestIdentify_mixed_names(TestPluginBase):
     package = 'q2_quality_control.tests'
 

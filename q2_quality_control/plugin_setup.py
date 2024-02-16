@@ -368,7 +368,8 @@ plugin.methods.register_function(
         'decontam_scores': ('Output table from decontam identify'),
         'table': ('ASV or OTU table which contaminate sequences '
                   'will be identified from'),
-        'rep_seqs': ('temp')
+        'rep_seqs': ('Representative Sequences table which contaminate '
+                     'seqeunces will be removed from')
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores')

@@ -10,6 +10,7 @@ import os
 import shutil
 import tempfile
 
+from qiime2.plugin import get_available_cores
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.bowtie2 import Bowtie2IndexDirFmt
 from q2_types.per_sample_sequences import (
@@ -42,8 +43,12 @@ _filter_defaults = {
 }
 
 
-def bowtie2_build(sequences: DNAFASTAFormat,
-                  n_threads: str = 1) -> Bowtie2IndexDirFmt:
+def bowtie2_build(
+    sequences: DNAFASTAFormat, n_threads: int = 1
+) -> Bowtie2IndexDirFmt:
+    if n_threads == 0:
+        n_threads = get_available_cores()
+
     database = Bowtie2IndexDirFmt()
     build_cmd = ['bowtie2-build', '--threads', str(n_threads),
                  str(sequences), str(database.path / 'db')]
@@ -52,15 +57,18 @@ def bowtie2_build(sequences: DNAFASTAFormat,
 
 
 def filter_reads(
-        demultiplexed_sequences: CasavaOneEightSingleLanePerSampleDirFmt,
-        database: Bowtie2IndexDirFmt,
-        n_threads: int = _filter_defaults['n_threads'],
-        mode: str = _filter_defaults['mode'],
-        sensitivity: str = _filter_defaults['sensitivity'],
-        ref_gap_open_penalty: str = _filter_defaults['ref_gap_open_penalty'],
-        ref_gap_ext_penalty: str = _filter_defaults['ref_gap_ext_penalty'],
-        exclude_seqs: str = _filter_defaults['exclude_seqs']) \
-            -> CasavaOneEightSingleLanePerSampleDirFmt:
+    demultiplexed_sequences: CasavaOneEightSingleLanePerSampleDirFmt,
+    database: Bowtie2IndexDirFmt,
+    n_threads: int = _filter_defaults['n_threads'],
+    mode: str = _filter_defaults['mode'],
+    sensitivity: str = _filter_defaults['sensitivity'],
+    ref_gap_open_penalty: str = _filter_defaults['ref_gap_open_penalty'],
+    ref_gap_ext_penalty: str = _filter_defaults['ref_gap_ext_penalty'],
+    exclude_seqs: str = _filter_defaults['exclude_seqs']
+) -> CasavaOneEightSingleLanePerSampleDirFmt:
+    if n_threads == 0:
+        n_threads = get_available_cores()
+
     filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
     df = demultiplexed_sequences.manifest
     fastq_paths = [record[1:] for record in df.itertuples()]

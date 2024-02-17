@@ -15,8 +15,6 @@ import qiime2.util
 from ._utilities import _run_command
 from q2_types.feature_data import DNAIterator
 import skbio
-import hashlib
-import numpy as np
 
 
 _WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
@@ -172,6 +170,7 @@ def decontam_identify(table: pd.DataFrame,
 def _filepath_to_sample_single(fp):
     return fp.rsplit('_', 4)[0]
 
+
 def decontam_remove(decontam_scores: qiime2.Metadata,
                     table: pd.DataFrame,
                     rep_seqs: qiime2.Metadata,
@@ -195,6 +194,8 @@ def decontam_remove(decontam_scores: qiime2.Metadata,
             no_contam_table = biom.Table.from_tsv(fh, None, None, None)
             index_list = rep_seqs_df.index.tolist()
             values_list = rep_seqs_df.values.tolist()
-            rep_sequences = DNAIterator((skbio.DNA(values_list[i][0], metadata={'id': index_list[i]})
-                                         for i in range(0, len(rep_seqs_df.index)-1)))
+            rep_sequences = DNAIterator((skbio.DNA(values_list[i][0],
+                                        metadata={'id': index_list[i]})
+                                        for i in range(
+                                        0, len(rep_seqs_df.index)-1)))
         return no_contam_table, rep_sequences

@@ -143,10 +143,12 @@ class TestRemove(TestPluginBase):
     def test_remove(self):
         rep_seq_output = qiime2.Artifact.load(
             self.get_data_path('expected/output_remove_contam_rep_seqs.qza'))
-        self.rep_seq_output = rep_seq_output.view(qiime2.Metadata).to_dataframe()
+        self.rep_seq_output = rep_seq_output.view(
+            qiime2.Metadata).to_dataframe()
         output_table = qiime2.Artifact.load(
             self.get_data_path('expected/output_remove_contam_table.qza'))
-        self.rep_seq_output_table = output_table.view(qiime2.Metadata).to_dataframe()
+        self.rep_seq_output_table = output_table.view(
+            qiime2.Metadata).to_dataframe()
         output_asv_table, output_rep_seqs = decontam_remove(
             table=self.seq_removal_asv_table,
             decontam_scores=self.rep_seq_decon_scores,
@@ -155,7 +157,8 @@ class TestRemove(TestPluginBase):
         temp_table = output_asv_table.to_dataframe().transpose()
         temp_table.index.name = 'id'
         temp_table.columns = range(1, len(temp_table.columns) + 1)
-        self.rep_seq_output_table.columns = range(1, len(self.rep_seq_output_table.columns) + 1)
+        self.rep_seq_output_table.columns = range(
+            1, len(self.rep_seq_output_table.columns) + 1)
         exp_rep_seqs = list(
             skbio.io.read(self.get_data_path('expected/output_rep_seqs.fasta'),
                           'fasta', constructor=skbio.DNA))
@@ -172,7 +175,9 @@ class TestRemove(TestPluginBase):
             with open(expected_biom_fp) as th:
                 expecter_table = biom.Table.from_tsv(th, None, None, None)
             self.assertEqual(test_table, expecter_table)
-            self.assertEqual(_sort_seqs(output_rep_seqs), _sort_seqs(exp_rep_seqs))
+            self.assertEqual(_sort_seqs(output_rep_seqs),
+                             _sort_seqs(exp_rep_seqs))
+
 
 class TestIdentify_mixed_names(TestPluginBase):
     package = 'q2_quality_control.tests'

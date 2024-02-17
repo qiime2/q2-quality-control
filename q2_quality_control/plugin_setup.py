@@ -8,7 +8,7 @@
 import importlib
 import q2_quality_control
 from qiime2.plugin import (Str, Plugin, Choices, Range, Float, Int, Bool,
-                           MetadataColumn, Visualization,
+                           Threads, MetadataColumn, Visualization,
                            Categorical, Citations, TypeMap,
                            TypeMatch, Metadata, Collection)
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
@@ -67,7 +67,7 @@ filter_input = {'demultiplexed_sequences': 'The sequences to be trimmed.',
 filter_output = {'filtered_sequences': 'The resulting filtered sequences.'}
 
 filter_parameters = {
-    'n_threads': Int % Range(1, None),
+    'n_threads': Threads,
     'mode': Str % Choices(['local', 'global']),
     'sensitivity': Str % Choices([
         'very-fast', 'fast', 'sensitive', 'very-sensitive']),
@@ -101,7 +101,7 @@ plugin.methods.register_function(
                 'perc_identity': Float % Range(0.0, 1.0, inclusive_end=True),
                 'evalue': Float,
                 'perc_query_aligned': Float,
-                'threads': Int % Range(1, None),
+                'threads': Threads,
                 'left_justify': P_left_justify,
                 },
     outputs=[('sequence_hits', FeatureData[Sequence]),
@@ -119,7 +119,7 @@ plugin.methods.register_function(
             'Percent of query sequence that must align to reference in order '
             'to be accepted as a hit.'),
         'threads': (
-            'Number of jobs to execute. Only applies to vsearch method.'),
+            'Number of threads to use. Only applies to vsearch method.'),
         'left_justify': ('Reject match if the pairwise alignment begins with '
                          'gaps'),
     },
@@ -295,11 +295,11 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=bowtie2_build,
     inputs={'sequences': FeatureData[Sequence]},
-    parameters={'n_threads': Int % Range(1, None)},
+    parameters={'n_threads': Threads},
     outputs=[('database', Bowtie2Index)],
     input_descriptions={
         'sequences': 'Reference sequences used to build bowtie2 index.'},
-    parameter_descriptions={'n_threads': 'Number of threads to launch'},
+    parameter_descriptions={'n_threads': 'Number of threads to launch.'},
     output_descriptions={'database': 'Bowtie2 index.'},
     name='Build bowtie2 index from reference sequences.',
     description='Build bowtie2 index from reference sequences.',

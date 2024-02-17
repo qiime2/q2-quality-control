@@ -167,6 +167,7 @@ def decontam_identify(table: pd.DataFrame,
                                 " and stderr to learn more." % e.returncode)
         return _decontam_identify_helper(track_fp, method)
 
+
 def _filepath_to_sample_single(fp):
     return fp.rsplit('_', 4)[0]
 

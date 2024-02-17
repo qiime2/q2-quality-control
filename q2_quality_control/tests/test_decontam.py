@@ -109,8 +109,11 @@ class TestIdentify(TestPluginBase):
                 expecter_table = biom.Table.from_tsv(th, None, None, None)
             self.assertEqual(test_table, expecter_table)
 
+
 def _sort_seqs(seqs):
     return sorted(list(seqs), key=lambda x: x.metadata['id'])
+
+
 class TestRemove(TestPluginBase):
     package = 'q2_quality_control.tests'
 
@@ -125,13 +128,17 @@ class TestRemove(TestPluginBase):
 
         seq_removal_table = qiime2.Artifact.load(
             self.get_data_path('expected/remove_contam_test_table.qza'))
-        self.seq_removal_asv_table = seq_removal_table.view(qiime2.Metadata).to_dataframe()
+        self.seq_removal_asv_table = seq_removal_table.view(
+            qiime2.Metadata).to_dataframe()
         seq_removal_rep_seqs = qiime2.Artifact.load(
             self.get_data_path('expected/remove_contam_rep_seqs.qza'))
-        self.rep_seq_removal_table = seq_removal_rep_seqs.view(qiime2.Metadata)
+        self.rep_seq_removal_table = \
+            seq_removal_rep_seqs.view(qiime2.Metadata)
         seq_removal_rep_seq_decontam_scores = qiime2.Artifact.load(
-            self.get_data_path('expected/remove_contam_test_identify_scores.qza'))
-        self.rep_seq_decon_scores =  seq_removal_rep_seq_decontam_scores.view(qiime2.Metadata)
+            self.get_data_path(
+                'expected/remove_contam_test_identify_scores.qza'))
+        self.rep_seq_decon_scores =  \
+            seq_removal_rep_seq_decontam_scores.view(qiime2.Metadata)
 
     def test_remove(self):
         rep_seq_output = qiime2.Artifact.load(

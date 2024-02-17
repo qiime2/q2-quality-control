@@ -363,7 +363,8 @@ plugin.methods.register_function(
             'table': FeatureTable[Frequency],
             'rep_seqs': FeatureData[Sequence]},
     parameters={'threshold': Float},
-    outputs=[('filtered_table', FeatureTable[Frequency]), ('filtered_rep_seqs', FeatureData[Sequence])],
+    outputs=[('filtered_table', FeatureTable[Frequency]),
+             ('filtered_rep_seqs', FeatureData[Sequence])],
     input_descriptions={
         'decontam_scores': ('Output table from decontam identify'),
         'table': ('ASV or OTU table which contaminate sequences '
@@ -377,8 +378,8 @@ plugin.methods.register_function(
     output_descriptions={
         'filtered_table': ('The resulting feature table of scores '
                            'once contaminants are removed'),
-        'filtered_rep_seqs': ('The resulting rep_seq table of scores '
-                               'once contaminants are removed')
+        'filtered_rep_seqs': ('The resulting rep_seq table of '
+                              'scores once contaminants are removed')
 
     },
     name='Removes contaminant',

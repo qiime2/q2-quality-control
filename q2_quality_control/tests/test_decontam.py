@@ -146,6 +146,9 @@ class TestRemove(TestPluginBase):
             threshold=0.1,
             rep_seqs=self.rep_seq_removal_table)
         temp_table = output_asv_table.to_dataframe().transpose()
+        temp_table.index.name = 'id'
+        temp_table.columns = range(1, len(temp_table.columns) + 1)
+        self.rep_seq_output_table.columns = range(1, len(self.rep_seq_output_table.columns) + 1)
         exp_rep_seqs = list(
             skbio.io.read(self.get_data_path('expected/output_rep_seqs.fasta'),
                           'fasta', constructor=skbio.DNA))

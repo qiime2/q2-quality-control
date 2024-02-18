@@ -198,5 +198,5 @@ def decontam_remove(decontam_scores: qiime2.Metadata,
             rep_sequences = DNAIterator((skbio.DNA(values_list[i][0],
                                         metadata={'id': index_list[i]})
                                         for i in range(
-                                        0, len(rep_seqs_df.index)-1)))
+                                        0, len(rep_seqs_df.index))))
         return no_contam_table, rep_sequences

@@ -160,10 +160,11 @@ class TestRemove(TestPluginBase):
         self.rep_seq_output_table.columns = range(
             1, len(self.rep_seq_output_table.columns) + 1)
         exp_rep_seqs = list(
-            skbio.io.read(self.get_data_path('expected/output_rep_seqs.fasta'),
+            skbio.io.read(self.get_data_path('expected/output_dna_seqs.fasta'),
                           'fasta', constructor=skbio.DNA))
         for seq in exp_rep_seqs:
             del seq.metadata['description']
+
         with tempfile.TemporaryDirectory() as temp_dir_name:
             test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
             expected_biom_fp = os.path.join(temp_dir_name,

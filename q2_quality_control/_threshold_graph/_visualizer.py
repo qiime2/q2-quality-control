@@ -155,7 +155,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                 sequences[sequence.metadata['id']] \
                     = {'url': _blast_url_template % str_seq,
                        'seq': str_seq,
-                       'contam_or_naw': 'NaN',
+                       'contam_or_naw': 'Unknown',
                        'p_val': df.loc[sequence.metadata['id'], 'p'],
                        'read_nums': read_nums.loc[sequence.metadata['id']]}
         #temp area end

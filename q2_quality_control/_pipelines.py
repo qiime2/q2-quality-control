@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-def decontam_identify_batches(ctx, table, metadata,
+def decontam_identify_batches(ctx, table, rep_seqs, metadata,
                               split_column,
                               method,
                               filter_empty_features=None,
@@ -48,6 +48,7 @@ def decontam_identify_batches(ctx, table, metadata,
         decon_results[keyer] = temp_results
     temp_viz_results, = decon_score_viz(
         decontam_scores=decon_results,
+        rep_seqs=rep_seqs,
         table=split_tables_dict, threshold=threshold,
         weighted=weighted, bin_size=bin_size)
 

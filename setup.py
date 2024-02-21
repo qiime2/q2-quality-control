@@ -26,7 +26,7 @@ setup(
     package_data={
         'q2_quality_control': ['citations.bib', 'assets/*'],
         'q2_quality_control.tests': ['data/*', 'data/expected/*'],
-        'q2_quality_control._threshold_graph': ['assets/index.html'],
+        'q2_quality_control._threshold_graph': ['assets/index.html','assets/js/*'],
     },
     zip_safe=False,
 )

@@ -51,14 +51,17 @@ _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                        "=nt&CMD=Put&QUERY=%s")
 
 def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
-                       rep_seqs: qiime2.Metadata,
-                       table: pd.DataFrame, threshold: float = 0.1,
+                       table: pd.DataFrame,
+                       rep_seqs: qiime2.Metadata = None,
+                       threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
     _check_inputs(**locals())
     # initalizes dictionaries for iteration
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
-    rep_seqs_df = rep_seqs.to_dataframe()
+
+    #Sets rep seq flags
+    rep_seq_indicator = ["Are there rep seqs?"]
 
     # intializes arrays to pass data to the html
     image_paths_arr = []
@@ -85,33 +88,36 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
 
         read_nums = table.sum(axis='rows')
 
-        #indicies of nan p values
-        nan_indices = df[df['p'].isna()].index.tolist()
-        na_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(nan_indices)]['Sequence'].tolist()
-
         p_vals = df['p'].dropna()
         filt_read_nums = read_nums[p_vals.index]
 
         contams = (p_vals < threshold)
 
-
+        nan_indices = df[df['p'].isna()].index.tolist()
         contam_indices = contams.index[contams == True].tolist()
-        contam_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(contam_indices)]['Sequence'].tolist()
-
         true_indices = contams.index[contams == False].tolist()
-        true_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(true_indices)]['Sequence'].tolist()
+        if rep_seqs is not None:
+            rep_seqs_df = rep_seqs.to_dataframe()
+            na_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(nan_indices)]['Sequence'].tolist()
+            contam_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(contam_indices)]['Sequence'].tolist()
+            true_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(true_indices)]['Sequence'].tolist()
+        else:
+            rep_seq_indicator.append("Nope there are not")
+            true_rep_seqs = ["NNNNNNNNNNNNN"] * len(true_indices)
+            na_rep_seqs = ["NNNNNNNNNNNNN"] * len(nan_indices)
+            contam_rep_seqs = ["NNNNNNNNNNNNN"] * len(contam_indices)
 
         true_asvs_iter = DNAIterator((skbio.DNA(true_rep_seqs[i],
-                              metadata={'id': true_indices[i]})
-                    for i in range(0, len(true_indices))))
+                                                metadata={'id': true_indices[i]})
+                                      for i in range(0, len(true_indices))))
 
         na_asvs_iter = DNAIterator((skbio.DNA(na_rep_seqs[i],
-                              metadata={'id': nan_indices[i]})
-                    for i in range(0, len(nan_indices))))
+                                              metadata={'id': nan_indices[i]})
+                                    for i in range(0, len(nan_indices))))
 
         contam_asvs_iter = DNAIterator((skbio.DNA(contam_rep_seqs[i],
-                                                metadata={'id': contam_indices[i]})
-                                      for i in range(0, len(contam_indices))))
+                                                  metadata={'id': contam_indices[i]})
+                                        for i in range(0, len(contam_indices))))
         
 
         #temp area
@@ -133,7 +139,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                 sequences[sequence.metadata['id']] \
                     = {'url': _blast_url_template % str_seq,
                        'seq': str_seq,
-                       'contam_or_naw': 'True_ASV',
+                       'contam_or_naw': 'True_Seq',
                        'p_val': df.loc[sequence.metadata['id'], 'p'],
                        'read_nums': read_nums.loc[sequence.metadata['id']]}
         with open(os.path.join(output_dir, contam_dest), 'w') as fh:
@@ -144,7 +150,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                 sequences[sequence.metadata['id']] \
                     = {'url': _blast_url_template % str_seq,
                        'seq': str_seq,
-                       'contam_or_naw': 'Contaminant_ASV',
+                       'contam_or_naw': 'Contaminant',
                        'p_val': df.loc[sequence.metadata['id'], 'p'],
                        'read_nums': read_nums.loc[sequence.metadata['id']]}
         with open(os.path.join(output_dir, nan_dest), 'w') as fh:
@@ -197,10 +203,10 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             h, bins, patches = plt.hist(p_vals, bins, weights=filt_read_nums)
             plt.yscale('log')
         else:
-            y_lab = 'number of ASVs'
-            blue_lab = "True ASVs"
-            red_lab = "Contaminant ASVs"
-            gray_lab = "Unknown ASVs"
+            y_lab = 'number of Seqs'
+            blue_lab = "True Seqs"
+            red_lab = "Contaminants"
+            gray_lab = "Unknown Seqs"
             contam_val = contam_asvs
             true_val = true_asvs
             unknown_val = unknown_asvs
@@ -282,6 +288,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             'true_fastas': true_fasta_dest,
             'contam_fastas': contam_fasta_dest,
             'na_fastas': nan_fasta_dest,
+            'rep_seq_indicator': rep_seq_indicator,
     })
     js = os.path.join(
         TEMPLATES, 'js', 'tsorter.min.js')

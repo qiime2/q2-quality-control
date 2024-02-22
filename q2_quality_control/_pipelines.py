@@ -5,9 +5,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-def decontam_identify_batches(ctx, table, rep_seqs, metadata,
+def decontam_identify_batches(ctx, table, metadata,
                               split_column,
                               method,
+                              rep_seqs=None,
                               filter_empty_features=None,
                               freq_concentration_column=None,
                               prev_control_column=None,

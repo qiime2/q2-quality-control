@@ -398,7 +398,7 @@ plugin.visualizers.register_function(
     parameters={
         'threshold':  Float,
         'weighted': Bool,
-        'bin_size': Float
+        'bin_size': Float,
     },
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',

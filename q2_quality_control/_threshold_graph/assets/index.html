@@ -70,6 +70,7 @@
   <div class="row">
     <div class="col-lg-12">
       <h3>Decontam Sequence Table</h3>
+      {% if rep_seq_indicator|length <= 1 %}
       <p>
         To BLAST a sequence against the NCBI nt database, click the
         sequence and then click the <i>View report</i>
@@ -77,16 +78,17 @@
       <div class="container">
         <p><center>
           <a class="btn btn-default" href="{{ true_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download True ASVs as a raw FASTA file
+            Download True Seqs as a raw FASTA file
           </a>
           <a class="btn btn-default" href="{{ contam_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download Contaminant ASVs as a raw FASTA file
+            Download Contaminants as a raw FASTA file
           </a>
           <a class="btn btn-default" href="{{ na_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download Unknown (Na) ASVs as a raw FASTA file
+            Download Unknown (Na) Seqs as a raw FASTA file
           </a>
         </center></p>
       </div>
+      {% endif %}
       <p>
         <i>Click on a Column header to sort the table.</i>
       </p>
@@ -95,9 +97,11 @@
           <tr>
             <th>Feature ID</th>
             <th data-tsorter="text">Determination</th>
-            <th data-tsorter="text">P-value</th>
-            <th data-tsorter="numeric">Read_Num</th>
+            <th data-tsorter="text">P-Score</th>
+            <th data-tsorter="numeric">Read Number</th>
+            {% if rep_seq_indicator|length <= 1 %}
             <th data-tsorter="text">Sequence</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
@@ -108,7 +112,9 @@
             <td>{{ data[sequence].contam_or_naw }}</td>
             <td>{{ data[sequence].p_val | round(2, 'common')}}</td>
             <td>{{ data[sequence].read_nums | int }}</td>
+            {% if rep_seq_indicator|length <= 1 %}
             <td><samp><a target="_blank" href="{{ data[sequence].url }}" rel="noopener noreferrer">{{ data[sequence].seq }}</a></samp></td>
+            {% endif %}
             {% else %}
             <td>-</td>
             <td>-</td>
@@ -135,24 +141,27 @@
     }
   </style>
         {% else %}
+        
+              <div class="row">
+          <div class="col-lg-12">
+            {% if rep_seq_indicator|length <= 1 %}
+            <div class="container">
+              <p><center>
+                <a class="btn btn-default" href="{{ true_fastas[index] }}" target="_blank" rel="noopener noreferrer">
+                  Download True Seqs as a raw FASTA file
+                </a>
+                <a class="btn btn-default" href="{{ contam_fastas[index] }}" target="_blank" rel="noopener noreferrer">
+                  Download Contaminants as a raw FASTA file
+                </a>
+                <a class="btn btn-default" href="{{ na_fastas[index] }}" target="_blank" rel="noopener noreferrer">
+                  Download Unknown (Na) Seqs as a raw FASTA file
+                </a>
+              </center></p>
+            </div>
+            {% endif %}
+             </div>
+                 </div>
 
-        <div class="row">
-    <div class="col-lg-12">
-      <div class="container">
-        <p><center>
-          <a class="btn btn-default" href="{{ true_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download True ASVs as a raw FASTA file
-          </a>
-          <a class="btn btn-default" href="{{ contam_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download Contaminant ASVs as a raw FASTA file
-          </a>
-          <a class="btn btn-default" href="{{ na_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download Unknown (Na) ASVs as a raw FASTA file
-          </a>
-        </center></p>
-      </div>
-       </div>
-           </div>
       {% endif %}
 
         {% if subset_id|length > 1  %}

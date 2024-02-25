@@ -78,6 +78,8 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
     true_fasta_dest = []
     contam_fasta_dest = []
     nan_fasta_dest = []
+    sorted_key_arr = []
+    feature_or_read_arr = []
 
     for key in table_dict.keys():
         table = table_dict[key]
@@ -118,18 +120,16 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         contam_asvs_iter = DNAIterator((skbio.DNA(contam_rep_seqs[i],
                                                   metadata={'id': contam_indices[i]})
                                         for i in range(0, len(contam_indices))))
-        
 
-        #temp area
         display_sequences = set()
         sequences = {}
         if(len(table_dict.keys()) > 1):
-            true_dest = str(key) + '_true_ASV_seqs.fasta'
-            contam_dest = str(key) + '_contam_ASV_seqs.fasta'
+            true_dest = str(key) + '_non_contam.fasta'
+            contam_dest = str(key) + '_contam.fasta'
             nan_dest = str(key) + '_na_ASV_seqs.fasta'
         else:
-            true_dest = 'true_ASV_seqs.fasta'
-            contam_dest = 'contam_ASV_seqs.fasta'
+            true_dest = 'non_contam.fasta'
+            contam_dest = 'contam.fasta'
             nan_dest = 'na_ASV_seqs.fasta'
         with open(os.path.join(output_dir, true_dest), 'w') as fh:
             for sequence in true_asvs_iter:
@@ -139,9 +139,22 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                 sequences[sequence.metadata['id']] \
                     = {'url': _blast_url_template % str_seq,
                        'seq': str_seq,
-                       'contam_or_naw': 'True_Seq',
+                       'contam_or_naw': 'Non-Contaminant',
                        'p_val': df.loc[sequence.metadata['id'], 'p'],
-                       'read_nums': read_nums.loc[sequence.metadata['id']]}
+                       'read_nums': read_nums.loc[sequence.metadata['id']],
+                       'prevalence': (table[sequence.metadata['id']] != 0).sum()}
+                #Add Nas to Non-contaminant sequence fasta
+                for sequence in na_asvs_iter:
+                    skbio.io.write(sequence, format='fasta', into=fh)
+                    str_seq = str(sequence)
+                    display_sequences.add(sequence.metadata['id'])
+                    sequences[sequence.metadata['id']] \
+                        = {'url': _blast_url_template % str_seq,
+                           'seq': str_seq,
+                           'contam_or_naw': 'Non-Contaminant',
+                           'p_val': df.loc[sequence.metadata['id'], 'p'],
+                           'read_nums': read_nums.loc[sequence.metadata['id']],
+                           'prevalence': (table[sequence.metadata['id']] != 0).sum()}
         with open(os.path.join(output_dir, contam_dest), 'w') as fh:
             for sequence in contam_asvs_iter:
                 skbio.io.write(sequence, format='fasta', into=fh)
@@ -152,29 +165,22 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        'seq': str_seq,
                        'contam_or_naw': 'Contaminant',
                        'p_val': df.loc[sequence.metadata['id'], 'p'],
-                       'read_nums': read_nums.loc[sequence.metadata['id']]}
-        with open(os.path.join(output_dir, nan_dest), 'w') as fh:
-            for sequence in na_asvs_iter:
-                skbio.io.write(sequence, format='fasta', into=fh)
-                str_seq = str(sequence)
-                display_sequences.add(sequence.metadata['id'])
-                sequences[sequence.metadata['id']] \
-                    = {'url': _blast_url_template % str_seq,
-                       'seq': str_seq,
-                       'contam_or_naw': 'Unknown',
-                       'p_val': df.loc[sequence.metadata['id'], 'p'],
-                       'read_nums': read_nums.loc[sequence.metadata['id']]}
-        #temp area end
+                       'read_nums': read_nums.loc[sequence.metadata['id']],
+                       'prevalence': (table[sequence.metadata['id']] != 0).sum()}
+        #with open(os.path.join(output_dir, nan_dest), 'w') as fh:
+        sorted_keys = sorted(sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)
 
         contam_asvs = contams.sum()
         true_asvs = len(contams) - contam_asvs
         unknown_asvs = len(df['p']) - true_asvs - contam_asvs
-        percent_asvs = contam_asvs / (contam_asvs + true_asvs) * 100
+        percent_asvs = contam_asvs / (contam_asvs + true_asvs + unknown_asvs) * 100
+        true_asvs = unknown_asvs + true_asvs
 
         contam_reads = filt_read_nums[contams[contams].index].sum()
         true_reads = filt_read_nums.sum() - contam_reads
         unknown_reads = read_nums.sum() - true_reads - contam_reads
-        percent_reads = contam_reads / (contam_reads + true_reads) * 100
+        percent_reads = contam_reads / (contam_reads + true_reads + unknown_reads) * 100
+        true_reads = unknown_reads + true_reads
 
         binwidth = bin_size
         bin_diff = threshold - (binwidth * int(threshold/binwidth))
@@ -193,9 +199,10 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
 
         if weighted is True:
             y_lab = 'Number of Reads'
-            blue_lab = "True Reads"
+            blue_lab = "Non-Contaminant Reads"
             red_lab = "Contaminant Reads"
-            gray_lab = "Unknown Reads"
+            gray_lab = "Non-Contaminant Reads (Score=NA)"
+            feature_or_read = "Reads"
             contam_val = contam_reads
             true_val = true_reads
             unknown_val = unknown_reads
@@ -203,10 +210,11 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             h, bins, patches = plt.hist(p_vals, bins, weights=filt_read_nums)
             plt.yscale('log')
         else:
-            y_lab = 'number of Seqs'
-            blue_lab = "True Seqs"
-            red_lab = "Contaminants"
-            gray_lab = "Unknown Seqs"
+            y_lab = 'Number of Features'
+            blue_lab = "Non-Contaminant Features"
+            red_lab = "Contaminant Features"
+            gray_lab = "Non-Contaminant Features (Score=NA)"
+            feature_or_read = "Features"
             contam_val = contam_asvs
             true_val = true_asvs
             unknown_val = unknown_asvs
@@ -214,7 +222,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             h, bins, patches = plt.hist(p_vals, bins)
 
         plt.xlim(0.0, 1.0)
-        plt.xlabel('Score Value')
+        plt.xlabel('Score')
         plt.ylabel(y_lab)
         arr_bins = list(bins)
         rounded_bins = [round(number, num_dec) for number in arr_bins]
@@ -268,8 +276,8 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         true_fasta_dest.append(true_dest)
         contam_fasta_dest.append(contam_dest)
         nan_fasta_dest.append(nan_dest)
-
-        
+        sorted_key_arr.append(sorted_keys)
+        feature_or_read_arr.append(feature_or_read)
 
 
     index_fp = os.path.join(TEMPLATES, 'index.html')
@@ -289,6 +297,8 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             'contam_fastas': contam_fasta_dest,
             'na_fastas': nan_fasta_dest,
             'rep_seq_indicator': rep_seq_indicator,
+            'table_keys_arr': sorted_key_arr,
+            'feat_or_read': feature_or_read_arr,
     })
     js = os.path.join(
         TEMPLATES, 'js', 'tsorter.min.js')

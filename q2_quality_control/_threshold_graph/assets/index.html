@@ -13,6 +13,17 @@
             justify-content: center;
         }
 </style>
+<style>
+    caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+    }
+</style>
+
+
 
 {% block content %}
 
@@ -21,16 +32,16 @@
 
         {% set display_sequences = display_sequences_arr[index] %}
         {% set data = data_arr[index] %}
+        {% set keys = table_keys_arr[index] %}
 
       <h1 ALIGN=CENTER>
           {% if subset_id|length <= 1 %}
-              Decontam Histogram of Contaminant Scores
+              Histogram of Decontam Scores
           {% else %}
-              Decontam Histogram of Contaminant Scores<br>
+              Histogram of Decontam Scores<br>
               {{subset_id[index]}}
           {% endif %}
       </h1>
-
         <div class='row' ALIGN=CENTER>
           <div class='col-md-12' ALIGN=CENTER>
             <img src='{{image_paths[index]}}'>
@@ -39,25 +50,26 @@
 
       <div class="row" >
         <div class="col-lg-4 col-md-offset-4">
-          <table class="table table-striped" id="stats_table">
+          <table class="table table-striped table-responsive mb-0 pb-0" id="stats_table">
+            <caption>* {{ unknownr[index]}} Non-Contaminant {{feat_or_read[index]}} were assigned a score of NA (not plotted)</caption>
             <thead>
               <tr>
                 <th>{{  contam_label[index] }}</th>
                 <th>{{ true_label[index] }}</th>
-                <th>{{ unknown_label[index] }}</th>
-                <th>% Contaminant</th>
+                <th>Contaminant {{feat_or_read[index]}} %</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>{{ contamer[index]  }}</td>
                 <td>{{ truer[index] }}</td>
-                <td>{{ unknownr[index]}}</td>
                 <td>{{ percenter[index] }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+      </div>
+
 
         {% if subset_id|length <= 1 %}
   <div class="row">
@@ -71,13 +83,10 @@
       <div class="container">
         <p><center>
           <a class="btn btn-default" href="{{ true_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download True Seqs as a raw FASTA file
+            Download Non-Contaminants as a raw FASTA file
           </a>
           <a class="btn btn-default" href="{{ contam_fastas[index] }}" target="_blank" rel="noopener noreferrer">
             Download Contaminants as a raw FASTA file
-          </a>
-          <a class="btn btn-default" href="{{ na_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-            Download Unknown (Na) Seqs as a raw FASTA file
           </a>
         </center></p>
       </div>
@@ -91,20 +100,22 @@
             <th>Feature ID</th>
             <th data-tsorter="text">Determination</th>
             <th data-tsorter="text">P-Score</th>
-            <th data-tsorter="numeric">Read Number</th>
+            <th data-tsorter="numeric">Abundance</th>
+            <th data-tsorter="numeric">Prevalance</th>
             {% if rep_seq_indicator|length <= 1 %}
             <th data-tsorter="text">Sequence</th>
             {% endif %}
           </tr>
         </thead>
         <tbody>
-        {% for sequence in display_sequences %}
+        {% for sequence in keys %}
           <tr>
             <td>{{ sequence }}</td>
             {% if sequence in data%}
             <td>{{ data[sequence].contam_or_naw }}</td>
             <td>{{ data[sequence].p_val | round(2, 'common')}}</td>
             <td>{{ data[sequence].read_nums | int }}</td>
+            <td>{{ data[sequence].prevalence | int }}</td>
             {% if rep_seq_indicator|length <= 1 %}
             <td><samp><a target="_blank" href="{{ data[sequence].url }}" rel="noopener noreferrer">{{ data[sequence].seq }}</a></samp></td>
             {% endif %}
@@ -145,9 +156,6 @@
                 </a>
                 <a class="btn btn-default" href="{{ contam_fastas[index] }}" target="_blank" rel="noopener noreferrer">
                   Download Contaminants as a raw FASTA file
-                </a>
-                <a class="btn btn-default" href="{{ na_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-                  Download Unknown (Na) Seqs as a raw FASTA file
                 </a>
               </center></p>
             </div>

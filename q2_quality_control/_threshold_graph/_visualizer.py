@@ -111,21 +111,21 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             na_rep_seqs = ["NNNNNNNNNNNNN"] * len(nan_indices)
             contam_rep_seqs = ["NNNNNNNNNNNNN"] * len(contam_indices)
 
-        true_asvs_iter = DNAIterator((skbio.DNA(true_rep_seqs[i],
-                                                metadata={'id': true_indices[i]})
-                                      for i in range(0, len(true_indices))))
+        true_asvs_iter = DNAIterator((skbio.DNA(
+            true_rep_seqs[i],metadata={'id': true_indices[i]})
+            for i in range(0, len(true_indices))))
 
-        na_asvs_iter = DNAIterator((skbio.DNA(na_rep_seqs[i],
-                                              metadata={'id': nan_indices[i]})
-                                    for i in range(0, len(nan_indices))))
+        na_asvs_iter = DNAIterator((skbio.DNA(
+            na_rep_seqs[i], metadata={'id': nan_indices[i]})
+            for i in range(0, len(nan_indices))))
 
-        contam_asvs_iter = DNAIterator((skbio.DNA(contam_rep_seqs[i],
-                                                  metadata={'id': contam_indices[i]})
-                                        for i in range(0, len(contam_indices))))
+        contam_asvs_iter = DNAIterator((skbio.DNA(
+            contam_rep_seqs[i],metadata={'id': contam_indices[i]})
+            for i in range(0, len(contam_indices))))
 
         display_sequences = set()
         sequences = {}
-        if(len(table_dict.keys()) > 1):
+        if( len(table_dict.keys()) > 1):
             true_dest = str(key) + '_non_contam.fasta'
             contam_dest = str(key) + '_contam.fasta'
             nan_dest = str(key) + '_na_ASV_seqs.fasta'
@@ -144,7 +144,8 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        'contam_or_naw': 'Non-Contaminant',
                        'p_val': df.loc[sequence.metadata['id'], 'p'],
                        'read_nums': read_nums.loc[sequence.metadata['id']],
-                       'prevalence': (table[sequence.metadata['id']] != 0).sum()}
+                       'prevalence': (
+                               table[sequence.metadata['id']] != 0).sum()}
                 #Add Nas to Non-contaminant sequence fasta
                 for sequence in na_asvs_iter:
                     skbio.io.write(sequence, format='fasta', into=fh)
@@ -156,7 +157,8 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                            'contam_or_naw': 'Non-Contaminant',
                            'p_val': df.loc[sequence.metadata['id'], 'p'],
                            'read_nums': read_nums.loc[sequence.metadata['id']],
-                           'prevalence': (table[sequence.metadata['id']] != 0).sum()}
+                           'prevalence': (
+                                   table[sequence.metadata['id']] != 0).sum()}
         with open(os.path.join(output_dir, contam_dest), 'w') as fh:
             for sequence in contam_asvs_iter:
                 skbio.io.write(sequence, format='fasta', into=fh)
@@ -168,20 +170,24 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        'contam_or_naw': 'Contaminant',
                        'p_val': df.loc[sequence.metadata['id'], 'p'],
                        'read_nums': read_nums.loc[sequence.metadata['id']],
-                       'prevalence': (table[sequence.metadata['id']] != 0).sum()}
-        #with open(os.path.join(output_dir, nan_dest), 'w') as fh:
-        sorted_keys = sorted(sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)
+                       'prevalence': (
+                               table[sequence.metadata['id']] != 0).sum()}
+        # with open(os.path.join(output_dir, nan_dest), 'w') as fh:
+        sorted_keys = sorted(
+            sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)
 
         contam_asvs = contams.sum()
         true_asvs = len(contams) - contam_asvs
         unknown_asvs = len(df['p']) - true_asvs - contam_asvs
-        percent_asvs = contam_asvs / (contam_asvs + true_asvs + unknown_asvs) * 100
+        percent_asvs = contam_asvs / (
+                contam_asvs + true_asvs + unknown_asvs) * 100
         true_asvs = unknown_asvs + true_asvs
 
         contam_reads = filt_read_nums[contams[contams].index].sum()
         true_reads = filt_read_nums.sum() - contam_reads
         unknown_reads = read_nums.sum() - true_reads - contam_reads
-        percent_reads = contam_reads / (contam_reads + true_reads + unknown_reads) * 100
+        percent_reads = contam_reads / (
+                contam_reads + true_reads + unknown_reads) * 100
         true_reads = unknown_reads + true_reads
 
         binwidth = bin_size

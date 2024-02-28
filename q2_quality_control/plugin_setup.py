@@ -491,7 +491,6 @@ plugin.pipelines.register_function(
         'identifies contaminant sequences from an '
         'OTU or ASV table and reports them to the user')
 )
-
 plugin.register_formats(DecontamScoreFormat, DecontamScoreDirFmt)
 plugin.register_semantic_types(DecontamScore)
 plugin.register_semantic_type_to_format(

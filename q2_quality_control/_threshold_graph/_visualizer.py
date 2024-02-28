@@ -112,7 +112,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             contam_rep_seqs = ["NNNNNNNNNNNNN"] * len(contam_indices)
 
         true_asvs_iter = DNAIterator((skbio.DNA(
-            true_rep_seqs[i],metadata={'id': true_indices[i]})
+            true_rep_seqs[i], metadata={'id': true_indices[i]})
             for i in range(0, len(true_indices))))
 
         na_asvs_iter = DNAIterator((skbio.DNA(
@@ -120,12 +120,12 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             for i in range(0, len(nan_indices))))
 
         contam_asvs_iter = DNAIterator((skbio.DNA(
-            contam_rep_seqs[i],metadata={'id': contam_indices[i]})
+            contam_rep_seqs[i], metadata={'id': contam_indices[i]})
             for i in range(0, len(contam_indices))))
 
         display_sequences = set()
         sequences = {}
-        if( len(table_dict.keys()) > 1):
+        if len(table_dict.keys()) > 1:
             true_dest = str(key) + '_non_contam.fasta'
             contam_dest = str(key) + '_contam.fasta'
             nan_dest = str(key) + '_na_ASV_seqs.fasta'
@@ -146,7 +146,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        'read_nums': read_nums.loc[sequence.metadata['id']],
                        'prevalence': (
                                table[sequence.metadata['id']] != 0).sum()}
-                #Add Nas to Non-contaminant sequence fasta
+                # Add Nas to Non-contaminant sequence fasta
                 for sequence in na_asvs_iter:
                     skbio.io.write(sequence, format='fasta', into=fh)
                     str_seq = str(sequence)
@@ -286,8 +286,6 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         nan_fasta_dest.append(nan_dest)
         sorted_key_arr.append(sorted_keys)
         feature_or_read_arr.append(feature_or_read)
-
-
     index_fp = os.path.join(TEMPLATES, 'index.html')
     q2templates.render(index_fp, output_dir, context={
             'contamer': contam_val_arr,

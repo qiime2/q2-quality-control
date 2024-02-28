@@ -34,8 +34,6 @@ _valid_inputs = {
 }
 
 
-
-
 def _check_inputs(**kwargs):
     for param, arg in kwargs.items():
         check_is_valid, explanation = _valid_inputs[param]
@@ -50,6 +48,7 @@ _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                        "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
                        "=nt&CMD=Put&QUERY=%s")
 
+
 def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                        table: pd.DataFrame,
                        rep_seqs: qiime2.Metadata = None,
@@ -60,7 +59,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    #Sets rep seq flags
+    # Sets rep seq flags
     rep_seq_indicator = ["Are there rep seqs?"]
 
     # intializes arrays to pass data to the html
@@ -96,13 +95,16 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         contams = (p_vals < threshold)
 
         nan_indices = df[df['p'].isna()].index.tolist()
-        contam_indices = contams.index[contams == True].tolist()
-        true_indices = contams.index[contams == False].tolist()
+        contam_indices = contams.index[contams is True].tolist()
+        true_indices = contams.index[contams is False].tolist()
         if rep_seqs is not None:
             rep_seqs_df = rep_seqs.to_dataframe()
-            na_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(nan_indices)]['Sequence'].tolist()
-            contam_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(contam_indices)]['Sequence'].tolist()
-            true_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(true_indices)]['Sequence'].tolist()
+            na_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(
+                nan_indices)]['Sequence'].tolist()
+            contam_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(
+                contam_indices)]['Sequence'].tolist()
+            true_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(
+                true_indices)]['Sequence'].tolist()
         else:
             rep_seq_indicator.append("Nope there are not")
             true_rep_seqs = ["NNNNNNNNNNNNN"] * len(true_indices)

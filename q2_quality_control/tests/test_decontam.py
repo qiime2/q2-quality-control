@@ -9,14 +9,15 @@ import unittest
 import pandas as pd
 import pandas.testing as pdt
 import qiime2
+import qiime2.plugin.util
 import biom
 import skbio
 from qiime2.plugin.testing import TestPluginBase
 from q2_quality_control.decontam import (decontam_identify,
                                          decontam_remove)
-from q2_quality_control._stats import DecontamScoreFormat
-from q2_types.feature_table import BIOMV210Format
-from q2_types.feature_data import DNAFASTAFormat
+from q2_quality_control._stats import DecontamScoreDirFmt
+from q2_types.feature_table import BIOMV210DirFmt
+from q2_types.feature_data import DNASequencesDirectoryFormat
 import os
 import tempfile
 
@@ -123,26 +124,31 @@ class TestRemove(TestPluginBase):
 
     def setUp(self):
         super().setUp()
-        _, self.input_sequences = self.transform_format(
-            DNAFASTAFormat, pd.Series, # from DNASequencesDirectoryFormat is preferable
-            'expected/output_remove_contam_rep_seqs/dna-sequences.fasta')
+        self.input_sequences = qiime2.plugin.util.transform(
+            self.get_data_path('expected/output_remove_contam_rep_seqs/'),
+            from_type=DNASequencesDirectoryFormat,
+            to_type=pd.Series)
 
-        _, self.input_table = self.transform_format(
-            BIOMV210Format, pd.DataFrame, # from BIOMV210DirFmt is preferable
-            'expected/remove_contam_test_table/feature-table.biom')
+        self.input_table = qiime2.plugin.util.transform(
+            self.get_data_path('expected/remove_contam_test_table/'),
+            from_type=BIOMV210DirFmt,
+            to_type=pd.DataFrame)
 
-        _, self.input_decontam_scores = self.transform_format(
-            DecontamScoreFormat, pd.DataFrame, # from DecontamScoreDirFmt is preferable
-            'expected/remove_contam_test_identify_scores/stats.tsv')
+        self.input_decontam_scores = qiime2.plugin.util.transform(
+            self.get_data_path('expected/remove_contam_test_identify_scores/'),
+            from_type=DecontamScoreDirFmt,
+            to_type=pd.DataFrame)
 
     def test_remove(self):
-        _, expected_table = self.transform_format(
-            BIOMV210Format, pd.DataFrame, 
-            'expected/output_remove_contam_table/feature-table.biom')
+        expected_sequences = qiime2.plugin.util.transform(
+            self.get_data_path('expected/output_remove_contam_rep_seqs/'),
+            from_type=DNASequencesDirectoryFormat,
+            to_type=pd.Series)
 
-        _, expected_sequences = self.transform_format(
-            DNAFASTAFormat, pd.Series, 
-            'expected/output_remove_contam_rep_seqs/dna-sequences.fasta')
+        expected_table = qiime2.plugin.util.transform(
+            self.get_data_path('expected/output_remove_contam_table/'),
+            from_type=BIOMV210DirFmt,
+            to_type=pd.DataFrame)
 
         observed_table, observed_sequences = decontam_remove(
             table=self.input_table,
@@ -159,13 +165,15 @@ class TestRemove(TestPluginBase):
             "The expected data represented here right now is just the "
             "threshold=0.1 expected data from the above test.")
 
-        _, expected_table = self.transform_format(
-            BIOMV210Format, pd.DataFrame, 
-            'expected/output_remove_contam_table/feature-table.biom')
+        expected_sequences = qiime2.plugin.util.transform(
+            self.get_data_path('expected/output_remove_contam_rep_seqs/'),
+            from_type=DNASequencesDirectoryFormat,
+            to_type=pd.Series)
 
-        _, expected_sequences = self.transform_format(
-            DNAFASTAFormat, pd.Series, 
-            'expected/output_remove_contam_rep_seqs/dna-sequences.fasta')
+        expected_table = qiime2.plugin.util.transform(
+            self.get_data_path('expected/output_remove_contam_table/'),
+            from_type=BIOMV210DirFmt,
+            to_type=pd.DataFrame)
 
         observed_table, observed_sequences = decontam_remove(
             table=self.input_table,

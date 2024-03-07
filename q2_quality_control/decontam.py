@@ -6,14 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import biom
 import pandas as pd
 import os
 import tempfile
 import subprocess
 import qiime2.util
 from ._utilities import _run_command
-from q2_types.feature_data import DNAIterator
 
 
 _WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
@@ -171,7 +169,7 @@ def decontam_remove(decontam_scores: pd.DataFrame,
                     table: pd.DataFrame,
                     rep_seqs: pd.Series,
                     threshold: float = 0.1
-                    ) -> (biom.Table, pd.Series):
+                    ) -> (pd.DataFrame, pd.Series):
     _check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         rep_seqs_df = rep_seqs

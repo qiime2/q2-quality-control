@@ -368,8 +368,8 @@ plugin.methods.register_function(
     input_descriptions={
         'decontam_scores': ('Pre-feature decontam scores.'),
         'table': ('Feature table from which contaminants will be removed.'),
-        'rep_seqs': ('Feature representative sequences from which contaminants '
-                     'will be removed.')
+        'rep_seqs': ('Feature representative sequences from which '
+                     'contaminants will be removed.')
     },
     parameter_descriptions={
         'threshold': ('Decontam score threshold. Features with a score less '

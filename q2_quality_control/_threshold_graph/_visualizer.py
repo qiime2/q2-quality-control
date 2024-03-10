@@ -14,7 +14,6 @@ import q2templates
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import qiime2
 from q2_types.feature_data import DNAIterator
 import skbio
 
@@ -87,13 +86,11 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         table = table_dict[key]
         decontam_scores = decontam_scores_dict[key]
         df = decontam_scores
-        print(df)
         if df['p'].isna().all():
             raise ValueError("No p-values exist for the data provided.")
 
         read_nums = table.sum(axis='rows')
         p_vals = df['p'].dropna()
-        print(p_vals)
         filt_read_nums = read_nums[p_vals.index]
 
         contams = (p_vals < threshold)
@@ -101,14 +98,14 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         true_indices = []
         for true_or_false_index in contams.index:
             true_or_false = contams[true_or_false_index]
-            if(true_or_false == False):
+            if (true_or_false is False):
                 true_indices.append(true_or_false_index)
             else:
                 contam_indices.append(true_or_false_index)
-
         nan_indices = df[df['p'].isna()].index.tolist()
         if rep_seqs is not None:
-            rep_seqs_df = pd.DataFrame({'Sequence': temp_list}, index=rep_seqs.index)
+            rep_seqs_df = pd.DataFrame({'Sequence': temp_list},
+                                       index=rep_seqs.index)
             na_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(
                 nan_indices)]['Sequence'].tolist()
             contam_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(

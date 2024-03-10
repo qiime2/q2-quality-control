@@ -49,9 +49,9 @@ _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                        "=nt&CMD=Put&QUERY=%s")
 
 
-def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
+def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                        table: pd.DataFrame,
-                       rep_seqs: qiime2.Metadata = None,
+                       rep_seqs: pd.Series = None,
                        threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
     _check_inputs(**locals())
@@ -61,6 +61,9 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
 
     # Sets rep seq flags
     rep_seq_indicator = ["Are there rep seqs?"]
+    temp_list = []
+    for seq in rep_seqs:
+        temp_list.append(str(seq))
 
     # intializes arrays to pass data to the html
     image_paths_arr = []
@@ -83,22 +86,29 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
     for key in table_dict.keys():
         table = table_dict[key]
         decontam_scores = decontam_scores_dict[key]
-        df = decontam_scores.to_dataframe()
+        df = decontam_scores
+        print(df)
         if df['p'].isna().all():
             raise ValueError("No p-values exist for the data provided.")
 
         read_nums = table.sum(axis='rows')
-
         p_vals = df['p'].dropna()
+        print(p_vals)
         filt_read_nums = read_nums[p_vals.index]
 
         contams = (p_vals < threshold)
+        contam_indices = []
+        true_indices = []
+        for true_or_false_index in contams.index:
+            true_or_false = contams[true_or_false_index]
+            if(true_or_false == False):
+                true_indices.append(true_or_false_index)
+            else:
+                contam_indices.append(true_or_false_index)
 
         nan_indices = df[df['p'].isna()].index.tolist()
-        contam_indices = contams.index[contams is True].tolist()
-        true_indices = contams.index[contams is False].tolist()
         if rep_seqs is not None:
-            rep_seqs_df = rep_seqs.to_dataframe()
+            rep_seqs_df = pd.DataFrame({'Sequence': temp_list}, index=rep_seqs.index)
             na_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(
                 nan_indices)]['Sequence'].tolist()
             contam_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(

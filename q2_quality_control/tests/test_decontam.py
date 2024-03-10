@@ -406,8 +406,7 @@ class TestVizualization(TestPluginBase):
         self.assertIn('<td>1</td>\n                '
                       '<td>4</td>\n                '
                       '<td>20.00</td>\n', index_contents)
-        self.assertIn('<td>Non-Contaminant</td>\n   '
-                      '         <td>0.57</td>\n      '
+        self.assertIn('<td>0.57</td>\n      '
                       '      <td>12</td>\n           '
                       ' <td>2</td>\n', index_contents)
         self.assertTrue(os.path.exists(

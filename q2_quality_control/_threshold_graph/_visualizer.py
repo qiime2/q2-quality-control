@@ -14,7 +14,6 @@ import q2templates
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from q2_types.feature_data import DNAIterator
 
 _PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
 _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
@@ -45,6 +44,7 @@ TEMPLATES = pkg_resources.resource_filename(
 _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                        "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
                        "=nt&CMD=Put&QUERY=%s")
+
 
 def format_fasta(header, sequence):
     return f">{header}\n{sequence}\n"
@@ -100,7 +100,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         true_indices = []
         for true_or_false_index in contams.index:
             true_or_false = contams[true_or_false_index]
-            if (true_or_false == False):
+            if not true_or_false:
                 true_indices.append(true_or_false_index)
             else:
                 contam_indices.append(true_or_false_index)
@@ -121,13 +121,13 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             contam_rep_seqs = ["NNNNNNNNNNNNN"] * len(contam_indices)
 
         true_asvs_df = pd.DataFrame({'id': true_indices,
-                'Sequence': true_rep_seqs})
+                                     'Sequence': true_rep_seqs})
 
         na_asvs_df = pd.DataFrame({'id': nan_indices,
-                'Sequence': na_rep_seqs})
+                                   'Sequence': na_rep_seqs})
 
         contam_asvs_df = pd.DataFrame({'id': contam_indices,
-                'Sequence': contam_rep_seqs})
+                                       'Sequence': contam_rep_seqs})
 
         display_sequences = set()
         sequences = {}
@@ -173,7 +173,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                 sequences[row['id']] \
                     = {'url': _blast_url_template % str_seq,
                        'seq': str_seq,
-                       'contam_or_naw': 'Non-Contaminant',
+                       'contam_or_naw': 'Contaminant',
                        'p_val': df.loc[row['id'], 'p'],
                        'read_nums': read_nums.loc[row['id']],
                        'prevalence': (

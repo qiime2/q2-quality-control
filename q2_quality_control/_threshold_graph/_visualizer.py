@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from q2_types.feature_data import DNAIterator
-import skbio
 
 _PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
 _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
@@ -46,6 +45,9 @@ TEMPLATES = pkg_resources.resource_filename(
 _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                        "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
                        "=nt&CMD=Put&QUERY=%s")
+
+def format_fasta(header, sequence):
+    return f">{header}\n{sequence}\n"
 
 
 def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
@@ -98,7 +100,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         true_indices = []
         for true_or_false_index in contams.index:
             true_or_false = contams[true_or_false_index]
-            if (true_or_false is False):
+            if (true_or_false == False):
                 true_indices.append(true_or_false_index)
             else:
                 contam_indices.append(true_or_false_index)
@@ -118,17 +120,14 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             na_rep_seqs = ["NNNNNNNNNNNNN"] * len(nan_indices)
             contam_rep_seqs = ["NNNNNNNNNNNNN"] * len(contam_indices)
 
-        true_asvs_iter = DNAIterator((skbio.DNA(
-            true_rep_seqs[i], metadata={'id': true_indices[i]})
-            for i in range(0, len(true_indices))))
+        true_asvs_df = pd.DataFrame({'id': true_indices,
+                'Sequence': true_rep_seqs})
 
-        na_asvs_iter = DNAIterator((skbio.DNA(
-            na_rep_seqs[i], metadata={'id': nan_indices[i]})
-            for i in range(0, len(nan_indices))))
+        na_asvs_df = pd.DataFrame({'id': nan_indices,
+                'Sequence': na_rep_seqs})
 
-        contam_asvs_iter = DNAIterator((skbio.DNA(
-            contam_rep_seqs[i], metadata={'id': contam_indices[i]})
-            for i in range(0, len(contam_indices))))
+        contam_asvs_df = pd.DataFrame({'id': contam_indices,
+                'Sequence': contam_rep_seqs})
 
         display_sequences = set()
         sequences = {}
@@ -141,44 +140,44 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             contam_dest = 'contam.fasta'
             nan_dest = 'na_ASV_seqs.fasta'
         with open(os.path.join(output_dir, true_dest), 'w') as fh:
-            for sequence in true_asvs_iter:
-                skbio.io.write(sequence, format='fasta', into=fh)
-                str_seq = str(sequence)
-                display_sequences.add(sequence.metadata['id'])
-                sequences[sequence.metadata['id']] \
+            for index, row in true_asvs_df.iterrows():
+                fh.write(format_fasta(row['id'], row['Sequence']))
+                str_seq = str(row['Sequence'])
+                display_sequences.add(row['id'])
+                sequences[row['id']] \
                     = {'url': _blast_url_template % str_seq,
                        'seq': str_seq,
                        'contam_or_naw': 'Non-Contaminant',
-                       'p_val': df.loc[sequence.metadata['id'], 'p'],
-                       'read_nums': read_nums.loc[sequence.metadata['id']],
+                       'p_val': df.loc[row['id'], 'p'],
+                       'read_nums': read_nums.loc[row['id']],
                        'prevalence': (
-                               table[sequence.metadata['id']] != 0).sum()}
+                               table[row['id']] != 0).sum()}
                 # Add Nas to Non-contaminant sequence fasta
-                for sequence in na_asvs_iter:
-                    skbio.io.write(sequence, format='fasta', into=fh)
-                    str_seq = str(sequence)
-                    display_sequences.add(sequence.metadata['id'])
-                    sequences[sequence.metadata['id']] \
-                        = {'url': _blast_url_template % str_seq,
-                           'seq': str_seq,
-                           'contam_or_naw': 'Non-Contaminant',
-                           'p_val': df.loc[sequence.metadata['id'], 'p'],
-                           'read_nums': read_nums.loc[sequence.metadata['id']],
-                           'prevalence': (
-                                   table[sequence.metadata['id']] != 0).sum()}
+            for index, row in na_asvs_df.iterrows():
+                fh.write(format_fasta(row['id'], row['Sequence']))
+                str_seq = str(row['Sequence'])
+                display_sequences.add(row['id'])
+                sequences[row['id']] \
+                    = {'url': _blast_url_template % str_seq,
+                        'seq': str_seq,
+                        'contam_or_naw': 'Non-Contaminant',
+                        'p_val': df.loc[row['id'], 'p'],
+                        'read_nums': read_nums.loc[row['id']],
+                        'prevalence': (
+                                table[row['id']] != 0).sum()}
         with open(os.path.join(output_dir, contam_dest), 'w') as fh:
-            for sequence in contam_asvs_iter:
-                skbio.io.write(sequence, format='fasta', into=fh)
-                str_seq = str(sequence)
-                display_sequences.add(sequence.metadata['id'])
-                sequences[sequence.metadata['id']] \
+            for index, row in contam_asvs_df.iterrows():
+                fh.write(format_fasta(row['id'], row['Sequence']))
+                str_seq = str(row['Sequence'])
+                display_sequences.add(row['id'])
+                sequences[row['id']] \
                     = {'url': _blast_url_template % str_seq,
                        'seq': str_seq,
-                       'contam_or_naw': 'Contaminant',
-                       'p_val': df.loc[sequence.metadata['id'], 'p'],
-                       'read_nums': read_nums.loc[sequence.metadata['id']],
+                       'contam_or_naw': 'Non-Contaminant',
+                       'p_val': df.loc[row['id'], 'p'],
+                       'read_nums': read_nums.loc[row['id']],
                        'prevalence': (
-                               table[sequence.metadata['id']] != 0).sum()}
+                               table[row['id']] != 0).sum()}
         # with open(os.path.join(output_dir, nan_dest), 'w') as fh:
         sorted_keys = sorted(
             sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)

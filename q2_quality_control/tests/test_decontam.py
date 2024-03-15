@@ -7,9 +7,10 @@
 # ----------------------------------------------------------------------------
 import unittest
 import pandas as pd
+import pandas.testing as pdt
 import qiime2
+import qiime2.plugin.util
 import biom
-import skbio
 from qiime2.plugin.testing import TestPluginBase
 from q2_quality_control.decontam import (decontam_identify,
                                          decontam_remove)
@@ -119,65 +120,86 @@ class TestRemove(TestPluginBase):
 
     def setUp(self):
         super().setUp()
-        table = qiime2.Artifact.load(
-            self.get_data_path('expected/decon_default_ASV_table.qza'))
-        self.asv_table = table.view(qiime2.Metadata).to_dataframe()
-        id_table = qiime2.Artifact.load(
-            self.get_data_path('expected/decon_default_score_table.qza'))
-        self.identify_table = id_table.view(qiime2.Metadata)
-
-        seq_removal_table = qiime2.Artifact.load(
-            self.get_data_path('expected/remove_contam_test_table.qza'))
-        self.seq_removal_asv_table = seq_removal_table.view(
-            qiime2.Metadata).to_dataframe()
-        seq_removal_rep_seqs = qiime2.Artifact.load(
-            self.get_data_path('expected/remove_contam_rep_seqs.qza'))
-        self.rep_seq_removal_table = \
-            seq_removal_rep_seqs.view(qiime2.Metadata)
-        seq_removal_rep_seq_decontam_scores = qiime2.Artifact.load(
-            self.get_data_path(
-                'expected/remove_contam_test_identify_scores.qza'))
-        self.rep_seq_decon_scores =  \
-            seq_removal_rep_seq_decontam_scores.view(qiime2.Metadata)
+        self.input_table = pd.DataFrame(
+            [[1, 2, 3, 4, 5], [9, 10, 11, 12, 13]],
+            columns=['abc', 'def', 'jkl', 'mno', 'pqr'],
+            index=['sample-1', 'sample-2'])
+        self.input_seqs = pd.Series(
+            ['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG'],
+            index=['abc', 'def', 'jkl', 'mno', 'pqr'])
+        self.input_scores = pd.DataFrame(
+            [[13.0, 0.969179],
+             [16.0, 0.566067],
+             [25.0, 0.019475],
+             [10.0, 0.383949],
+             [13.0, 0.969179]],
+            index=['abc', 'def', 'jkl', 'mno', 'pqr'],
+            columns=['prev', 'p'])
 
     def test_remove(self):
-        rep_seq_output = qiime2.Artifact.load(
-            self.get_data_path('expected/output_remove_contam_rep_seqs.qza'))
-        self.rep_seq_output = rep_seq_output.view(
-            qiime2.Metadata).to_dataframe()
-        output_table = qiime2.Artifact.load(
-            self.get_data_path('expected/output_remove_contam_table.qza'))
-        self.rep_seq_output_table = output_table.view(
-            qiime2.Metadata).to_dataframe()
-        output_asv_table, output_rep_seqs = decontam_remove(
-            table=self.seq_removal_asv_table,
-            decontam_scores=self.rep_seq_decon_scores,
-            threshold=0.1,
-            rep_seqs=self.rep_seq_removal_table)
-        temp_table = output_asv_table.to_dataframe().transpose()
-        temp_table.index.name = 'id'
-        temp_table.columns = range(1, len(temp_table.columns) + 1)
-        self.rep_seq_output_table.columns = range(
-            1, len(self.rep_seq_output_table.columns) + 1)
-        exp_rep_seqs = list(
-            skbio.io.read(self.get_data_path('expected/output_dna_seqs.fasta'),
-                          'fasta', constructor=skbio.DNA))
-        for seq in exp_rep_seqs:
-            del seq.metadata['description']
+        exp_table = pd.DataFrame(
+            [[1, 2, 4, 5], [9, 10, 12, 13]],
+            columns=['abc', 'def', 'mno', 'pqr'],
+            index=['sample-1', 'sample-2'])
+        exp_seqs = pd.Series(['ACGT', 'TTTT', 'CCCC', 'GGG'],
+                             index=['abc', 'def', 'mno', 'pqr'])
 
-        with tempfile.TemporaryDirectory() as temp_dir_name:
-            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
-            expected_biom_fp = os.path.join(temp_dir_name,
-                                            'expected_output.tsv')
-            temp_table.to_csv(test_biom_fp, sep="\t")
-            self.rep_seq_output_table.to_csv(expected_biom_fp, sep="\t")
-            with open(test_biom_fp) as fh:
-                test_table = biom.Table.from_tsv(fh, None, None, None)
-            with open(expected_biom_fp) as th:
-                expecter_table = biom.Table.from_tsv(th, None, None, None)
-            self.assertEqual(test_table, expecter_table)
-            self.assertEqual(_sort_seqs(output_rep_seqs),
-                             _sort_seqs(exp_rep_seqs))
+        obs_table, obs_seqs = decontam_remove(
+            table=self.input_table,
+            decontam_scores=self.input_scores,
+            threshold=0.1,
+            rep_seqs=self.input_seqs)
+
+        pdt.assert_series_equal(obs_seqs, exp_seqs)
+        pdt.assert_frame_equal(obs_table, exp_table)
+
+    def test_remove_alt_threshold(self):
+        exp_table = pd.DataFrame(
+            [[1, 2, 5], [9, 10, 13]],
+            columns=['abc', 'def', 'pqr'],
+            index=['sample-1', 'sample-2'])
+        exp_seqs = pd.Series(['ACGT', 'TTTT', 'GGG'],
+                             index=['abc', 'def', 'pqr'])
+
+        obs_table, obs_seqs = decontam_remove(
+            table=self.input_table,
+            decontam_scores=self.input_scores,
+            threshold=0.383949,
+            rep_seqs=self.input_seqs)
+
+        pdt.assert_series_equal(obs_seqs, exp_seqs)
+        pdt.assert_frame_equal(obs_table, exp_table)
+
+    def test_remove_all(self):
+        exp_table = pd.DataFrame(
+            [], columns=[], index=['sample-1', 'sample-2'])
+        exp_seqs = pd.Series([], index=[])
+
+        obs_table, obs_seqs = decontam_remove(
+            table=self.input_table,
+            decontam_scores=self.input_scores,
+            threshold=1.0,
+            rep_seqs=self.input_seqs)
+
+        pdt.assert_series_equal(obs_seqs, exp_seqs, check_dtype=False)
+        pdt.assert_frame_equal(obs_table, exp_table, check_dtype=False)
+
+    def test_remove_none(self):
+        exp_table = pd.DataFrame(
+            [[1, 2, 3, 4, 5], [9, 10, 11, 12, 13]],
+            columns=['abc', 'def', 'jkl', 'mno', 'pqr'],
+            index=['sample-1', 'sample-2'])
+        exp_seqs = pd.Series(['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG'],
+                             index=['abc', 'def', 'jkl', 'mno', 'pqr'])
+
+        obs_table, obs_seqs = decontam_remove(
+            table=self.input_table,
+            decontam_scores=self.input_scores,
+            threshold=0.0,
+            rep_seqs=self.input_seqs)
+
+        pdt.assert_series_equal(obs_seqs, exp_seqs)
+        pdt.assert_frame_equal(obs_table, exp_table)
 
 
 class TestIdentify_mixed_names(TestPluginBase):

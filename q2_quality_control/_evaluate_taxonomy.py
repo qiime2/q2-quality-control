@@ -98,11 +98,14 @@ def _precision_recall_fscore(exp, obs, sample_weight=None):
 def _index_is_subset(series1, series2, name):
     ix1 = series1.index
     ix2 = series2.index
+
     if set(ix1) < set(ix2):
         raise ValueError(
             'Observed and expected ids do not match. Missing '
             'ids not found in {0} ids: {1}'.format(
-                name, set(ix1) - (set(ix2))))
+                name, set(ix2) - set(ix1)
+            )
+        )
 
 
 def _prf_to_dataframe(exp, obs, sample_weight=None, level_range=range(0, 7)):

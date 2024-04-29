@@ -13,8 +13,6 @@ import tempfile
 import subprocess
 import qiime2.util
 from ._utilities import _run_command
-from q2_types.feature_data import DNAIterator
-import skbio
 
 
 _WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
@@ -168,35 +166,22 @@ def decontam_identify(table: pd.DataFrame,
         return _decontam_identify_helper(track_fp, method)
 
 
-def _filepath_to_sample_single(fp):
-    return fp.rsplit('_', 4)[0]
-
-
 def decontam_remove(decontam_scores: qiime2.Metadata,
                     table: pd.DataFrame,
-                    rep_seqs: qiime2.Metadata,
                     threshold: float = 0.1
-                    ) -> (biom.Table, DNAIterator):
+                    ) -> (biom.Table):
     _check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         df = decontam_scores.to_dataframe()
-        rep_seqs_df = rep_seqs.to_dataframe()
         df.loc[(df['p'].astype(float) <= threshold),
                'contaminant_seq'] = 'True'
         df.loc[(df['p'].astype(float) > threshold),
                'contaminant_seq'] = 'False'
         df = df[df.contaminant_seq == 'True']
         table = table.drop(df.index, axis=1)
-        rep_seqs_df = rep_seqs_df.drop(df.index)
         output = os.path.join(temp_dir_name, 'temp.tsv.biom')
         temp_transposed_table = table.transpose()
         temp_transposed_table.to_csv(output, sep="\t")
         with open(output) as fh:
             no_contam_table = biom.Table.from_tsv(fh, None, None, None)
-            index_list = rep_seqs_df.index.tolist()
-            values_list = rep_seqs_df.values.tolist()
-            rep_sequences = DNAIterator((skbio.DNA(values_list[i][0],
-                                        metadata={'id': index_list[i]})
-                                        for i in range(
-                                        0, len(rep_seqs_df.index))))
-        return no_contam_table, rep_sequences
+        return no_contam_table

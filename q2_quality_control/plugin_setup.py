@@ -360,26 +360,20 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=decontam_remove,
     inputs={'decontam_scores': FeatureData[DecontamScore],
-            'table': FeatureTable[Frequency],
-            'rep_seqs': FeatureData[Sequence]},
+            'table': FeatureTable[Frequency]},
     parameters={'threshold': Float},
-    outputs=[('filtered_table', FeatureTable[Frequency]),
-             ('filtered_rep_seqs', FeatureData[Sequence])],
+    outputs=[('filtered_table', FeatureTable[Frequency])],
     input_descriptions={
         'decontam_scores': ('Output table from decontam identify'),
         'table': ('ASV or OTU table which contaminate sequences '
-                  'will be identified from'),
-        'rep_seqs': ('Representative Sequences table which contaminate '
-                     'seqeunces will be removed from')
+                  'will be identified from')
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores')
     },
     output_descriptions={
         'filtered_table': ('The resulting feature table of scores '
-                           'once contaminants are removed'),
-        'filtered_rep_seqs': ('The resulting rep_seq table of '
-                              'scores once contaminants are removed')
+                           'once contaminants are removed')
 
     },
     name='Removes contaminant',

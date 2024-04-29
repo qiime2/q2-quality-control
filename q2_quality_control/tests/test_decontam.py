@@ -9,7 +9,6 @@ import unittest
 import pandas as pd
 import qiime2
 import biom
-import skbio
 from qiime2.plugin.testing import TestPluginBase
 from q2_quality_control.decontam import (decontam_identify,
                                          decontam_remove)
@@ -143,44 +142,38 @@ class TestRemove(TestPluginBase):
         self.rep_seq_decon_scores =  \
             seq_removal_rep_seq_decontam_scores.view(qiime2.Metadata)
 
-    def test_remove(self):
-        rep_seq_output = qiime2.Artifact.load(
-            self.get_data_path('expected/output_remove_contam_rep_seqs.qza'))
-        self.rep_seq_output = rep_seq_output.view(
-            qiime2.Metadata).to_dataframe()
-        output_table = qiime2.Artifact.load(
-            self.get_data_path('expected/output_remove_contam_table.qza'))
-        self.rep_seq_output_table = output_table.view(
-            qiime2.Metadata).to_dataframe()
-        output_asv_table, output_rep_seqs = decontam_remove(
-            table=self.seq_removal_asv_table,
-            decontam_scores=self.rep_seq_decon_scores,
-            threshold=0.1,
-            rep_seqs=self.rep_seq_removal_table)
-        temp_table = output_asv_table.to_dataframe().transpose()
-        temp_table.index.name = 'id'
-        temp_table.columns = range(1, len(temp_table.columns) + 1)
-        self.rep_seq_output_table.columns = range(
-            1, len(self.rep_seq_output_table.columns) + 1)
-        exp_rep_seqs = list(
-            skbio.io.read(self.get_data_path('expected/output_dna_seqs.fasta'),
-                          'fasta', constructor=skbio.DNA))
-        for seq in exp_rep_seqs:
-            del seq.metadata['description']
+    class TestRemove(TestPluginBase):
+        package = 'q2_quality_control.tests'
 
-        with tempfile.TemporaryDirectory() as temp_dir_name:
-            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
-            expected_biom_fp = os.path.join(temp_dir_name,
-                                            'expected_output.tsv')
-            temp_table.to_csv(test_biom_fp, sep="\t")
-            self.rep_seq_output_table.to_csv(expected_biom_fp, sep="\t")
-            with open(test_biom_fp) as fh:
-                test_table = biom.Table.from_tsv(fh, None, None, None)
-            with open(expected_biom_fp) as th:
-                expecter_table = biom.Table.from_tsv(th, None, None, None)
-            self.assertEqual(test_table, expecter_table)
-            self.assertEqual(_sort_seqs(output_rep_seqs),
-                             _sort_seqs(exp_rep_seqs))
+        def setUp(self):
+            super().setUp()
+            table = qiime2.Artifact.load(
+                self.get_data_path('expected/decon_default_ASV_table.qza'))
+            self.asv_table = table.view(qiime2.Metadata).to_dataframe()
+            id_table = qiime2.Artifact.load(
+                self.get_data_path('expected/decon_default_score_table.qza'))
+            self.identify_table = id_table.view(qiime2.Metadata)
+
+        def test_remove(self):
+            exp_table = pd.read_csv(
+                self.get_data_path('expected/no-contaminant-asv-table.tsv'),
+                sep='\t', index_col=0)
+            output_asv_table = decontam_remove(
+                table=self.asv_table,
+                decontam_scores=self.identify_table,
+                threshold=0.1)
+            temp_table = output_asv_table.to_dataframe()
+            with tempfile.TemporaryDirectory() as temp_dir_name:
+                test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+                expected_biom_fp = os.path.join(temp_dir_name,
+                                                'expected_output.tsv')
+                temp_table.to_csv(test_biom_fp, sep="\t")
+                exp_table.to_csv(expected_biom_fp, sep="\t")
+                with open(test_biom_fp) as fh:
+                    test_table = biom.Table.from_tsv(fh, None, None, None)
+                with open(expected_biom_fp) as th:
+                    expecter_table = biom.Table.from_tsv(th, None, None, None)
+                self.assertEqual(test_table, expecter_table)
 
 
 class TestIdentify_mixed_names(TestPluginBase):

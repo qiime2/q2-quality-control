@@ -30,7 +30,6 @@
 
   {% for index in range(image_paths|length) %}
 
-        {% set display_sequences = display_sequences_arr[index] %}
         {% set data = data_arr[index] %}
         {% set keys = table_keys_arr[index] %}
 
@@ -71,11 +70,10 @@
       </div>
 
 
-        {% if subset_id|length <= 1 %}
+        {% if subset_id|length <= 1 and rep_seq_indicator|length <= 1 %}
   <div class="row">
     <div class="col-lg-12">
       <h3>Decontam Sequence Table</h3>
-      {% if rep_seq_indicator|length <= 1 %}
       <p>
         To BLAST a sequence against the NCBI nt database, click the
         sequence and then click the <i>View report</i>
@@ -90,7 +88,6 @@
           </a>
         </center></p>
       </div>
-      {% endif %}
       <p>
         <i>Click on a Column header to sort the table.</i>
       </p>

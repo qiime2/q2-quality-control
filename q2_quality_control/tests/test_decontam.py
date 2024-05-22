@@ -413,6 +413,14 @@ class TestVizualization(TestPluginBase):
                            rep_seqs=self.input_seqs, weighted=False)
         self.assertScore_Viz_Basics(self.output_dir)
 
+    def test_defaults_no_reps(self):
+        decontam_score_viz(output_dir=self.output_dir,
+                           table=self.input_table,
+                           decontam_scores=self.input_scores,
+                           threshold=0.1,
+                           rep_seqs=None, weighted=False)
+        self.assertScore_Viz_Basics(self.output_dir)
+
 
 if __name__ == '__main__':
     unittest.main()

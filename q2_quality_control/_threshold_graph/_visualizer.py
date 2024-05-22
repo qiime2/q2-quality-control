@@ -73,7 +73,10 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                        rep_seqs: pd.Series = None,
                        threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
+
+    #checks inputs
     _check_inputs(**locals())
+
     # initalizes dictionaries for iteration
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
@@ -144,12 +147,12 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             na_rep_seqs = ["NNNNNNNNNNNNN"] * len(nan_indices)
             contam_rep_seqs = ["NNNNNNNNNNNNN"] * len(contam_indices)
 
+
+        #legacy code splitting na and true asvs kept here for future iterations of plugin
         true_asvs_df = pd.DataFrame({'id': true_indices,
                                      'Sequence': true_rep_seqs})
-
         na_asvs_df = pd.DataFrame({'id': nan_indices,
                                    'Sequence': na_rep_seqs})
-
         contam_asvs_df = pd.DataFrame({'id': contam_indices,
                                        'Sequence': contam_rep_seqs})
 
@@ -259,6 +262,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             plt.setp([p for p, b in zip(patches, bins)
                       if b >= threshold], color='b', edgecolor="white",
                      label=blue_lab)
+
         #threshold line plotting
         plt.axvline(threshold, ymin=-.1, ymax=1.1, color='k',
                     linestyle='dashed', linewidth=1, label="Threshold")
@@ -266,7 +270,8 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         by_label = dict(zip(labels, handles))
         plt.legend(by_label.values(), by_label.keys(),
                    loc="upper left", framealpha=1)
-        #code for saving plot as PNG for future addtion
+
+        #code for saving plot as PNG for render, legacy svg code kept for future potential additon of .svg file
         subset_key_arr.append(key)
         image_prefix = key + '-'
         for ext in ['png', 'svg']:
@@ -295,6 +300,8 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         nan_fasta_dest.append(nan_dest)
         sorted_key_arr.append(sorted_keys)
         feature_or_read_arr.append(feature_or_read)
+
+    #intializes template and passes data arrays to template for render
     index_fp = os.path.join(TEMPLATES, 'index.html')
     q2templates.render(index_fp, output_dir, context={
             'contamer': contam_val_arr,
@@ -315,6 +322,8 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             'table_keys_arr': sorted_key_arr,
             'feat_or_read': feature_or_read_arr,
     })
+
+    #sortable JS code 
     js = os.path.join(
         TEMPLATES, 'js', 'tsorter.min.js')
     os.mkdir(os.path.join(output_dir, 'js'))

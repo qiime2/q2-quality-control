@@ -78,12 +78,9 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    # Sets rep seq flags if rep_seq indciator is >1 then the seqeunces are printed in table otherwise no sequences are printed
+    # Sets rep seq flags if rep_seq indciator is >1 then the seqeunces are printed in table otherwise no sequences are printed and temp lists
     rep_seq_indicator = ["Are there rep seqs?"]
     temp_list = []
-    if rep_seqs is not None:
-        for seq in rep_seqs:
-            temp_list.append(str(seq))
 
     # intializes arrays to pass data to the html
     image_paths_arr = []
@@ -131,6 +128,8 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
 
         #if rep reqs are not found then dummy variables are initalized otherwise individual seqeunce objects are inalized for true seqe, NA seqs, and contaminant seqs
         if rep_seqs is not None:
+            for seq in rep_seqs:
+                temp_list.append(str(seq))
             rep_seqs_df = pd.DataFrame({'Sequence': temp_list},
                                        index=rep_seqs.index)
             na_rep_seqs = rep_seqs_df[rep_seqs_df.index.isin(

@@ -31,6 +31,7 @@ _valid_inputs = {
 }
 
 
+#checks inputs
 def _check_inputs(**kwargs):
     for param, arg in kwargs.items():
         check_is_valid, explanation = _valid_inputs[param]
@@ -41,15 +42,32 @@ def _check_inputs(**kwargs):
 
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
-_blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
-                       "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
-                       "=nt&CMD=Put&QUERY=%s")
 
+#generates seqeunce table and fasta files for each assignment
+def write_table_fastas(output_dir, dest, display_sequences, sequences, df, desig, decontam_scores, read_nums, table):
+    _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
+                           "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
+                           "=nt&CMD=Put&QUERY=%s")
+    with open(os.path.join(output_dir, dest), 'w') as fh:
+        for index, row in df.iterrows():
+            fh.write(format_fasta(row['id'], row['Sequence']))
+            str_seq = str(row['Sequence'])
+            display_sequences.add(row['id'])
+            sequences[row['id']] \
+                = {'url': _blast_url_template % str_seq,
+                   'seq': str_seq,
+                   'contam_or_naw': desig,
+                   'p_val': decontam_scores.loc[row['id'], 'p'],
+                   'read_nums': read_nums.loc[row['id']],
+                   'prevalence': (
+                           table[row['id']] != 0).sum()}
+    return [display_sequences, sequences]
 
+#formats fasta files appripriatly
 def format_fasta(header, sequence):
     return f">{header}\n{sequence}\n"
 
-
+#main algorithm
 def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                        table: pd.DataFrame,
                        rep_seqs: pd.Series = None,
@@ -60,11 +78,12 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    # Sets rep seq flags
+    # Sets rep seq flags if rep_seq indciator is >1 then the seqeunces are printed in table otherwise no sequences are printed
     rep_seq_indicator = ["Are there rep seqs?"]
     temp_list = []
-    for seq in rep_seqs:
-        temp_list.append(str(seq))
+    if rep_seqs is not None:
+        for seq in rep_seqs:
+            temp_list.append(str(seq))
 
     # intializes arrays to pass data to the html
     image_paths_arr = []
@@ -84,27 +103,33 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     sorted_key_arr = []
     feature_or_read_arr = []
 
+    #iterates through tables and keys of ASV tables and decontam score tables
     for key in table_dict.keys():
         table = table_dict[key]
         decontam_scores = decontam_scores_dict[key]
-        df = decontam_scores
-        if df['p'].isna().all():
+        if decontam_scores['p'].isna().all():
             raise ValueError("No p-values exist for the data provided.")
 
+        #pull out relevant data from objs
         read_nums = table.sum(axis='rows')
-        p_vals = df['p'].dropna()
+        p_vals = decontam_scores['p'].dropna()
         filt_read_nums = read_nums[p_vals.index]
 
+        #start ASV contaminant differentiation
         contams = (p_vals < threshold)
         contam_indices = []
         true_indices = []
+
+        #parses index for contaminant identification
         for true_or_false_index in contams.index:
             true_or_false = contams[true_or_false_index]
             if not true_or_false:
                 true_indices.append(true_or_false_index)
             else:
                 contam_indices.append(true_or_false_index)
-        nan_indices = df[df['p'].isna()].index.tolist()
+        nan_indices = decontam_scores[decontam_scores['p'].isna()].index.tolist()
+
+        #if rep reqs are not found then dummy variables are initalized otherwise individual seqeunce objects are inalized for true seqe, NA seqs, and contaminant seqs
         if rep_seqs is not None:
             rep_seqs_df = pd.DataFrame({'Sequence': temp_list},
                                        index=rep_seqs.index)
@@ -129,6 +154,8 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         contam_asvs_df = pd.DataFrame({'id': contam_indices,
                                        'Sequence': contam_rep_seqs})
 
+
+        #initzalized seqeunces for display in table and fasta downloads
         display_sequences = set()
         sequences = {}
         if len(table_dict.keys()) > 1:
@@ -139,56 +166,31 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             true_dest = 'non_contam.fasta'
             contam_dest = 'contam.fasta'
             nan_dest = 'na_ASV_seqs.fasta'
-        with open(os.path.join(output_dir, true_dest), 'w') as fh:
-            for index, row in true_asvs_df.iterrows():
-                fh.write(format_fasta(row['id'], row['Sequence']))
-                str_seq = str(row['Sequence'])
-                display_sequences.add(row['id'])
-                sequences[row['id']] \
-                    = {'url': _blast_url_template % str_seq,
-                       'seq': str_seq,
-                       'contam_or_naw': 'Non-Contaminant',
-                       'p_val': df.loc[row['id'], 'p'],
-                       'read_nums': read_nums.loc[row['id']],
-                       'prevalence': (
-                               table[row['id']] != 0).sum()}
-                # Add Nas to Non-contaminant sequence fasta
-            for index, row in na_asvs_df.iterrows():
-                fh.write(format_fasta(row['id'], row['Sequence']))
-                str_seq = str(row['Sequence'])
-                display_sequences.add(row['id'])
-                sequences[row['id']] \
-                    = {'url': _blast_url_template % str_seq,
-                        'seq': str_seq,
-                        'contam_or_naw': 'Non-Contaminant',
-                        'p_val': df.loc[row['id'], 'p'],
-                        'read_nums': read_nums.loc[row['id']],
-                        'prevalence': (
-                                table[row['id']] != 0).sum()}
-        with open(os.path.join(output_dir, contam_dest), 'w') as fh:
-            for index, row in contam_asvs_df.iterrows():
-                fh.write(format_fasta(row['id'], row['Sequence']))
-                str_seq = str(row['Sequence'])
-                display_sequences.add(row['id'])
-                sequences[row['id']] \
-                    = {'url': _blast_url_template % str_seq,
-                       'seq': str_seq,
-                       'contam_or_naw': 'Contaminant',
-                       'p_val': df.loc[row['id'], 'p'],
-                       'read_nums': read_nums.loc[row['id']],
-                       'prevalence': (
-                               table[row['id']] != 0).sum()}
-        # with open(os.path.join(output_dir, nan_dest), 'w') as fh:
+
+        #merge true and NA dfs
+        merged_df = pd.concat([true_asvs_df, na_asvs_df], ignore_index=True)
+
+        #generate repseq table and fasta for non contaminants
+        ret_arr = write_table_fastas(output_dir, true_dest, display_sequences, sequences, merged_df, "Non-Contaminant", decontam_scores, read_nums, table)
+        display_sequences = ret_arr[0]
+        sequences = ret_arr[1]
+
+        #generate repseq table and fasta for contaminants
+        ret_arr = write_table_fastas(output_dir, contam_dest, display_sequences, sequences, contam_asvs_df, "Contaminant", decontam_scores, read_nums, table)
+        display_sequences = ret_arr[0]
+        sequences = ret_arr[1]
+
+        #sorts sequences to be highest read nums first
         sorted_keys = sorted(
             sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)
 
+        #calculates percentage of contaminant asvs, true and contaminant asv feature nums
         contam_asvs = contams.sum()
         true_asvs = len(contams) - contam_asvs
-        unknown_asvs = len(df['p']) - true_asvs - contam_asvs
+        unknown_asvs = len(decontam_scores['p']) - true_asvs - contam_asvs
         percent_asvs = contam_asvs / (
                 contam_asvs + true_asvs + unknown_asvs) * 100
         true_asvs = unknown_asvs + true_asvs
-
         contam_reads = filt_read_nums[contams[contams].index].sum()
         true_reads = filt_read_nums.sum() - contam_reads
         unknown_reads = read_nums.sum() - true_reads - contam_reads
@@ -196,6 +198,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                 contam_reads + true_reads + unknown_reads) * 100
         true_reads = unknown_reads + true_reads
 
+        #bin width and different color calculations for histogram
         binwidth = bin_size
         bin_diff = threshold - (binwidth * int(threshold/binwidth))
         temp_dec = decimal.Decimal(str(binwidth))
@@ -211,6 +214,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
         ])
 
+        #weighted histogram determination for graph
         if weighted is True:
             y_lab = 'Number of Reads'
             blue_lab = "Non-Contaminant Reads"
@@ -256,14 +260,14 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             plt.setp([p for p, b in zip(patches, bins)
                       if b >= threshold], color='b', edgecolor="white",
                      label=blue_lab)
-
+        #threshold line plotting
         plt.axvline(threshold, ymin=-.1, ymax=1.1, color='k',
                     linestyle='dashed', linewidth=1, label="Threshold")
         handles, labels = plt.gca().get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
         plt.legend(by_label.values(), by_label.keys(),
                    loc="upper left", framealpha=1)
-
+        #code for saving plot as PNG for future addtion
         subset_key_arr.append(key)
         image_prefix = key + '-'
         for ext in ['png', 'svg']:

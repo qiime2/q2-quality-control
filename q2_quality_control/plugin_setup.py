@@ -28,7 +28,6 @@ from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
 citations = Citations.load('citations.bib', package='q2_quality_control')
 
 plugin = Plugin(
-
     name='quality-control',
     version=q2_quality_control.__version__,
     website='https://github.com/qiime2/q2-quality-control',

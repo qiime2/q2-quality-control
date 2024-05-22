@@ -171,13 +171,11 @@ def decontam_remove(decontam_scores: pd.DataFrame,
                     threshold: float = 0.1
                     ) -> (pd.DataFrame, pd.Series):
     _check_inputs(**locals())
-    with tempfile.TemporaryDirectory() as temp_dir_name:
-        rep_seqs_df = rep_seqs
-        decontam_scores['contaminant_seq'] = \
-            decontam_scores['p'].astype(float) <= threshold
+    decontam_scores['contaminant_seq'] = \
+        decontam_scores['p'].astype(float) <= threshold
 
-        decontam_scores = decontam_scores[decontam_scores['contaminant_seq']]
-        table.drop(decontam_scores.index, axis=1, inplace=True)
-        rep_seqs_df.drop(decontam_scores.index, inplace=True)
+    decontam_scores = decontam_scores[decontam_scores['contaminant_seq']]
+    table.drop(decontam_scores.index, axis=1, inplace=True)
+    rep_seqs.drop(decontam_scores.index, inplace=True)
 
-        return table, rep_seqs_df
+    return table, rep_seqs

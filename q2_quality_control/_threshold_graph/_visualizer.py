@@ -103,8 +103,8 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         contams = (p_vals < threshold)
 
         # parses index for contaminant identification
-        true_indices = contams[contams is False].index
-        contam_indices = contams[contams is True].index
+        true_indices = contams[contams == False].index
+        contam_indices = contams[contams == True].index
         nan_indices = decontam_scores[
             decontam_scores['p'].isna()].index.tolist()
 

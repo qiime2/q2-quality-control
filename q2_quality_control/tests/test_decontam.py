@@ -121,7 +121,7 @@ def _sort_seqs(seqs):
 
 
 class TestRemove(TestPluginBase):
-        package = 'q2_quality_control.tests'
+    package = 'q2_quality_control.tests'
 
     def setUp(self):
         super().setUp()

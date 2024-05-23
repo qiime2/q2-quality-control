@@ -53,7 +53,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
 
     # TODO: Replace rep_seq_indicator to a boolean value
     # Sets rep seq flags if rep_seq indciator is >1 then the sequences are printed in table otherwise no sequences are printed and temp lists
-    rep_seq_indicator = ["Are there rep seqs?"]
+    rep_seq_indicator = True
 
     # initializes arrays to pass data to the html
     image_paths_arr = [] #array for image paths for render on template (length 1 when running base decontam-score-viz)
@@ -104,7 +104,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                     # TODO: describe the case where you'd end up here in a comment
                     pass
         else:
-            rep_seq_indicator.append("Nope there are not")
+            rep_seq_indicator = False
 
         #initialized sequences for display in table and fasta downloads
         sequences = {}

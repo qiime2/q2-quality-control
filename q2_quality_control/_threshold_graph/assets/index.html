@@ -70,7 +70,7 @@
       </div>
 
 <!-- Table in this section based off of table in q2-dada2 vizualizer-->
-        {% if subset_id|length <= 1 and rep_seq_indicator|length <= 1 %}
+        {% if subset_id|length <= 1 and rep_seq_indicator == True %}
   <div class="row">
     <div class="col-lg-12">
       <h3>Decontam Sequence Table</h3>
@@ -99,7 +99,7 @@
             <th data-tsorter="text">P-Score</th>
             <th data-tsorter="numeric">Abundance</th>
             <th data-tsorter="numeric">Prevalance</th>
-            {% if rep_seq_indicator|length <= 1 %}
+            {% if rep_seq_indicator == True %}
             <th data-tsorter="text">Sequence</th>
             {% endif %}
           </tr>
@@ -113,7 +113,7 @@
             <td>{{ data[sequence].p_val | round(2, 'common')}}</td>
             <td>{{ data[sequence].read_nums | int }}</td>
             <td>{{ data[sequence].prevalence | int }}</td>
-            {% if rep_seq_indicator|length <= 1 %}
+            {% if rep_seq_indicator == True %}
             <td><samp><a target="_blank" href="{{ data[sequence].url }}" rel="noopener noreferrer">{{ data[sequence].seq }}</a></samp></td>
             {% endif %}
             {% else %}
@@ -145,7 +145,7 @@
         
               <div class="row">
           <div class="col-lg-12">
-            {% if rep_seq_indicator|length <= 1 %}
+            {% if rep_seq_indicator == True %}
             <div class="container">
               <p><center>
                 <a class="btn btn-default" href="{{ true_fastas[index] }}" target="_blank" rel="noopener noreferrer">

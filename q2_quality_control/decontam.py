@@ -141,7 +141,6 @@ def decontam_remove(decontam_scores: pd.DataFrame,
                     rep_seqs: pd.Series,
                     threshold: float = 0.1
                     ) -> (pd.DataFrame, pd.Series):
-    _check_inputs(**locals())
     decontam_scores['contaminant_seq'] = \
         decontam_scores['p'].astype(float) <= threshold
 

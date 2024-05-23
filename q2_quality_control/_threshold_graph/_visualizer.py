@@ -53,11 +53,9 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    # TODO: Replace rep_seq_indicator to a boolean value
-    # Sets rep seq flags if rep_seq indciator is >1 then
-    # the sequences are printed in table otherwise no sequences are
-    # printed and temp lists
-    rep_seq_indicator = True
+    # Indicates whether sequences are provided, and therefore 
+    # whether a section should be created for them in the viz
+    rep_seq_indicator = rep_seqs is not None
 
     # initializes arrays to pass data to the html
     image_paths_arr = []  # array for image paths for render on template
@@ -113,7 +111,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         # objects are inalized for true seqe, and contaminant seqs
         contam_rep_seqs = []
         true_rep_seqs = []
-        if rep_seqs is not None:
+        if rep_seq_indicator:
             for seq in rep_seqs:
                 if seq.metadata['id'] in contam_indices:
                     contam_rep_seqs.append(seq)
@@ -126,8 +124,6 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                     # the repseq obj is never subset and will cause an
                     # else statment is used
                     pass
-        else:
-            rep_seq_indicator = False
 
         # initialized sequences for display in table and fasta downloads
         sequences = {}

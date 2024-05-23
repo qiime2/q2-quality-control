@@ -14,6 +14,11 @@ import biom
 from qiime2.plugin.testing import TestPluginBase
 from q2_quality_control.decontam import (decontam_identify,
                                          decontam_remove)
+from skbio.sequence import DNA
+
+from q2_quality_control._threshold_graph._visualizer import (
+    decontam_score_viz)
+
 import os
 import tempfile
 
@@ -388,6 +393,64 @@ class TestIdentify_more_names(TestPluginBase):
             with open(expected_biom_fp) as th:
                 expecter_table = biom.Table.from_tsv(th, None, None, None)
             self.assertEqual(test_table, expecter_table)
+
+
+class TestVizualization(TestPluginBase):
+    package = 'q2_quality_control.tests'
+
+    def setUp(self):
+        super().setUp()
+        self.input_table = {'test_dict': pd.DataFrame(
+            [[1, 2, 3, 4, 5], [9, 10, 11, 12, 13]],
+            columns=['abc', 'def', 'jkl', 'mno', 'pqr'],
+            index=['sample-1', 'sample-2'])}
+        temp_list = []
+        seqs = ['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG']
+        indexes = ['abc', 'def', 'jkl', 'mno', 'pqr']
+        for i in range(len(seqs)):
+            temp_list.append(DNA(seqs[i], metadata={'id': indexes[i]}))
+        self.input_seqs = temp_list
+        self.input_scores = {'test_dict': pd.DataFrame(
+            [[13.0, 0.969179],
+             [16.0, 0.566067],
+             [25.0, 0.019475],
+             [10.0, 0.383949],
+             [13.0, 0.969179]],
+            index=['abc', 'def', 'jkl', 'mno', 'pqr'],
+            columns=['prev', 'p'])}
+        self.output_dir_obj = tempfile.TemporaryDirectory(
+                prefix='q2-quality-control-decontam-test-temp-')
+        self.output_dir = self.output_dir_obj.name
+
+    def tearDown(self):
+        self.output_dir_obj.cleanup()
+
+    def assertScore_Viz_Basics(self, viz_dir):
+        index_fp = os.path.join(viz_dir, 'index.html')
+        self.assertTrue(os.path.exists(index_fp))
+        with open(index_fp, 'r') as fh:
+            index_contents = fh.read()
+        self.assertIn('<td>1</td>\n                '
+                      '<td>4</td>\n                '
+                      '<td>20.00</td>\n', index_contents)
+        self.assertTrue(os.path.exists(
+            os.path.join(viz_dir, 'test_dict-identify-table-histogram.png')))
+
+    def test_defaults(self):
+        decontam_score_viz(output_dir=self.output_dir,
+                           table=self.input_table,
+                           decontam_scores=self.input_scores,
+                           threshold=0.1,
+                           rep_seqs=self.input_seqs, weighted=False)
+        self.assertScore_Viz_Basics(self.output_dir)
+
+    def test_defaults_no_reps(self):
+        decontam_score_viz(output_dir=self.output_dir,
+                           table=self.input_table,
+                           decontam_scores=self.input_scores,
+                           threshold=0.1,
+                           rep_seqs=None, weighted=False)
+        self.assertScore_Viz_Basics(self.output_dir)
 
 
 if __name__ == '__main__':

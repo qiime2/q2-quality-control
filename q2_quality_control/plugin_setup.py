@@ -28,6 +28,7 @@ from ._stats import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
 citations = Citations.load('citations.bib', package='q2_quality_control')
 
 plugin = Plugin(
+
     name='quality-control',
     version=q2_quality_control.__version__,
     website='https://github.com/qiime2/q2-quality-control',
@@ -361,7 +362,7 @@ plugin.methods.register_function(
     inputs={'decontam_scores': FeatureData[DecontamScore],
             'table': FeatureTable[Frequency],
             'rep_seqs': FeatureData[Sequence]},
-    parameters={'threshold': Float},
+    parameters={'threshold': Float % Range(0.0, 1.0, inclusive_end=True)},
     outputs=[('filtered_table', FeatureTable[Frequency]),
              ('filtered_rep_seqs', FeatureData[Sequence])],
     input_descriptions={
@@ -389,12 +390,13 @@ plugin.visualizers.register_function(
     function=decontam_score_viz,
     inputs={
         'decontam_scores': Collection[FeatureData[DecontamScore]],
-        'table': Collection[FeatureTable[Frequency]]
+        'table': Collection[FeatureTable[Frequency]],
+        'rep_seqs': FeatureData[Sequence]
     },
     parameters={
-        'threshold':  Float,
+        'threshold':  Float % Range(0.0, 1.0, inclusive_end=True),
         'weighted': Bool,
-        'bin_size': Float
+        'bin_size': Float % Range(0.0, 1.0, inclusive_end=True),
     },
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',
@@ -402,7 +404,9 @@ plugin.visualizers.register_function(
         'decontam_scores': 'Output from decontam identify '
                            'to be visualized',
         'table': 'Raw OTU/ASV table that was used '
-                 'as input to decontam-identify'
+                 'as input to decontam-identify',
+        'rep_seqs': ('Representative Sequences table which contaminate '
+                     'sequences will be removed from')
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores'),
@@ -415,7 +419,8 @@ plugin.visualizers.register_function(
 # Heirarchical Decontam format Pipeline
 plugin.pipelines.register_function(
     function=decontam_identify_batches,
-    inputs={'table': FeatureTable[Frequency]},
+    inputs={'table': FeatureTable[Frequency],
+            'rep_seqs': FeatureData[Sequence]},
     parameters={'metadata': Metadata,
                 'split_column': Str,
                 'method': Str % Choices(_DECON_METHOD_OPT),
@@ -433,7 +438,9 @@ plugin.pipelines.register_function(
              ],
     input_descriptions={
         'table': ('Feature table which contaminate sequences '
-                  'will be identified from')
+                  'will be identified from'),
+        'rep_seqs': ('Representative Sequences table which contaminate '
+                     'seqeunces will be removed from')
     },
     parameter_descriptions={
         'metadata': ('metadata file indicating which samples in the '

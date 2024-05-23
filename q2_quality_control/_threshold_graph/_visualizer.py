@@ -7,84 +7,167 @@
 # ----------------------------------------------------------------------------
 import os.path
 import pkg_resources
+import shutil
 
 import decimal
 import q2templates
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import qiime2
-
-_PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
-_BOOLEAN = (lambda x: type(x) is bool, 'True or False')
-_PRESENT = (lambda x: x is not None, '')
-# Better to choose to skip, than to implicitly ignore things that KeyError
-_SKIP = (lambda x: True, '')
-_valid_inputs = {
-    'output_dir': _SKIP,
-    'table': _SKIP,
-    'decontam_scores': _SKIP,
-    'threshold': _PER_NUM,
-    'bin_size': _PER_NUM,
-    'weighted': _BOOLEAN,
-}
-
-
-def _check_inputs(**kwargs):
-    for param, arg in kwargs.items():
-        check_is_valid, explanation = _valid_inputs[param]
-        if not check_is_valid(arg):
-            raise ValueError('Argument to %r was %r, should be %s.'
-                             % (param, arg, explanation))
+from q2_types.feature_data import DNAIterator
 
 
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
 
 
-def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
-                       table: pd.DataFrame, threshold: float = 0.1,
+# generates sequence table and fasta files for each assignment
+def _write_table_fastas(output_dir, dest, sequences, seq_list,
+                        desig, decontam_scores, read_nums, table):
+    _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
+                           "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
+                           "=nt&CMD=Put&QUERY=%s")
+    with open(os.path.join(output_dir, dest), 'w') as fh:
+        for seq in seq_list:
+            seq.write(fh)
+            str_seq = str(seq)
+            sequences[seq.metadata['id']] \
+                = {'url': _blast_url_template % str_seq,
+                   'seq': str_seq,
+                   'contam_or_naw': desig,
+                   'p_val': decontam_scores.loc[seq.metadata['id'], 'p'],
+                   'read_nums': read_nums.loc[seq.metadata['id']],
+                   'prevalence': (
+                           table[seq.metadata['id']] != 0).sum()}
+    return sequences
+
+
+# main algorithm
+def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
+                       table: pd.DataFrame,
+                       rep_seqs: DNAIterator = None,
+                       threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
-    _check_inputs(**locals())
-    # initalizes dictionaries for iteration
+
+    # initializes dictionaries for iteration
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    # intializes arrays to pass data to the html
-    image_paths_arr = []
-    subset_key_arr = []
-    contam_val_arr = []
-    true_val_arr = []
-    unknown_val_arr = []
-    percent_val_arr = []
-    gray_lab_arr = []
-    red_lab_arr = []
-    blue_lab_arr = []
+    # Indicates whether sequences are provided, and therefore
+    # whether a section should be created for them in the viz
+    rep_seq_indicator = rep_seqs is not None
 
+    # initializes arrays to pass data to the html
+    image_paths_arr = []  # array for image paths for render on template
+    # (length 1 when running base decontam-score-viz)
+    subset_key_arr = []  # array for table subset id when runnning batches
+    # (length 1 when running base decontam-score-viz)
+    contam_val_arr = []  # contaminant features count
+    # (length 1 when running base decontam-score-viz)
+    true_val_arr = []  # non-contaminant features count
+    # (length 1 when running base decontam-score-viz)
+    unknown_val_arr = []  # NA features count
+    # (length 1 when running base decontam-score-viz)
+    percent_val_arr = []  # % contaminant features
+    # (length 1 when running base decontam-score-viz)
+    red_lab_arr = []  # contaminant feature/read label
+    # (length 1 when running base decontam-score-viz)
+    blue_lab_arr = []  # non-contaminant feature/read label
+    # (length 1 when running base decontam-score-viz)
+    data_arr = []  # information for sequencing table
+    # (only render in base decontam-score-viz)
+    true_fasta_dest = []  # destination for true/nan seq fastas
+    # (only render if rep-seqs not None)
+    contam_fasta_dest = []  # destination for contaminant feature fastas
+    # (only render if rep-seqs not None)
+    sorted_key_arr = []  # sorted feature ids
+    # (only render in base decontam-score-viz)
+    feature_or_read_arr = []  # feature or read label for graph rendering
+    # (length 1 when running base decontam-score-viz)
+
+    # iterates through tables and keys of ASV tables and decontam score tables
     for key in table_dict.keys():
         table = table_dict[key]
         decontam_scores = decontam_scores_dict[key]
-        df = decontam_scores.to_dataframe()
-        if df['p'].isna().all():
+        if decontam_scores['p'].isna().all():
             raise ValueError("No p-values exist for the data provided.")
 
+        # pull out relevant data from objs
         read_nums = table.sum(axis='rows')
-
-        p_vals = df['p'].dropna()
+        p_vals = decontam_scores['p'].dropna()
         filt_read_nums = read_nums[p_vals.index]
 
+        # start ASV contaminant differentiation
         contams = (p_vals < threshold)
 
+        # parses index for contaminant identification
+        true_indices = contams[~contams].index
+        contam_indices = contams[contams].index
+        nan_indices = decontam_scores[
+            decontam_scores['p'].isna()].index.tolist()
+
+        # if rep reqs are not found then the indicator
+        # variable changes to False
+        # objects are inalized for true seqe, and contaminant seqs
+        contam_rep_seqs = []
+        true_rep_seqs = []
+        if rep_seq_indicator:
+            for seq in rep_seqs:
+                if seq.metadata['id'] in contam_indices:
+                    contam_rep_seqs.append(seq)
+                elif (seq.metadata['id'] in true_indices) or \
+                        (seq.metadata['id'] in nan_indices):
+                    true_rep_seqs.append(seq)
+                else:
+                    # TODO:
+                    #  this will only be reached in the batches mode
+                    # the repseq obj is never subset and will cause an
+                    # else statment is used
+                    pass
+
+        # initialized sequences for display in table and fasta downloads
+        sequences = {}
+        if len(table_dict.keys()) > 1:
+            true_dest = str(key) + '_non_contam.fasta'
+            contam_dest = str(key) + '_contam.fasta'
+        else:
+            true_dest = 'non_contam.fasta'
+            contam_dest = 'contam.fasta'
+
+        # generate repseq table and fasta for non contaminants
+        sequences = _write_table_fastas(output_dir, true_dest, sequences,
+                                        true_rep_seqs, "Non-Contaminant",
+                                        decontam_scores,
+                                        read_nums, table)
+
+        # generate repseq table and fasta for contaminants
+        sequences = _write_table_fastas(output_dir, contam_dest, sequences,
+                                        contam_rep_seqs, "Contaminant",
+                                        decontam_scores,
+                                        read_nums, table)
+
+        # sorts sequences to be highest read nums first
+        sorted_keys = sorted(
+            sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)
+
+        # TODO: these calculations should move to their
+        #  own function to facilitate testing
+        # calculates percentage of contaminant asvs,
+        # true and contaminant asv feature nums
         contam_asvs = contams.sum()
         true_asvs = len(contams) - contam_asvs
-        unknown_asvs = len(df['p']) - true_asvs - contam_asvs
-        percent_asvs = contam_asvs / (contam_asvs + true_asvs) * 100
-
+        unknown_asvs = len(decontam_scores['p']) - true_asvs - contam_asvs
+        percent_asvs = contam_asvs / (
+                contam_asvs + true_asvs + unknown_asvs) * 100
+        true_asvs = unknown_asvs + true_asvs
         contam_reads = filt_read_nums[contams[contams].index].sum()
         true_reads = filt_read_nums.sum() - contam_reads
         unknown_reads = read_nums.sum() - true_reads - contam_reads
-        percent_reads = contam_reads / (contam_reads + true_reads) * 100
+        percent_reads = contam_reads / (
+                contam_reads + true_reads + unknown_reads) * 100
+        true_reads = unknown_reads + true_reads
 
+        # bin width and different color calculations for histogram
         binwidth = bin_size
         bin_diff = threshold - (binwidth * int(threshold/binwidth))
         temp_dec = decimal.Decimal(str(binwidth))
@@ -100,11 +183,12 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
         ])
 
+        # weighted histogram determination for graph
         if weighted is True:
             y_lab = 'Number of Reads'
-            blue_lab = "True Reads"
+            blue_lab = "Non-Contaminant Reads"
             red_lab = "Contaminant Reads"
-            gray_lab = "Unknown Reads"
+            feature_or_read = "Reads"
             contam_val = contam_reads
             true_val = true_reads
             unknown_val = unknown_reads
@@ -112,10 +196,10 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             h, bins, patches = plt.hist(p_vals, bins, weights=filt_read_nums)
             plt.yscale('log')
         else:
-            y_lab = 'number of ASVs'
-            blue_lab = "True ASVs"
-            red_lab = "Contaminant ASVs"
-            gray_lab = "Unknown ASVs"
+            y_lab = 'Number of Features'
+            blue_lab = "Non-Contaminant Features"
+            red_lab = "Contaminant Features"
+            feature_or_read = "Features"
             contam_val = contam_asvs
             true_val = true_asvs
             unknown_val = unknown_asvs
@@ -123,7 +207,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
             h, bins, patches = plt.hist(p_vals, bins)
 
         plt.xlim(0.0, 1.0)
-        plt.xlabel('Score Value')
+        plt.xlabel('Score')
         plt.ylabel(y_lab)
         arr_bins = list(bins)
         rounded_bins = [round(number, num_dec) for number in arr_bins]
@@ -144,6 +228,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
                       if b >= threshold], color='b', edgecolor="white",
                      label=blue_lab)
 
+        # threshold line plotting
         plt.axvline(threshold, ymin=-.1, ymax=1.1, color='k',
                     linestyle='dashed', linewidth=1, label="Threshold")
         handles, labels = plt.gca().get_legend_handles_labels()
@@ -151,6 +236,7 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         plt.legend(by_label.values(), by_label.keys(),
                    loc="upper left", framealpha=1)
 
+        # code for saving plot as PNG for render
         subset_key_arr.append(key)
         image_prefix = key + '-'
         for ext in ['png', 'svg']:
@@ -169,19 +255,34 @@ def decontam_score_viz(output_dir, decontam_scores: qiime2.Metadata,
         true_val_arr.append("{:.0f}".format(true_val))
         unknown_val_arr.append("{:.0f}".format(unknown_val))
         percent_val_arr.append("%.2f" % percent_val)
-        gray_lab_arr.append(gray_lab)
         red_lab_arr.append(red_lab)
         blue_lab_arr.append(blue_lab)
+        data_arr.append(sequences)
+        true_fasta_dest.append(true_dest)
+        contam_fasta_dest.append(contam_dest)
+        sorted_key_arr.append(sorted_keys)
+        feature_or_read_arr.append(feature_or_read)
 
+    # intializes template and passes data arrays to template for render
     index_fp = os.path.join(TEMPLATES, 'index.html')
     q2templates.render(index_fp, output_dir, context={
             'contamer': contam_val_arr,
             'truer': true_val_arr,
             'unknownr': unknown_val_arr,
             'percenter': percent_val_arr,
-            'unknown_label': gray_lab_arr,
             'contam_label': red_lab_arr,
             'true_label': blue_lab_arr,
             'image_paths': image_paths_arr,
             'subset_id': subset_key_arr,
+            'data_arr': data_arr,
+            'true_fastas': true_fasta_dest,
+            'contam_fastas': contam_fasta_dest,
+            'rep_seq_indicator': rep_seq_indicator,
+            'table_keys_arr': sorted_key_arr,
+            'feat_or_read': feature_or_read_arr,
     })
+    # sortable JS code sourced from the q2-dada2 plugin
+    js = os.path.join(
+        TEMPLATES, 'js', 'tsorter.min.js')
+    os.mkdir(os.path.join(output_dir, 'js'))
+    shutil.copy(js, os.path.join(output_dir, 'js', 'tsorter.min.js'))

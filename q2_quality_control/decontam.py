@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import biom
 import pandas as pd
 import os
 import tempfile
@@ -137,21 +136,17 @@ def decontam_identify(table: pd.DataFrame,
         return _decontam_identify_helper(track_fp, method)
 
 
-def decontam_remove(decontam_scores: qiime2.Metadata,
+def decontam_remove(decontam_scores: pd.DataFrame,
                     table: pd.DataFrame,
+                    rep_seqs: pd.Series,
                     threshold: float = 0.1
-                    ) -> (biom.Table):
-    with tempfile.TemporaryDirectory() as temp_dir_name:
-        df = decontam_scores.to_dataframe()
-        df.loc[(df['p'].astype(float) <= threshold),
-               'contaminant_seq'] = 'True'
-        df.loc[(df['p'].astype(float) > threshold),
-               'contaminant_seq'] = 'False'
-        df = df[df.contaminant_seq == 'True']
-        table = table.drop(df.index, axis=1)
-        output = os.path.join(temp_dir_name, 'temp.tsv.biom')
-        temp_transposed_table = table.transpose()
-        temp_transposed_table.to_csv(output, sep="\t")
-        with open(output) as fh:
-            no_contam_table = biom.Table.from_tsv(fh, None, None, None)
-        return no_contam_table
+                    ) -> (pd.DataFrame, pd.Series):
+    _check_inputs(**locals())
+    decontam_scores['contaminant_seq'] = \
+        decontam_scores['p'].astype(float) <= threshold
+
+    decontam_scores = decontam_scores[decontam_scores['contaminant_seq']]
+    table.drop(decontam_scores.index, axis=1, inplace=True)
+    rep_seqs.drop(decontam_scores.index, inplace=True)
+
+    return table, rep_seqs

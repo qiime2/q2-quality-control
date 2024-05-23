@@ -487,7 +487,7 @@ class EvaluateCompositionTests(QualityControlTestsBase):
     def test_evaluate_composition_dont_test_all_levels(self):
         empty_expectations = pd.DataFrame(
             columns=['s1', 's2', 's3']).astype(float)
-        empty_expectations.index.name = 'Taxon'
+        empty_expectations.set_index(pd.Index([], name='Taxon'), inplace=True)
         mc = self.misclassified.loc[[
             'k__Ag;p__Bg;c__Cg;o__Dg;f__Eg;g__Fg;s__Gg']]
         mc.index = ['k__Ag;p__Bg;c__Cg;o__Dg;f__Eg']

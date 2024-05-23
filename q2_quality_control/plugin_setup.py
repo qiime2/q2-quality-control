@@ -317,7 +317,7 @@ plugin.methods.register_function(
                 'prev_control_indicator': Str},
     outputs=[('decontam_scores', FeatureData[DecontamScore])],
     input_descriptions={
-        'table': ('ASV or OTU table which contaminate sequences '
+        'table': ('Feature table which contaminate sequences '
                   'will be identified from')
     },
     parameter_descriptions={
@@ -347,7 +347,7 @@ plugin.methods.register_function(
     output_descriptions={
         'decontam_scores': ('The resulting table of scores '
                             'from the decontam algorithm '
-                            'which scores each ASV or OTU on '
+                            'which scores each feature on '
                             'how likely they are to be a '
                             'contaminant sequence')
 
@@ -360,25 +360,29 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=decontam_remove,
     inputs={'decontam_scores': FeatureData[DecontamScore],
-            'table': FeatureTable[Frequency]},
+            'table': FeatureTable[Frequency],
+            'rep_seqs': FeatureData[Sequence]},
     parameters={'threshold': Float % Range(0.0, 1.0, inclusive_end=True)},
-    outputs=[('filtered_table', FeatureTable[Frequency])],
+    outputs=[('filtered_table', FeatureTable[Frequency]),
+             ('filtered_rep_seqs', FeatureData[Sequence])],
     input_descriptions={
-        'decontam_scores': ('Output table from decontam identify'),
-        'table': ('ASV or OTU table which contaminate sequences '
-                  'will be identified from')
+        'decontam_scores': ('Pre-feature decontam scores.'),
+        'table': ('Feature table from which contaminants will be removed.'),
+        'rep_seqs': ('Feature representative sequences from which '
+                     'contaminants will be removed.')
     },
     parameter_descriptions={
-        'threshold': ('Select threshold cutoff for decontam algorithm scores')
+        'threshold': ('Decontam score threshold. Features with a score less '
+                      'than or equal to this threshold will be removed.')
     },
     output_descriptions={
-        'filtered_table': ('The resulting feature table of scores '
-                           'once contaminants are removed')
-
+        'filtered_table': ('Feature table with contaminants removed.'),
+        'filtered_rep_seqs': ('Feature representative sequences with '
+                              'contaminants removed.')
     },
-    name='Removes contaminant',
-    description=('This method removes contaminant sequences from an '
-                 'OTU or ASV table and returns the amended table to the user')
+    name='Remove contaminants',
+    description=('Remove contaminant sequences from a feature table and '
+                 'the associated representative sequences.')
 )
 
 
@@ -433,7 +437,7 @@ plugin.pipelines.register_function(
              ('score_histograms', Visualization)
              ],
     input_descriptions={
-        'table': ('ASV or OTU table which contaminate sequences '
+        'table': ('Feature table which contaminate sequences '
                   'will be identified from'),
         'rep_seqs': ('Representative Sequences table which contaminate '
                      'seqeunces will be removed from')
@@ -477,7 +481,7 @@ plugin.pipelines.register_function(
             'and parameter split_column values should be written.'),
         'decontam_scores': ('The resulting table of scores '
                             'from the decontam algorithm '
-                            'which scores each ASV or OTU on '
+                            'which scores each feature on '
                             'how likely they are to be a '
                             'contaminant sequence'),
         'score_histograms': (
@@ -491,7 +495,6 @@ plugin.pipelines.register_function(
         'identifies contaminant sequences from an '
         'OTU or ASV table and reports them to the user')
 )
-
 plugin.register_formats(DecontamScoreFormat, DecontamScoreDirFmt)
 plugin.register_semantic_types(DecontamScore)
 plugin.register_semantic_type_to_format(

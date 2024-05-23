@@ -404,13 +404,12 @@ class TestVizualization(TestPluginBase):
             [[1, 2, 3, 4, 5], [9, 10, 11, 12, 13]],
             columns=['abc', 'def', 'jkl', 'mno', 'pqr'],
             index=['sample-1', 'sample-2'])}
-        temp_list=[]
+        temp_list = []
         seqs = ['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG']
-        indexes=['abc', 'def', 'jkl', 'mno', 'pqr']
+        indexes = ['abc', 'def', 'jkl', 'mno', 'pqr']
         for i in range(len(seqs)):
-            temp_list.append(DNA(seqs[i],
-                        metadata={'id': indexes[i]}))
-        self.input_seqs=temp_list
+            temp_list.append(DNA(seqs[i], metadata={'id': indexes[i]}))
+        self.input_seqs = temp_list
         self.input_scores = {'test_dict': pd.DataFrame(
             [[13.0, 0.969179],
              [16.0, 0.566067],

@@ -133,8 +133,6 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                     true_rep_seqs.append(seq)
         else:
             rep_seq_indicator.append("Nope there are not")
-            true_rep_seqs = []
-            contam_rep_seqs = []
 
         #initzalized seqeunces for display in table and fasta downloads
         sequences = {}

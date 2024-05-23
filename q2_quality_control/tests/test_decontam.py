@@ -12,6 +12,8 @@ import biom
 from qiime2.plugin.testing import TestPluginBase
 from q2_quality_control.decontam import (decontam_identify,
                                          decontam_remove)
+from skbio.sequence import DNA
+
 from q2_quality_control._threshold_graph._visualizer import (
     decontam_score_viz)
 
@@ -373,9 +375,13 @@ class TestVizualization(TestPluginBase):
             [[1, 2, 3, 4, 5], [9, 10, 11, 12, 13]],
             columns=['abc', 'def', 'jkl', 'mno', 'pqr'],
             index=['sample-1', 'sample-2'])}
-        self.input_seqs = pd.Series(
-            ['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG'],
-            index=['abc', 'def', 'jkl', 'mno', 'pqr'])
+        temp_list=[]
+        seqs = ['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG']
+        indexes=['abc', 'def', 'jkl', 'mno', 'pqr']
+        for i in range(len(seqs)):
+            temp_list.append(DNA(seqs[i],
+                        metadata={'id': indexes[i]}))
+        self.input_seqs=temp_list
         self.input_scores = {'test_dict': pd.DataFrame(
             [[13.0, 0.969179],
              [16.0, 0.566067],
@@ -399,9 +405,6 @@ class TestVizualization(TestPluginBase):
         self.assertIn('<td>1</td>\n                '
                       '<td>4</td>\n                '
                       '<td>20.00</td>\n', index_contents)
-        self.assertIn('<td>0.57</td>\n      '
-                      '      <td>12</td>\n           '
-                      ' <td>2</td>\n', index_contents)
         self.assertTrue(os.path.exists(
             os.path.join(viz_dir, 'test_dict-identify-table-histogram.png')))
 

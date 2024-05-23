@@ -122,8 +122,6 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                     # TODO:
                     #  describe the case where you'd end up here in a comment
                     pass
-        else:
-            rep_seq_indicator = False
 
         # initialized sequences for display in table and fasta downloads
         sequences = {}

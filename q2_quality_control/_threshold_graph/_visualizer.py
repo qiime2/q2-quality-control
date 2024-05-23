@@ -282,7 +282,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             'table_keys_arr': sorted_key_arr,
             'feat_or_read': feature_or_read_arr,
     })
-    #sortable JS code 
+    #sortable JS code sourced from the q2-dada2 plugin
     js = os.path.join(
         TEMPLATES, 'js', 'tsorter.min.js')
     os.mkdir(os.path.join(output_dir, 'js'))

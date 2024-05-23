@@ -361,7 +361,7 @@ plugin.methods.register_function(
     function=decontam_remove,
     inputs={'decontam_scores': FeatureData[DecontamScore],
             'table': FeatureTable[Frequency]},
-    parameters={'threshold': Float},
+    parameters={'threshold': Float % Range(0.0, 1.0, inclusive_end=True)},
     outputs=[('filtered_table', FeatureTable[Frequency])],
     input_descriptions={
         'decontam_scores': ('Output table from decontam identify'),
@@ -390,9 +390,9 @@ plugin.visualizers.register_function(
         'rep_seqs': FeatureData[Sequence]
     },
     parameters={
-        'threshold':  Float,
+        'threshold':  Float % Range(0.0, 1.0, inclusive_end=True),
         'weighted': Bool,
-        'bin_size': Float,
+        'bin_size': Float % Range(0.0, 1.0, inclusive_end=True),
     },
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',
@@ -402,7 +402,7 @@ plugin.visualizers.register_function(
         'table': 'Raw OTU/ASV table that was used '
                  'as input to decontam-identify',
         'rep_seqs': ('Representative Sequences table which contaminate '
-                     'seqeunces will be removed from')
+                     'sequences will be removed from')
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores'),

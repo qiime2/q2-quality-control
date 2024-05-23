@@ -15,34 +15,6 @@ import qiime2.util
 from ._utilities import _run_command
 
 
-_WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
-_PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
-_DECON_METHOD_STR = (lambda x: x in {'frequency', 'prevalence', 'combined'},
-                     'frequency, prevalence, combined')
-_BOOLEAN = (lambda x: type(x) is bool, 'True or False')
-# Better to choose to skip, than to implicitly ignore things that KeyError
-_SKIP = (lambda x: True, '')
-_valid_inputs = {
-    'table': _SKIP,
-    'metadata': _SKIP,
-    'threshold': _PER_NUM,
-    'method': _DECON_METHOD_STR,
-    'freq_concentration_column': _SKIP,
-    'prev_control_column': _SKIP,
-    'prev_control_indicator': _SKIP,
-    'decontam_scores': _SKIP,
-    'rep_seqs': _SKIP
-}
-
-
-def _check_inputs(**kwargs):
-    for param, arg in kwargs.items():
-        check_is_valid, explanation = _valid_inputs[param]
-        if not check_is_valid(arg):
-            raise ValueError('Argument to %r was %r, should be %s.'
-                             % (param, arg, explanation))
-
-
 def _check_column_inputs_helper(table, metadata,
                                 prev_control_column,
                                 prev_control_indicator):
@@ -130,7 +102,6 @@ def decontam_identify(table: pd.DataFrame,
                       prev_control_column: str = None,
                       prev_control_indicator: str = None
                       ) -> (pd.DataFrame):
-    _check_inputs(**locals())
     metadata = metadata.to_dataframe()
     _check_column_inputs(table, metadata, method, freq_concentration_column,
                          prev_control_column, prev_control_indicator)
@@ -170,7 +141,6 @@ def decontam_remove(decontam_scores: qiime2.Metadata,
                     table: pd.DataFrame,
                     threshold: float = 0.1
                     ) -> (biom.Table):
-    _check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         df = decontam_scores.to_dataframe()
         df.loc[(df['p'].astype(float) <= threshold),

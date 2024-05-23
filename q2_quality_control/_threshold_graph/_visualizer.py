@@ -111,7 +111,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         # objects are inalized for true seqe, NA seqs, and contaminant seqs
         contam_rep_seqs = []
         true_rep_seqs = []
-        if rep_seqs is not None:
+        if rep_seq_indicator:
             for seq in rep_seqs:
                 if seq.metadata['id'] in contam_indices:
                     contam_rep_seqs.append(seq)

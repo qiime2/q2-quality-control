@@ -128,10 +128,9 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             for seq in temp_list:
                 if seq.metadata['id'] in contam_indices:
                     contam_rep_seqs.append(seq)
-                elif (seq.metadata['id'] in true_indices) or (seq.metadata['id'] in nan_indices):
+                    continue
+                if (seq.metadata['id'] in true_indices) or (seq.metadata['id'] in nan_indices):
                     true_rep_seqs.append(seq)
-                else:
-                    x=1
         else:
             rep_seq_indicator.append("Nope there are not")
             true_rep_seqs = []
@@ -240,7 +239,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         plt.legend(by_label.values(), by_label.keys(),
                    loc="upper left", framealpha=1)
 
-        #code for saving plot as PNG for render, legacy svg code kept for future potential additon of .svg file
+        #code for saving plot as PNG for render, svg code kept for future potential additon of .svg file
         subset_key_arr.append(key)
         image_prefix = key + '-'
         for ext in ['png', 'svg']:

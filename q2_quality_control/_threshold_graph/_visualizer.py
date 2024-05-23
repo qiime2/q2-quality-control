@@ -51,6 +51,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
+    # TODO: Replace rep_seq_indicator to a boolean value
     # Sets rep seq flags if rep_seq indciator is >1 then the sequences are printed in table otherwise no sequences are printed and temp lists
     rep_seq_indicator = ["Are there rep seqs?"]
 
@@ -68,11 +69,6 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     contam_fasta_dest = [] #destination for contaminant feature fastas (only render if rep-seqs not None)
     sorted_key_arr = [] # sorted feature ids (only render in base decontam-score-viz)
     feature_or_read_arr = [] # feature or read label for graph rendering (length 1 when running base decontam-score-viz)
-
-    temp_list =[]
-    if rep_seqs is not None:
-        for seq in rep_seqs:
-            temp_list.append(seq)
 
     #iterates through tables and keys of ASV tables and decontam score tables
     for key in table_dict.keys():
@@ -99,16 +95,18 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         contam_rep_seqs=[]
         true_rep_seqs=[]
         if rep_seqs is not None:
-            for seq in temp_list:
+            for seq in rep_seqs:
                 if seq.metadata['id'] in contam_indices:
                     contam_rep_seqs.append(seq)
-                    continue
-                if (seq.metadata['id'] in true_indices) or (seq.metadata['id'] in nan_indices):
+                elif (seq.metadata['id'] in true_indices) or (seq.metadata['id'] in nan_indices):
                     true_rep_seqs.append(seq)
+                else:
+                    # TODO: describe the case where you'd end up here in a comment
+                    pass
         else:
             rep_seq_indicator.append("Nope there are not")
 
-        #initzalized seqeunces for display in table and fasta downloads
+        #initialized sequences for display in table and fasta downloads
         sequences = {}
         if len(table_dict.keys()) > 1:
             true_dest = str(key) + '_non_contam.fasta'
@@ -128,6 +126,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         sorted_keys = sorted(
             sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)
 
+        # TODO: these calculations should move to their own function to facilitate testing
         #calculates percentage of contaminant asvs, true and contaminant asv feature nums
         contam_asvs = contams.sum()
         true_asvs = len(contams) - contam_asvs

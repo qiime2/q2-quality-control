@@ -16,36 +16,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from q2_types.feature_data import DNAIterator
 
-_PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
-_BOOLEAN = (lambda x: type(x) is bool, 'True or False')
-_PRESENT = (lambda x: x is not None, '')
-# Better to choose to skip, than to implicitly ignore things that KeyError
-_SKIP = (lambda x: True, '')
-_valid_inputs = {
-    'output_dir': _SKIP,
-    'table': _SKIP,
-    'decontam_scores': _SKIP,
-    'threshold': _PER_NUM,
-    'bin_size': _PER_NUM,
-    'weighted': _BOOLEAN,
-    'rep_seqs': _SKIP
-}
-
-
-#checks inputs
-def _check_inputs(**kwargs):
-    for param, arg in kwargs.items():
-        check_is_valid, explanation = _valid_inputs[param]
-        if not check_is_valid(arg):
-            raise ValueError('Argument to %r was %r, should be %s.'
-                             % (param, arg, explanation))
-
 
 TEMPLATES = pkg_resources.resource_filename(
     'q2_quality_control._threshold_graph', 'assets')
 
-#generates seqeunce table and fasta files for each assignment
-def write_table_fastas(output_dir, dest, sequences, seq_list, desig, decontam_scores, read_nums, table):
+#generates sequence table and fasta files for each assignment
+def _write_table_fastas(output_dir, dest, sequences, seq_list,
+                        desig, decontam_scores, read_nums, table):
     _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                            "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
                            "=nt&CMD=Put&QUERY=%s")
@@ -70,17 +47,14 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                        threshold: float = 0.1,
                        weighted: bool = True, bin_size: float = 0.02):
 
-    #checks inputs
-    _check_inputs(**locals())
-
-    # initalizes dictionaries for iteration
+    # initializes dictionaries for iteration
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    # Sets rep seq flags if rep_seq indciator is >1 then the seqeunces are printed in table otherwise no sequences are printed and temp lists
+    # Sets rep seq flags if rep_seq indciator is >1 then the sequences are printed in table otherwise no sequences are printed and temp lists
     rep_seq_indicator = ["Are there rep seqs?"]
 
-    # intializes arrays to pass data to the html
+    # initializes arrays to pass data to the html
     image_paths_arr = [] #array for image paths for render on template (length 1 when running base decontam-score-viz)
     subset_key_arr = [] #array for table subset id when runnning batches (length 1 when running base decontam-score-viz)
     contam_val_arr = [] #contaminant features count (length 1 when running base decontam-score-viz)
@@ -145,10 +119,10 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
 
 
         #generate repseq table and fasta for non contaminants
-        sequences = write_table_fastas(output_dir, true_dest, sequences, true_rep_seqs, "Non-Contaminant", decontam_scores, read_nums, table)
+        sequences = _write_table_fastas(output_dir, true_dest, sequences, true_rep_seqs, "Non-Contaminant", decontam_scores, read_nums, table)
 
         #generate repseq table and fasta for contaminants
-        sequences = write_table_fastas(output_dir, contam_dest, sequences, contam_rep_seqs, "Contaminant", decontam_scores, read_nums, table)
+        sequences = _write_table_fastas(output_dir, contam_dest, sequences, contam_rep_seqs, "Contaminant", decontam_scores, read_nums, table)
 
         #sorts sequences to be highest read nums first
         sorted_keys = sorted(

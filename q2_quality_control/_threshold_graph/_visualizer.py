@@ -108,9 +108,9 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         nan_indices = decontam_scores[
             decontam_scores['p'].isna()].index.tolist()
 
-        # if rep reqs are not found then dummy variables
-        # are initalized otherwise individual seqeunce
-        # objects are inalized for true seqe, NA seqs, and contaminant seqs
+        # if rep reqs are not found then the indicator
+        # variable changes to False
+        # objects are inalized for true seqe, and contaminant seqs
         contam_rep_seqs = []
         true_rep_seqs = []
         if rep_seqs is not None:
@@ -122,7 +122,9 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                     true_rep_seqs.append(seq)
                 else:
                     # TODO:
-                    #  describe the case where you'd end up here in a comment
+                    #  this will only be reached in the batches mode
+                    # the repseq obj is never subset and will cause an
+                    # else statment is used
                     pass
         else:
             rep_seq_indicator = False

@@ -53,7 +53,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     table_dict = dict(table)
     decontam_scores_dict = dict(decontam_scores)
 
-    # Indicates whether sequences are provided, and therefore 
+    # Indicates whether sequences are provided, and therefore
     # whether a section should be created for them in the viz
     rep_seq_indicator = rep_seqs is not None
 

@@ -1,7 +1,8 @@
 [project]
 name = "q2-quality-control"
 authors = [
-    { name = "Nicholas Bokulich and Jorden Rabasco", email = "nbokulich@gmail.com, jordenrabasco1@gmail.com" }
+    { name = "Nicholas Bokulich", email = "nbokulich@gmail.com" },
+    { name = "Jorden Rabasco", email = "jordenrabasco1@gmail.com" }
 ]
 description = "Quality control methods for feature and sequence data."
 readme = {file = "README.md", content-type = "text/markdown"}

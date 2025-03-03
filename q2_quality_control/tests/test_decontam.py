@@ -12,8 +12,7 @@ import qiime2
 import qiime2.plugin.util
 import biom
 from qiime2.plugin.testing import TestPluginBase
-from q2_quality_control.decontam import (decontam_identify,
-                                         decontam_remove)
+from q2_quality_control.decontam import (decontam_identify)
 from skbio.sequence import DNA
 
 from q2_quality_control._threshold_graph._visualizer import (
@@ -177,94 +176,6 @@ class TestIdentify(TestPluginBase):
                 freq_concentration_column='quant_reading')
         self.assertIn("--p-freq-concentration-column given, but cannot be",
                       str(context.exception))
-
-
-class TestRemove(TestPluginBase):
-    package = 'q2_quality_control.tests'
-
-    def setUp(self):
-        super().setUp()
-        self.input_table = pd.DataFrame(
-            [[1, 2, 3, 4, 5], [9, 10, 11, 12, 13]],
-            columns=['abc', 'def', 'jkl', 'mno', 'pqr'],
-            index=['sample-1', 'sample-2'])
-        self.input_seqs = pd.Series(
-            ['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG'],
-            index=['abc', 'def', 'jkl', 'mno', 'pqr'])
-        self.input_scores = pd.DataFrame(
-            [[13.0, 0.969179],
-             [16.0, 0.566067],
-             [25.0, 0.019475],
-             [10.0, 0.383949],
-             [13.0, 0.969179]],
-            index=['abc', 'def', 'jkl', 'mno', 'pqr'],
-            columns=['prev', 'p'])
-
-    def test_remove(self):
-        exp_table = pd.DataFrame(
-            [[1, 2, 4, 5], [9, 10, 12, 13]],
-            columns=['abc', 'def', 'mno', 'pqr'],
-            index=['sample-1', 'sample-2'])
-        exp_seqs = pd.Series(['ACGT', 'TTTT', 'CCCC', 'GGG'],
-                             index=['abc', 'def', 'mno', 'pqr'])
-
-        obs_table, obs_seqs = decontam_remove(
-            table=self.input_table,
-            decontam_scores=self.input_scores,
-            threshold=0.1,
-            rep_seqs=self.input_seqs)
-
-        pdt.assert_series_equal(obs_seqs, exp_seqs)
-        pdt.assert_frame_equal(obs_table, exp_table)
-
-    def test_remove_alt_threshold(self):
-        exp_table = pd.DataFrame(
-            [[1, 2, 5], [9, 10, 13]],
-            columns=['abc', 'def', 'pqr'],
-            index=['sample-1', 'sample-2'])
-        exp_seqs = pd.Series(['ACGT', 'TTTT', 'GGG'],
-                             index=['abc', 'def', 'pqr'])
-
-        obs_table, obs_seqs = decontam_remove(
-            table=self.input_table,
-            decontam_scores=self.input_scores,
-            threshold=0.383949,
-            rep_seqs=self.input_seqs)
-
-        pdt.assert_series_equal(obs_seqs, exp_seqs)
-        pdt.assert_frame_equal(obs_table, exp_table)
-
-    def test_remove_all(self):
-        exp_table = pd.DataFrame(
-            [], columns=[], index=['sample-1', 'sample-2'])
-        exp_seqs = pd.Series([], index=[])
-
-        obs_table, obs_seqs = decontam_remove(
-            table=self.input_table,
-            decontam_scores=self.input_scores,
-            threshold=1.0,
-            rep_seqs=self.input_seqs)
-
-        pdt.assert_series_equal(obs_seqs, exp_seqs, check_dtype=False)
-        pdt.assert_frame_equal(obs_table, exp_table, check_dtype=False)
-
-    def test_remove_none(self):
-        exp_table = pd.DataFrame(
-            [[1, 2, 3, 4, 5], [9, 10, 11, 12, 13]],
-            columns=['abc', 'def', 'jkl', 'mno', 'pqr'],
-            index=['sample-1', 'sample-2'])
-        exp_seqs = pd.Series(['ACGT', 'TTTT', 'AAAA', 'CCCC', 'GGG'],
-                             index=['abc', 'def', 'jkl', 'mno', 'pqr'])
-
-        obs_table, obs_seqs = decontam_remove(
-            table=self.input_table,
-            decontam_scores=self.input_scores,
-            threshold=0.0,
-            rep_seqs=self.input_seqs)
-
-        pdt.assert_series_equal(obs_seqs, exp_seqs)
-        pdt.assert_frame_equal(obs_table, exp_table)
-
 
 class TestIdentify_mixed_names(TestPluginBase):
     package = 'q2_quality_control.tests'

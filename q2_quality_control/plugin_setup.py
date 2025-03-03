@@ -19,7 +19,7 @@ from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency
 from q2_types.bowtie2 import Bowtie2Index
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy)
-from .decontam import (decontam_identify, decontam_remove)
+from .decontam import (decontam_identify)
 from ._pipelines import (decontam_identify_batches)
 from ._filter import bowtie2_build, filter_reads
 from ._threshold_graph import (decontam_score_viz)
@@ -359,35 +359,6 @@ plugin.methods.register_function(
     description=('This method identifies contaminant sequences from an '
                  'OTU or ASV table and reports them to the user')
 )
-
-plugin.methods.register_function(
-    function=decontam_remove,
-    inputs={'decontam_scores': FeatureData[DecontamScore],
-            'table': FeatureTable[Frequency],
-            'rep_seqs': FeatureData[Sequence]},
-    parameters={'threshold': Float % Range(0.0, 1.0, inclusive_end=True)},
-    outputs=[('filtered_table', FeatureTable[Frequency]),
-             ('filtered_rep_seqs', FeatureData[Sequence])],
-    input_descriptions={
-        'decontam_scores': ('Pre-feature decontam scores.'),
-        'table': ('Feature table from which contaminants will be removed.'),
-        'rep_seqs': ('Feature representative sequences from which '
-                     'contaminants will be removed.')
-    },
-    parameter_descriptions={
-        'threshold': ('Decontam score threshold. Features with a score less '
-                      'than or equal to this threshold will be removed.')
-    },
-    output_descriptions={
-        'filtered_table': ('Feature table with contaminants removed.'),
-        'filtered_rep_seqs': ('Feature representative sequences with '
-                              'contaminants removed.')
-    },
-    name='Remove contaminants',
-    description=('Remove contaminant sequences from a feature table and '
-                 'the associated representative sequences.')
-)
-
 
 plugin.visualizers.register_function(
     function=decontam_score_viz,

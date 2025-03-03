@@ -134,18 +134,3 @@ def decontam_identify(table: pd.DataFrame,
                                 "(return code %d), please inspect stdout"
                                 " and stderr to learn more." % e.returncode)
         return _decontam_identify_helper(track_fp, method)
-
-
-def decontam_remove(decontam_scores: pd.DataFrame,
-                    table: pd.DataFrame,
-                    rep_seqs: pd.Series,
-                    threshold: float = 0.1
-                    ) -> (pd.DataFrame, pd.Series):
-    decontam_scores['contaminant_seq'] = \
-        decontam_scores['p'].astype(float) <= threshold
-
-    decontam_scores = decontam_scores[decontam_scores['contaminant_seq']]
-    table.drop(decontam_scores.index, axis=1, inplace=True)
-    rep_seqs.drop(decontam_scores.index, inplace=True)
-
-    return table, rep_seqs

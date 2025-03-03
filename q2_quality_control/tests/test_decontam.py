@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 import unittest
 import pandas as pd
-import pandas.testing as pdt
 import qiime2
 import qiime2.plugin.util
 import biom
@@ -176,6 +175,7 @@ class TestIdentify(TestPluginBase):
                 freq_concentration_column='quant_reading')
         self.assertIn("--p-freq-concentration-column given, but cannot be",
                       str(context.exception))
+
 
 class TestIdentify_mixed_names(TestPluginBase):
     package = 'q2_quality_control.tests'

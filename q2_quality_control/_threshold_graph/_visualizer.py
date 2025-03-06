@@ -42,6 +42,19 @@ def _write_table_fastas(output_dir, dest, sequences, seq_list,
     return sequences
 
 
+def _write_table(sequences, indicies, desig,
+                 decontam_scores, read_nums, table):
+
+    for index in indicies:
+        sequences[index] \
+                = {'contam_or_naw': desig,
+                   'p_val': decontam_scores.loc[index, 'p'],
+                   'read_nums': read_nums.loc[index],
+                   'prevalence': (
+                           table[index] != 0).sum()}
+    return sequences
+
+
 # main algorithm
 def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                        table: pd.DataFrame,
@@ -108,9 +121,12 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
 
         # if rep reqs are not found then the indicator
         # variable changes to False
-        # objects are inalized for true seqe, and contaminant seqs
+        # objects are inalized for true seq, and contaminant seqs
         contam_rep_seqs = []
         true_rep_seqs = []
+        sequences = {}
+        true_dest = ""
+        contam_dest = ""
         if rep_seq_indicator:
             for seq in rep_seqs:
                 if seq.metadata['id'] in contam_indices:
@@ -125,26 +141,33 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
                     # else statment is used
                     pass
 
-        # initialized sequences for display in table and fasta downloads
-        sequences = {}
-        if len(table_dict.keys()) > 1:
-            true_dest = str(key) + '_non_contam.fasta'
-            contam_dest = str(key) + '_contam.fasta'
+            # initialized sequences for display in table and fasta downloads
+            if len(table_dict.keys()) > 1:
+                true_dest = str(key) + '_non_contam.fasta'
+                contam_dest = str(key) + '_contam.fasta'
+            else:
+                true_dest = 'non_contam.fasta'
+                contam_dest = 'contam.fasta'
+
+            # generate repseq table and fasta for non contaminants
+            sequences = _write_table_fastas(output_dir, true_dest, sequences,
+                                            true_rep_seqs, "Non-Contaminant",
+                                            decontam_scores,
+                                            read_nums, table)
+
+            # generate repseq table and fasta for contaminants
+            sequences = _write_table_fastas(output_dir, contam_dest, sequences,
+                                            contam_rep_seqs, "Contaminant",
+                                            decontam_scores,
+                                            read_nums, table)
         else:
-            true_dest = 'non_contam.fasta'
-            contam_dest = 'contam.fasta'
-
-        # generate repseq table and fasta for non contaminants
-        sequences = _write_table_fastas(output_dir, true_dest, sequences,
-                                        true_rep_seqs, "Non-Contaminant",
-                                        decontam_scores,
-                                        read_nums, table)
-
-        # generate repseq table and fasta for contaminants
-        sequences = _write_table_fastas(output_dir, contam_dest, sequences,
-                                        contam_rep_seqs, "Contaminant",
-                                        decontam_scores,
-                                        read_nums, table)
+            sequences = _write_table(sequences,
+                                     (list(true_indices) + list(nan_indices)),
+                                     "Non-Contaminant", decontam_scores,
+                                     read_nums, table)
+            sequences = _write_table(sequences, list(contam_indices),
+                                     "Contaminant", decontam_scores,
+                                     read_nums, table)
 
         # sorts sequences to be highest read nums first
         sorted_keys = sorted(

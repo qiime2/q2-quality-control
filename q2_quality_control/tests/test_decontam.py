@@ -489,8 +489,8 @@ class TestVizualization(TestPluginBase):
         self.assertTrue(os.path.exists(index_fp))
         with open(index_fp, 'r') as fh:
             index_contents = fh.read()
-        self.assertIn('<td>1</td>\n                '
-                      '<td>4</td>\n                '
+        self.assertIn('<td>1</td>\n                    '
+                      '<td>4</td>\n                    '
                       '<td>20.00</td>\n', index_contents)
         self.assertTrue(os.path.exists(
             os.path.join(viz_dir, 'test_dict-identify-table-histogram.png')))

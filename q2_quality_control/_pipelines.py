@@ -9,7 +9,6 @@ def decontam_identify_batches(ctx, table, metadata,
                               split_column,
                               method,
                               rep_seqs=None,
-                              filter_empty_features=None,
                               freq_concentration_column=None,
                               prev_control_column=None,
                               prev_control_indicator=None,
@@ -25,7 +24,7 @@ def decontam_identify_batches(ctx, table, metadata,
     # New Work Flow
     split_tables, = spliter(table=table,
                             metadata=metadata.get_column(split_column),
-                            filter_empty_features=filter_empty_features)
+                            filter_empty_features=True)
     table_col = split_tables.collection
     table_dic = dict(table_col)
 

@@ -427,6 +427,7 @@ plugin.pipelines.register_function(
     parameters={'metadata': Metadata,
                 'split_column': Str,
                 'method': Str % Choices(_DECON_METHOD_OPT),
+                'filter_empty_features': Bool,
                 'freq_concentration_column': Str,
                 'prev_control_column': Str,
                 'prev_control_indicator': Str,
@@ -461,6 +462,8 @@ plugin.pipelines.register_function(
                    'Combined: Utilizes both Prevalence and '
                    'Frequency methods when identifying '
                    'contaminants'),
+        'filter_empty_features': 'If true, features which are not present in '
+                                 'a split feature table are dropped.',
         'freq_concentration_column': ('Input column name that has '
                                       'concentration information for '
                                       'the samples, used in '

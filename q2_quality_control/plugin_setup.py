@@ -385,7 +385,8 @@ plugin.methods.register_function(
     },
     name='Remove contaminants',
     description=('Remove contaminant sequences from a feature table and '
-                 'the associated representative sequences.')
+                 'the associated representative sequences.'),
+    deprecated=True
 )
 
 

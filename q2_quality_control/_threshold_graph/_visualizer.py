@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 import os.path
 import pkg_resources
+import importlib.resources
+import shutil
 import decimal
 import q2templates
 import numpy as np
@@ -15,8 +17,8 @@ import matplotlib.pyplot as plt
 from q2_types.feature_data import DNAIterator
 
 
-TEMPLATES = pkg_resources.resource_filename(
-    'q2_quality_control._threshold_graph', 'assets')
+TEMPLATES = importlib.resources.files(
+    'q2_quality_control._threshold_graph') / 'assets'
 
 
 # generates sequence table and fasta files for each assignment

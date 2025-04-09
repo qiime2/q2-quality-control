@@ -6,9 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os.path
-import pkg_resources
 import importlib.resources
-import shutil
 import decimal
 import q2templates
 import numpy as np

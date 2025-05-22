@@ -18,11 +18,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import q2_taxa
 import q2templates
-import pkg_resources
+import importlib.resources
 import subprocess
 
 
-TEMPLATES = pkg_resources.resource_filename('q2_quality_control', 'assets')
+TEMPLATES = importlib.resources.files('q2_quality_control') / 'assets'
 
 
 # Replace this function with QIIME2 API for wrapping commands/binaries,

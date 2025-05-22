@@ -22,6 +22,18 @@ TEMPLATES = importlib.resources.files(
 # generates sequence table and fasta files for each assignment
 def _write_table_fastas(output_dir, dest, sequences, seq_list,
                         desig, decontam_scores, read_nums, table):
+    '''Writes df for feature table in html
+    Args:
+        output_dir (string): output location of fasta files
+        dest (string): specific file output
+        sequences (dict): dictionary containing pertinant information
+        seq_list (list): list of sequences
+        decontam_scores (df): Dataframe of Decontam Scores
+        read_nums (int arr): Array of read numbers by asv
+        table (df): Feature of table
+    Returns:
+        sequences (dict): dictionary containing pertinant information
+    '''
     _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                            "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
                            "=nt&CMD=Put&QUERY=%s")
@@ -40,10 +52,21 @@ def _write_table_fastas(output_dir, dest, sequences, seq_list,
     return sequences
 
 
-def _write_table(sequences, indicies, desig,
+def _write_table(sequences, indices, desig,
                  decontam_scores, read_nums, table):
+    '''Writes df for feature table in html
+    Args:
+        sequences (dict): dictionary containing pertinant information
+        indicies (arr): Array of indicies to be saved with info
+        desig (string): indicates contaminant or not
+        decontam_scores (df): Dataframe of Decontam Scores
+        read_nums (int arr): Array of read numbers by asv
+        table (df): Feature of table
+    Returns:
+        sequences (dict): dictionary containing pertinant information
+    '''
 
-    for index in indicies:
+    for index in indices:
         sequences[index] \
                 = {'contam_or_naw': desig,
                    'p_val': decontam_scores.loc[index, 'p'],
@@ -54,23 +77,44 @@ def _write_table(sequences, indicies, desig,
 
 
 def _asv_calcs(contams, decontam_scores):
+    '''Calculates statistics rendered below graph in html, feature specific 
+    Args:
+        decontam_scores (df): Dataframe of Decontam Scores
+        contams (boolean arr): Array of true/false for which asvs are contaminants
+    Returns:
+        contam_asvs (int): Number of features that are designated as contaminant
+        true_asvs(int): Number of features that are designated as true ASVs
+        unknown_asvs (int): Number of features that are designated as NA
+        percent_asvs (float): Percent of asvs that are designated as contaminant
+    '''
     contam_asvs = contams.sum()
     true_asvs = len(contams) - contam_asvs
     unknown_asvs = len(decontam_scores['p']) - true_asvs - contam_asvs
     percent_asvs = contam_asvs / (
         contam_asvs + true_asvs + unknown_asvs) * 100
     true_asvs = unknown_asvs + true_asvs
-    return contam_asvs, true_asvs, unknown_asvs, percent_asvs, true_asvs
+    return contam_asvs, true_asvs, unknown_asvs, percent_asvs
 
 
 def _read_calcs(filt_read_nums, contams, read_nums):
+    '''Calculates statistics rendered below graph in html, read specific 
+    Args:
+        filt_read_nums (int arr): Array of read numbers by asv that have Pvalues
+        contams (boolean arr): Array of true/false for which asvs are contaminants
+        read_nums (int arr): Array of read numbers by asv
+    Returns:
+        contam_reads (int): Number of reads that are designated as contaminant
+        true_reads (int): Number of reads that are designated as true ASVs
+        unknown_reads (int): Number of reads that are designated as NA
+        percent_reads (float): Percent of reads that are designated as contaminant
+    '''
     contam_reads = filt_read_nums[contams[contams].index].sum()
     true_reads = filt_read_nums.sum() - contam_reads
     unknown_reads = read_nums.sum() - true_reads - contam_reads
     percent_reads = contam_reads / (
         contam_reads + true_reads + unknown_reads) * 100
     true_reads = unknown_reads + true_reads
-    return contam_reads, true_reads, unknown_reads, percent_reads, true_reads
+    return contam_reads, true_reads, unknown_reads, percent_reads
 
 
 # main algorithm
@@ -188,11 +232,11 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             sequences, key=lambda x: sequences[x]['read_nums'], reverse=True)
 
         # ASV calculations
-        contam_asvs, true_asvs, unknown_asvs, percent_asvs, true_asvs = \
+        contam_asvs, true_asvs, unknown_asvs, percent_asvs = \
             _asv_calcs(contams, decontam_scores)
 
         # Read Calculations
-        contam_reads, true_reads, unknown_reads, percent_reads, true_reads = \
+        contam_reads, true_reads, unknown_reads, percent_reads = \
             _read_calcs(filt_read_nums, contams, read_nums)
 
         # bin width and different color calculations for histogram

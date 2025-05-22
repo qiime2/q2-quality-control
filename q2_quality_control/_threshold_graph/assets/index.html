@@ -112,6 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     document.querySelectorAll(`#${subset_table_id} .sortable`).forEach((header, index) => {
+        header.style.cursor = "pointer"; 
         header.addEventListener("click", function () {
             sortTable(index, this);
         });
@@ -189,13 +190,14 @@ document.addEventListener("DOMContentLoaded", function () {
           To BLAST a sequence against the NCBI nt database, click the
           sequence and then click the <i>View report</i>
           button on the resulting page.
+        </p>
         <div class="container">
           <p><center>
+            <a class="btn btn-default" href="{{ contam_fastas[index] }}" target="_blank" rel="noopener noreferrer">
+                Download Contaminant Features as a raw FASTA file
+              </a>
             <a class="btn btn-default" href="{{ true_fastas[index] }}" target="_blank" rel="noopener noreferrer">
               Download Non-Contaminant Features as a raw FASTA file
-            </a>
-            <a class="btn btn-default" href="{{ contam_fastas[index] }}" target="_blank" rel="noopener noreferrer">
-              Download Contaminant Features as a raw FASTA file
             </a>
           </center></p>
         </div>

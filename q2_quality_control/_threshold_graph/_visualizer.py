@@ -137,7 +137,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
     # Indicates whether sequences are provided, and therefore
     # whether a section should be created for them in the viz
     rep_seq_indicator = rep_seqs is not None
-    if rep_seq_indicator:
+    if rep_seqs:
         rep_seqs_arr = list(rep_seqs)
 
     # initializes arrays to pass data to the html
@@ -197,7 +197,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
         sequences = {}
         true_dest = ""
         contam_dest = ""
-        if rep_seq_indicator:
+        if rep_seqs:
             for seq in rep_seqs_arr:
                 if seq.metadata['id'] in contam_indices:
                     contam_rep_seqs.append(seq)

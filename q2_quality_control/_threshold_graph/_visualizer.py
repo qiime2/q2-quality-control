@@ -201,7 +201,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             for seq in rep_seqs_arr:
                 if seq.metadata['id'] in contam_indices:
                     contam_rep_seqs.append(seq)
-                if (seq.metadata['id'] in true_indices) or \
+                elif (seq.metadata['id'] in true_indices) or \
                         (seq.metadata['id'] in nan_indices):
                     true_rep_seqs.append(seq)
 

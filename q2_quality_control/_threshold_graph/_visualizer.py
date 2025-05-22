@@ -77,15 +77,18 @@ def _write_table(sequences, indices, desig,
 
 
 def _asv_calcs(contams, decontam_scores):
-    '''Calculates statistics rendered below graph in html, feature specific 
+    '''Calculates statistics rendered below graph in html feature specific
     Args:
         decontam_scores (df): Dataframe of Decontam Scores
-        contams (boolean arr): Array of true/false for which asvs are contaminants
+        contams (boolean arr): Array of true/false for
+                               which asvs are contaminants
     Returns:
-        contam_asvs (int): Number of features that are designated as contaminant
+        contam_asvs (int): Number of features that are
+                           designated as contaminant
         true_asvs(int): Number of features that are designated as true ASVs
         unknown_asvs (int): Number of features that are designated as NA
-        percent_asvs (float): Percent of asvs that are designated as contaminant
+        percent_asvs (float): Percent of asvs that
+                              are designated as contaminant
     '''
     contam_asvs = contams.sum()
     true_asvs = len(contams) - contam_asvs
@@ -97,16 +100,19 @@ def _asv_calcs(contams, decontam_scores):
 
 
 def _read_calcs(filt_read_nums, contams, read_nums):
-    '''Calculates statistics rendered below graph in html, read specific 
+    '''Calculates statistics rendered below graph in html, read specific
     Args:
-        filt_read_nums (int arr): Array of read numbers by asv that have Pvalues
-        contams (boolean arr): Array of true/false for which asvs are contaminants
+        filt_read_nums (int arr): Array of read numbers
+                                  by asv that have Pvalues
+        contams (boolean arr): Array of true/false for
+                               which asvs are contaminants
         read_nums (int arr): Array of read numbers by asv
     Returns:
         contam_reads (int): Number of reads that are designated as contaminant
         true_reads (int): Number of reads that are designated as true ASVs
         unknown_reads (int): Number of reads that are designated as NA
-        percent_reads (float): Percent of reads that are designated as contaminant
+        percent_reads (float): Percent of reads that are
+                               designated as contaminant
     '''
     contam_reads = filt_read_nums[contams[contams].index].sum()
     true_reads = filt_read_nums.sum() - contam_reads

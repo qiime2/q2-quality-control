@@ -60,7 +60,7 @@ def _write_table(sequences, indices, desig,
     '''Writes df for feature table in html without fasta files
     Args:
         sequences (dict): dictionary containing pertinant information
-        indices (arr): Array of indicies to be saved with info
+        indices (series): Array of indicies to be saved with info
         desig (string): indicates contaminant or not
         decontam_scores (df): Dataframe of Decontam Scores
         read_nums (pandas series): Array of read numbers by asv
@@ -72,7 +72,7 @@ def _write_table(sequences, indices, desig,
     '''
 
     for index in indices:
-        sequences[index]  = {
+        sequences[index] = {
             'contam_or_naw': desig,
             'p_val': decontam_scores.loc[index, 'p'],
             'read_nums': read_nums.loc[index],
@@ -85,7 +85,7 @@ def _asv_calcs(contams, decontam_scores):
     '''Calculates statistics rendered below graph in html feature specific
     Args:
         decontam_scores (df): Dataframe of Decontam Scores
-        contams (boolean arr): Array of true/false for
+        contams (boolean series): Array of true/false for
                                which asvs are contaminants
     Returns:
         contam_asvs (int): Number of features that are
@@ -109,7 +109,7 @@ def _read_calcs(filt_read_nums, contams, read_nums):
     Args:
         filt_read_nums (int arr): Array of read numbers
                                   by asv that have Pvalues
-        contams (boolean arr): Array of true/false for
+        contams (boolean series): Array of true/false for
                                which asvs are contaminants
         read_nums (int arr): Array of read numbers by asv
     Returns:

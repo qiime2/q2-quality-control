@@ -60,7 +60,7 @@ def _write_table(sequences, indices, desig,
     '''Writes df for feature table in html without fasta files
     Args:
         sequences (dict): dictionary containing pertinant information
-        indicies (arr): Array of indicies to be saved with info
+        indices (arr): Array of indicies to be saved with info
         desig (string): indicates contaminant or not
         decontam_scores (df): Dataframe of Decontam Scores
         read_nums (pandas series): Array of read numbers by asv

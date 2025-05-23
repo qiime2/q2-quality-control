@@ -72,12 +72,12 @@ def _write_table(sequences, indices, desig,
     '''
 
     for index in indices:
-        sequences[index] \
-                = {'contam_or_naw': desig,
-                   'p_val': decontam_scores.loc[index, 'p'],
-                   'read_nums': read_nums.loc[index],
-                   'prevalence': (
-                           table[index] != 0).sum()}
+        sequences[index]  = {
+            'contam_or_naw': desig,
+            'p_val': decontam_scores.loc[index, 'p'],
+            'read_nums': read_nums.loc[index],
+            'prevalence': (table[index] != 0).sum()
+        }
     return sequences
 
 

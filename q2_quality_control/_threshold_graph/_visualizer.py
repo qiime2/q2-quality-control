@@ -23,17 +23,19 @@ TEMPLATES = importlib.resources.files(
 # generates sequence table and fasta files for each assignment
 def _write_table_fastas(output_dir, dest, sequences, seq_list,
                         desig, decontam_scores, read_nums, table):
-    '''Writes df for feature table in html
+    '''Writes df for feature table in html with fasta files
     Args:
         output_dir (string): output location of fasta files
-        dest (string): specific file output
+        dest (string): specific file name
         sequences (dict): dictionary containing pertinant information
         seq_list (list): list of sequences
         decontam_scores (df): Dataframe of Decontam Scores
-        read_nums (int arr): Array of read numbers by asv
-        table (df): Feature of table
+        read_nums (pandas series): Array of read numbers by asv
+        table (df): Feature Table
     Returns:
-        sequences (dict): dictionary containing pertinant information
+        sequences (dict): dictionary containing pertinant information,
+                          (seq, designation, p value, read numbers,
+                          and prevalence)
     '''
     _blast_url_template = ("http://www.ncbi.nlm.nih.gov/BLAST/Blast.cgi?"
                            "ALIGNMENT_VIEW=Pairwise&PROGRAM=blastn&DATABASE"
@@ -55,16 +57,18 @@ def _write_table_fastas(output_dir, dest, sequences, seq_list,
 
 def _write_table(sequences, indices, desig,
                  decontam_scores, read_nums, table):
-    '''Writes df for feature table in html
+    '''Writes df for feature table in html without fasta files
     Args:
         sequences (dict): dictionary containing pertinant information
         indicies (arr): Array of indicies to be saved with info
         desig (string): indicates contaminant or not
         decontam_scores (df): Dataframe of Decontam Scores
-        read_nums (int arr): Array of read numbers by asv
+        read_nums (pandas series): Array of read numbers by asv
         table (df): Feature of table
     Returns:
-        sequences (dict): dictionary containing pertinant information
+        sequences (dict): dictionary containing pertinant information,
+                          (designation, p value, read numbers,
+                           and prevalence)
     '''
 
     for index in indices:

@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from q2_types.feature_data import DNAIterator
+import shutil
 
 
 TEMPLATES = importlib.resources.files(
@@ -359,3 +360,7 @@ def decontam_score_viz(output_dir, decontam_scores: pd.DataFrame,
             'table_keys_arr': sorted_key_arr,
             'feat_or_read': feature_or_read_arr,
     })
+    js = os.path.join(
+        TEMPLATES, 'js', 'pag_sorter.min.js')
+    os.mkdir(os.path.join(output_dir, 'js'))
+    shutil.copy(js, os.path.join(output_dir, 'js', 'pag_sorter.min.js'))

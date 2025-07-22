@@ -15,12 +15,12 @@ requirements:
   - python {{ python }}
   - pandas {{ pandas }}
   - seaborn
-  - blast >=2.6.0
+  - blast {{ blast }}
   - bioconductor-decontam
   - r-base {{ r_base }}
-  - r-optparse >=1.7.1
+  - r-optparse {{ r_optparse }}
   - vsearch {{ vsearch }}
-  - samtools >=1.15
+  - samtools {{ samtools }}
   - bowtie2
   - qiime2 >={{ qiime2 }}
   - q2-types >={{ q2_types }}

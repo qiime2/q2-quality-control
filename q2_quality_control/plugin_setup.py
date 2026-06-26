@@ -17,6 +17,9 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality)
 from q2_types.feature_table import FeatureTable, RelativeFrequency, Frequency
 from q2_types.bowtie2 import Bowtie2Index
+
+from ._filter_pangenome import (filter_reads_human_pangenome,
+                                construct_human_pangenome_index)
 from .quality_control import (exclude_seqs, evaluate_composition,
                               evaluate_seqs, evaluate_taxonomy)
 from .decontam import (decontam_identify)
@@ -281,7 +284,7 @@ plugin.methods.register_function(
     input_descriptions=filter_input,
     parameter_descriptions=filter_parameter_descriptions,
     output_descriptions=filter_output,
-    name='Filter demultiplexed sequences by alignment to reference database.',
+    name='Filter demultiplexed sequences by alignment to reference database',
     description=(
         'Filter out (or keep) demultiplexed single- or paired-end sequences '
         'that align to a reference database, using bowtie2 and samtools. This '
@@ -304,6 +307,81 @@ plugin.methods.register_function(
     name='Build bowtie2 index from reference sequences.',
     description='Build bowtie2 index from reference sequences.',
     citations=[citations['langmead2012fast']]
+)
+
+I_reads, O_reads = TypeMap(
+    {
+        SampleData[SequencesWithQuality]: SampleData[SequencesWithQuality],
+        SampleData[PairedEndSequencesWithQuality]: SampleData[
+            PairedEndSequencesWithQuality
+        ],
+    }
+)
+
+plugin.pipelines.register_function(
+    function=construct_human_pangenome_index,
+    inputs={},
+    parameters={"threads": Threads},
+    outputs=[("index", Bowtie2Index)],
+    input_descriptions={},
+    parameter_descriptions={
+        "threads": "Number of threads to use when building the index."
+    },
+    output_descriptions={"index": "Generated combined human reference index."},
+    name="Construct the human pangenome index",
+    description=(
+        "This method generates a Bowtie2 index for the combined human "
+        "GRCh38 reference genome and the draft human pangenome."
+    ),
+    citations=[],
+)
+
+plugin.pipelines.register_function(
+    function=filter_reads_human_pangenome,
+    inputs={"reads": I_reads, "index": Bowtie2Index},
+    parameters={
+        "threads": Threads,
+        **{
+            k: v
+            for (k, v) in filter_parameters.items()
+            if k not in ["exclude_seqs", "n_threads"]
+        },
+    },
+    outputs=[("filtered_reads", O_reads), ("reference_index", Bowtie2Index)],
+    input_descriptions={
+        "reads": "Reads to be filtered against the human genome.",
+        "index": (
+            "Bowtie2 index of the reference human genome. If not "
+            "provided, an index combined from the reference GRCh38 "
+            "human genome and the human pangenome will be generated."
+        ),
+    },
+    parameter_descriptions={
+        "threads": "Number of threads to use for indexing and read filtering.",
+        **{
+            k: v
+            for (k, v) in filter_parameter_descriptions.items()
+            if k not in ["exclude_seqs", "n_threads"]
+        },
+    },
+    output_descriptions={
+        "filtered_reads": (
+            "Original reads without the contaminating human reads."
+        ),
+        "reference_index": (
+            "Generated combined human reference index. If an "
+            "index was provided as an input, it will be "
+            "returned here instead."
+        ),
+    },
+    name="Remove contaminating human reads",
+    description=(
+        "Generates a Bowtie2 index fo the combined human "
+        "GRCh38 reference genome and the draft human pangenome, and"
+        "uses that index to remove the contaminating human reads from "
+        "the reads provided as input."
+    ),
+    citations=[],
 )
 
 # Decontam Actions

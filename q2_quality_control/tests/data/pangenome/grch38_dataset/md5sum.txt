@@ -1,0 +1,1 @@
+16612e8c0a487edda4a1eee512452695  ./ncbi_dataset/data/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna

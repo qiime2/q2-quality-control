@@ -23,6 +23,7 @@ requirements:
   - vsearch {{ vsearch }}
   - samtools {{ samtools }}
   - bowtie2
+  - gfatools {{ gfatools }}
   - qiime2 >={{ qiime2 }}
   - q2-types >={{ q2_types }}
   - q2templates >={{ q2templates }}
